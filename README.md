@@ -1,6 +1,12 @@
-# ColdFusion MCP Server
+# MCPCFC - ColdFusion MCP Server
 
-This is a Remote Model Context Protocol (MCP) server implementation using Adobe ColdFusion CFML/CFScript with Server-Sent Events (SSE) transport.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
+[![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)
+
+**The world's first Model Context Protocol (MCP) server implementation for ColdFusion!**
+
+This project enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications through a standardized protocol.
 
 ## Features
 
@@ -26,17 +32,19 @@ This is a Remote Model Context Protocol (MCP) server implementation using Adobe 
 │   ├── sse.cfm              # SSE endpoint
 │   └── messages.cfm         # HTTP POST endpoint
 ├── /client-examples/
-│   └── test-client.cfm      # Browser test client
+│   └── test-client.html      # Browser test client
 └── README.md                # This file
 ```
 
 ## Getting Started
 
-1. Ensure your ColdFusion server is running
-2. Access the test client at: http://localhost:8500/mcpcfc/client-examples/test-client.cfm
-3. Click "Connect" to establish SSE connection
-4. Click "Initialize" to initialize the MCP session
-5. Test the available tools
+**[📚 See the Quick Start Guide for detailed setup instructions](QUICK_START.md)**
+
+1. Clone this repository: `git clone https://github.com/revsmoke/mcpcfc.git`
+2. Place in your ColdFusion webroot
+3. Navigate to `http://localhost:8500/mcpcfc/`
+4. Test with the included client at: http://localhost:8500/mcpcfc/client-examples/test-client.html
+5. Click "Connect" → "Initialize" → Test the tools!
 
 ## Adding New Tools
 
@@ -92,6 +100,30 @@ Update the datasource names in your tool implementations to match your ColdFusio
 ## Next Steps
 
 - Add authentication mechanism
-- Implement more tools for planned use cases
+- Implement more tools for your use cases
 - Add Redis for distributed session storage
 - Implement WebSocket transport for better performance
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Thanks to Anthropic for creating the Model Context Protocol
+- The ColdFusion community for keeping the platform alive and thriving
+- All contributors who help make this project better
+
+## Links
+
+- [GitHub Repository](https://github.com/revsmoke/mcpcfc)
+- [Report Issues](https://github.com/revsmoke/mcpcfc/issues)
+- [Model Context Protocol Docs](https://modelcontextprotocol.io)
+
+---
+
+**Made with ❤️ for the ColdFusion community**

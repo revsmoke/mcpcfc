@@ -1,1 +1,38 @@
+# ColdFusion specific
+*.log
+*.bak
+WEB-INF/
+CFIDE/
+
+# Temporary files
+temp/
+*.tmp
+*.temp
+
+# OS files
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Session files
+sessions/
+
+# Cache files
+cache/
+
+# Build files
+build/
+dist/
+
+# Dependencies (if using box)
+modules/
+.dependencies/
+
+# Environment files
+.env
+.env.local
+
+# Test artifacts
+test-results/
+coverage/

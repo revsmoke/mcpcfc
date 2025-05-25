@@ -1,0 +1,40 @@
+{
+    "name":"MCPCFC - ColdFusion MCP Server",
+    "version":"0.1.0",
+    "author":"MCPCFC Contributors",
+    "location":"https://github.com/revsmoke/mcpcfc",
+    "homepage":"https://github.com/revsmoke/mcpcfc",
+    "documentation":"https://github.com/revsmoke/mcpcfc/blob/main/README.md",
+    "repository":{
+        "type":"git",
+        "URL":"https://github.com/revsmoke/mcpcfc"
+    },
+    "bugs":"https://github.com/revsmoke/mcpcfc/issues",
+    "slug":"mcpcfc",
+    "shortDescription":"The world's first Model Context Protocol (MCP) server implementation for ColdFusion",
+    "description":"Enable your ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications through the Model Context Protocol.",
+    "type":"modules",
+    "keywords":[
+        "mcp",
+        "model-context-protocol",
+        "ai",
+        "llm",
+        "coldfusion",
+        "cfml",
+        "anthropic",
+        "claude",
+        "server-sent-events",
+        "sse",
+        "json-rpc"
+    ],
+    "engines":{
+        "coldfusion":"2016+",
+        "lucee":"5+"
+    },
+    "license":[
+        {
+            "type":"MIT",
+            "URL":"https://github.com/revsmoke/mcpcfc/blob/main/LICENSE"
+        }
+    ]
+}

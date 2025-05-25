@@ -92,6 +92,6 @@ Update the datasource names in your tool implementations to match your ColdFusio
 ## Next Steps
 
 - Add authentication mechanism
-- Implement more tools for your use cases
+- Implement more tools for planned use cases
 - Add Redis for distributed session storage
 - Implement WebSocket transport for better performance

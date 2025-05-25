@@ -27,7 +27,7 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 
 ## Directory Structure
 
-```
+```text
 /mcpcfc/
 ├── Application.cfc           # Application configuration
 ├── /components/
@@ -50,7 +50,7 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 1. Clone this repository: `git clone https://github.com/revsmoke/mcpcfc.git`
 2. Place in your ColdFusion webroot
 3. Navigate to `http://localhost:8500/mcpcfc/`
-4. Test with the included client at: http://localhost:8500/mcpcfc/client-examples/test-client.cfm
+4. Test with the included client at: <http://localhost:8500/mcpcfc/client-examples/test-client.cfm>
 5. Click "Connect" → "Initialize" → Test the tools!
 
 ## Adding New Tools
@@ -79,9 +79,11 @@ case "myTool":
 ## Configuration
 
 ### Database Configuration
+
 Update the datasource names in your tool implementations to match your ColdFusion datasources.
 
 ### Security
+
 - Only SELECT queries are allowed by default
 - Add authentication/authorization as needed
 - Implement rate limiting for production
@@ -150,4 +152,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for the ColdFusion community**
+## CFLOVE
+
+**Made with ❤️ for the ColdFusion community!**

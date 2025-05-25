@@ -1,5 +1,12 @@
-component displayname="JSONRPCProcessor" {
+component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
     
+    /**
+     * Processes a JSON-RPC request and returns a response.
+     * 
+     * @param {struct} request The incoming JSON-RPC request object.
+     * @param {string} sessionId The unique session identifier for the client.
+     * @return {struct} The JSON-RPC response object.
+     */
     public struct function processRequest(required struct request, required string sessionId) {
         var response = {
             "jsonrpc": "2.0"
@@ -34,17 +41,17 @@ component displayname="JSONRPCProcessor" {
             }
             
         } catch (MethodNotFound e) {
-            response.error = {
+            response["error"] = {
                 "code": -32601,
                 "message": e.message
             };
         } catch (InvalidParams e) {
-            response.error = {
+            response["error"] = {
                 "code": -32602,
                 "message": e.message
             };
         } catch (any e) {
-            response.error = {
+            response["error"] = {
                 "code": -32603,
                 "message": "Internal error: #e.message#"
             };
@@ -56,8 +63,12 @@ component displayname="JSONRPCProcessor" {
         
         return response;
     }
-    
-    private struct function handleInitialize(struct params = {}) {
+    /**
+	 * Handles the initialize request
+     * 
+     * @param {struct} params The request parameters
+	 */
+    private struct function handleInitialize(struct params = {}) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         return {
             "protocolVersion": "2024-11-05",
             "capabilities": {
@@ -73,14 +84,23 @@ component displayname="JSONRPCProcessor" {
             }
         };
     }
-    
+    /**
+     * Handles the tools/list request
+     * 
+     * @return {struct} The list of tools
+     */
     private struct function handleToolsList() {
         return {
-            "tools": application.toolRegistry.listTools()
+            "tools": application.toolRegistry.listTools() //cflint ignore:GLOBAL_VAR
         };
     }
-    
-    private struct function handleToolCall(required struct params) {
+    /**
+     * Handles the tools/call request
+     * 
+     * @param {struct} params The request parameters
+     * @return {struct} The result of the tool call
+     */
+    private struct function handleToolCall(required struct params) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         if (!structKeyExists(arguments.params, "name")) {
             throw(type="InvalidParams", message="Missing tool name");
         }
@@ -92,9 +112,14 @@ component displayname="JSONRPCProcessor" {
         var toolHandler = new mcpcfc.components.ToolHandler();
         return toolHandler.executeTool(toolName, toolArgs);
     }
-    
-    private void function sendSSEMessage(required string sessionId, required struct message) {
-        application.messageQueue.put({
+    /**
+     * Sends an SSE message to the client
+     * 
+     * @param {string} sessionId The unique session identifier for the client
+     * @param {struct} message The message to send
+     */
+    private void function sendSSEMessage(required string sessionId, required struct message) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
+        application.messageQueue.put({  //cflint ignore:GLOBAL_VAR
             "sessionId": arguments.sessionId,
             "content": arguments.message
         });

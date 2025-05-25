@@ -1,11 +1,13 @@
 # ColdFusion MCP SDK Roadmap
 
 ## Vision
+
 Create the first official CFML/CFScript SDK for the Model Context Protocol, enabling ColdFusion developers to easily build MCP servers that integrate with AI applications.
 
 ## Current Implementation Status
 
 The basic MCP server is now **working** with the following components implemented:
+
 - ✅ JSON-RPC 2.0 message processing
 - ✅ SSE transport for real-time communication
 - ✅ Tool registration and execution
@@ -15,60 +17,69 @@ The basic MCP server is now **working** with the following components implemente
 ## Core SDK Components
 
 ### 1. Base Classes
-- `MCPServer.cfc` - Abstract base class for all MCP servers
-- `MCPTransport.cfc` - Abstract transport layer
-- `MCPTool.cfc` - Base class for tool implementations
-- `MCPResource.cfc` - Base class for resource providers
-- `MCPPrompt.cfc` - Base class for prompt templates
+
+    - `MCPServer.cfc` - Abstract base class for all MCP servers
+    - `MCPTransport.cfc` - Abstract transport layer
+    - `MCPTool.cfc` - Base class for tool implementations
+    - `MCPResource.cfc` - Base class for resource providers
+    - `MCPPrompt.cfc` - Base class for prompt templates
 
 ### 2. Transport Implementations
-- `SSETransport.cfc` - Server-Sent Events (current implementation)
-- `WebSocketTransport.cfc` - WebSocket support
-- `HTTPTransport.cfc` - Simple HTTP polling
-- `StdioTransport.cfc` - Standard I/O for CLI tools
+
+    - `SSETransport.cfc` - Server-Sent Events (current implementation)
+    - `WebSocketTransport.cfc` - WebSocket support
+    - `HTTPTransport.cfc` - Simple HTTP polling
+    - `StdioTransport.cfc` - Standard I/O for CLI tools
 
 ### 3. Protocol Components
-- `JSONRPCHandler.cfc` - Enhanced JSON-RPC 2.0 processor
-- `MCPProtocol.cfc` - Protocol version negotiation
-- `MessageValidator.cfc` - Schema validation
-- `ErrorHandler.cfc` - Standard error responses
+
+    - `JSONRPCHandler.cfc` - Enhanced JSON-RPC 2.0 processor
+    - `MCPProtocol.cfc` - Protocol version negotiation
+    - `MessageValidator.cfc` - Schema validation
+    - `ErrorHandler.cfc` - Standard error responses
 
 ### 4. Security Layer
-- `AuthenticationProvider.cfc` - OAuth, API keys, etc.
-- `RateLimiter.cfc` - Request throttling
-- `Sanitizer.cfc` - Input validation
-- `AuditLogger.cfc` - Security event logging
+
+    - `AuthenticationProvider.cfc` - OAuth, API keys, etc.
+    - `RateLimiter.cfc` - Request throttling
+    - `Sanitizer.cfc` - Input validation
+    - `AuditLogger.cfc` - Security event logging
 
 ### 5. Developer Tools
-- `MCPTestClient.cfc` - Testing utilities
-- `MockTransport.cfc` - Unit testing support
-- `DebugLogger.cfc` - Development logging
-- `SchemaGenerator.cfc` - Auto-generate tool schemas
+
+    - `MCPTestClient.cfc` - Testing utilities
+    - `MockTransport.cfc` - Unit testing support
+    - `DebugLogger.cfc` - Development logging
+    - `SchemaGenerator.cfc` - Auto-generate tool schemas
 
 ### 6. Common Tools Library
-- `DatabaseTool.cfc` - Enhanced DB operations
-- `FileTool.cfc` - File system access
-- `HTTPTool.cfc` - External API calls
-- `EmailTool.cfc` - Email operations
-- `PDFTool.cfc` - PDF generation/manipulation
-- `ExcelTool.cfc` - Spreadsheet operations
+
+    - `DatabaseTool.cfc` - Enhanced DB operations
+    - `FileTool.cfc` - File system access
+    - `HTTPTool.cfc` - External API calls
+    - `EmailTool.cfc` - Email operations
+    - `PDFTool.cfc` - PDF generation/manipulation
+    - `ExcelTool.cfc` - Spreadsheet operations
 
 ## Features That Leverage ColdFusion's Strengths
 
 ### 1. Native Database Integration
-```cfscript
+
+    ```cfscript
 component extends="MCPTool" {
     function getCustomers(required string criteria) {
-        return queryExecute("
-            SELECT * FROM customers 
-            WHERE status = :status
-        ", {status: arguments.criteria});
+        return queryExecute(
+            "SELECT * FROM customers
+             WHERE status = :status",
+            {status: arguments.criteria}
+        );
     }
 }
-```
+    ```
 
 ### 2. Built-in Security Functions
-```cfscript
+
+    ```cfscript
 component extends="MCPServer" {
     function sanitizeInput(required string input) {
         return encodeForHTML(
@@ -76,21 +87,23 @@ component extends="MCPServer" {
         );
     }
 }
-```
+    ```
 
 ### 3. Seamless Java Integration
-```cfscript
+
+    ```cfscript
 component extends="MCPTransport" {
     function init() {
         variables.messageQueue = createObject(
-            "java", 
+            "java",
             "java.util.concurrent.LinkedBlockingQueue"
         ).init();
     }
 }
-```
+    ```
 
 ### 4. Government/Enterprise Features
+
 - FIPS compliance helpers
 - Section 508 accessibility tools
 - FedRAMP documentation generators
@@ -99,27 +112,26 @@ component extends="MCPTransport" {
 ## Installation & Usage
 
 ### Via CommandBox (Future)
-```bash
+
+    ```bash
 box install cf-mcp-sdk
-```
+    ```
 
 ### Basic Server Example
-```cfscript
+
+    ```cfscript
 component extends="mcp.sdk.MCPServer" {
-    
     function configure() {
         // Register tools
         this.registerTool(new tools.CustomerTool());
         this.registerTool(new tools.ReportTool());
-        
         // Set transport
         this.setTransport(new mcp.sdk.transports.SSETransport());
-        
         // Configure security
         this.requireAuthentication("oauth2");
     }
 }
-```
+    ```
 
 ## Community Benefits
 
@@ -138,7 +150,7 @@ component extends="mcp.sdk.MCPServer" {
 
 ## Next Steps
 
-1. **GitHub Repository** - Set up official repo ✅ (https://github.com/revsmoke/mcpcfc)
+1. **GitHub Repository** - Set up official repo ✅ ([https://github.com/revsmoke/mcpcfc](https://github.com/revsmoke/mcpcfc))
 2. **Documentation Site** - Comprehensive guides
 3. **Example Servers** - Real-world implementations
 4. **Community Feedback** - Gather requirements
@@ -149,6 +161,7 @@ component extends="mcp.sdk.MCPServer" {
 ## Contributing
 
 We need contributors for:
+
 - Transport implementations
 - Security providers
 - Tool libraries

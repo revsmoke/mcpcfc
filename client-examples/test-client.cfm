@@ -85,8 +85,8 @@
             <button onclick="callHello()">Call Hello Tool</button>
             
             <h3>Test Database Tool</h3>
-            <input type="text" id="dbQuery" placeholder="SQL Query" value="SELECT * FROM users LIMIT 10">
-            <input type="text" id="dbDatasource" placeholder="Datasource" value="myDatasource">
+            <input type="text" id="dbQuery" placeholder="SQL Query" value="SELECT * FROM example_data LIMIT 10">
+            <input type="text" id="dbDatasource" placeholder="Datasource" value="mcpcfc_ds">
             <button onclick="callDatabase()">Execute Query</button>
         </div>
         

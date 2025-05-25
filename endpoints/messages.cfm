@@ -3,10 +3,10 @@
 cfheader(name="Content-Type", value="application/json");
 cfheader(name="Access-Control-Allow-Origin", value="*");
 
+try {
 // Get raw JSON body
 requestBody = toString(getHttpRequestData().content);
 
-try {
     // Parse JSON-RPC request
     request = deserializeJson(requestBody);
     
@@ -29,7 +29,7 @@ try {
     // Return JSON-RPC error
     errorResponse = {
         "jsonrpc": "2.0",
-        "id": structKeyExists(request, "id") ? request.id : null,
+        "id": structKeyExists(request, "id") ? request.id : "",
         "error": {
             "code": -32603,
             "message": "Internal error: #e.message#"

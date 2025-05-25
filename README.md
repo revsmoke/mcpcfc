@@ -32,7 +32,7 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 │   ├── sse.cfm              # SSE endpoint
 │   └── messages.cfm         # HTTP POST endpoint
 ├── /client-examples/
-│   └── test-client.html      # Browser test client
+│   └── test-client.cfm      # Browser test client
 └── README.md                # This file
 ```
 
@@ -43,7 +43,7 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 1. Clone this repository: `git clone https://github.com/revsmoke/mcpcfc.git`
 2. Place in your ColdFusion webroot
 3. Navigate to `http://localhost:8500/mcpcfc/`
-4. Test with the included client at: http://localhost:8500/mcpcfc/client-examples/test-client.html
+4. Test with the included client at: http://localhost:8500/mcpcfc/client-examples/test-client.cfm
 5. Click "Connect" → "Initialize" → Test the tools!
 
 ## Adding New Tools

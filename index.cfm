@@ -43,7 +43,7 @@
         <p>Welcome to the ColdFusion implementation of the Model Context Protocol (MCP) server.</p>
         
         <h2>Quick Links</h2>
-        <a href="client-examples/test-client.html" class="button">Test Client</a>
+        <a href="client-examples/test-client.cfm" class="button">Test Client</a>
         <a href="README.md" class="button">Documentation</a>
         
         <h2>Endpoints</h2>

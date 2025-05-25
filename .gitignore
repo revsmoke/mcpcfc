@@ -36,3 +36,11 @@ modules/
 # Test artifacts
 test-results/
 coverage/
+
+# Playwright
+node_modules/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.CLAUDE.local.md
+screenshots/

@@ -89,7 +89,7 @@ component displayname="JSONRPCProcessor" {
         var toolArgs = structKeyExists(arguments.params, "arguments") ? arguments.params.arguments : {};
         
         // Execute tool
-        var toolHandler = new components.ToolHandler();
+        var toolHandler = new mcpcfc.components.ToolHandler();
         return toolHandler.executeTool(toolName, toolArgs);
     }
     

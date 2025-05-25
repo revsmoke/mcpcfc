@@ -22,6 +22,7 @@ application.sessionManager.createSession(url.sessionId);
 newline = chr(10);
 stopPollingAt = getTickCount() + (290 * 1000); // 290 seconds
 TimeUnit = createObject("java", "java.util.concurrent.TimeUnit");
+lastHeartbeat = 0; // Initialize heartbeat timer
 
 // Send initial connection event
 writeOutput("event: connection" & newline);
@@ -47,12 +48,13 @@ while (getTickCount() < stopPollingAt) {
             writeOutput(newline);
             getPageContext().getOut().flush();
         }        
-        // Send periodic heartbeat
-        if (getTickCount() % 30000 < 1000) {
+        // Send periodic heartbeat every 30 seconds
+        if (!isDefined("lastHeartbeat") || (getTickCount() - lastHeartbeat) > 30000) {
             writeOutput("event: heartbeat" & newline);
             writeOutput("data: " & now() & newline);
             writeOutput(newline);
             getPageContext().getOut().flush();
+            lastHeartbeat = getTickCount();
         }
         
     } catch (any e) {

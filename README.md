@@ -26,14 +26,14 @@ This is a Remote Model Context Protocol (MCP) server implementation using Adobe 
 │   ├── sse.cfm              # SSE endpoint
 │   └── messages.cfm         # HTTP POST endpoint
 ├── /client-examples/
-│   └── test-client.html     # Browser test client
+│   └── test-client.cfm      # Browser test client
 └── README.md                # This file
 ```
 
 ## Getting Started
 
 1. Ensure your ColdFusion server is running
-2. Access the test client at: http://localhost:8500/mcpcfc/client-examples/test-client.html
+2. Access the test client at: http://localhost:8500/mcpcfc/client-examples/test-client.cfm
 3. Click "Connect" to establish SSE connection
 4. Click "Initialize" to initialize the MCP session
 5. Test the available tools

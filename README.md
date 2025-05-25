@@ -3,10 +3,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
 [![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)
+[![Status: Working](https://img.shields.io/badge/Status-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 
 **The world's first Model Context Protocol (MCP) server implementation for ColdFusion!**
 
 This project enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications through a standardized protocol.
+
+## 🎉 What's New
+
+- **v1.0.1** - Fixed critical issues with JSON-RPC handling and component path resolution
+- **Confirmed Working** - Successfully tested with browser client
+- **Enhanced Error Handling** - Better debugging with optional debug mode
 
 ## Features
 
@@ -92,10 +99,27 @@ Update the datasource names in your tool implementations to match your ColdFusio
 
 ## Troubleshooting
 
-1. Check ColdFusion logs for errors
-2. Ensure Application.cfc is loaded (restart CF if needed)
-3. Verify CORS headers are set correctly
-4. Check browser console for JavaScript errors
+### Common Issues and Solutions
+
+1. **JSON-RPC Version Error**
+   - **Error**: "Invalid JSON-RPC version: missing"
+   - **Solution**: The server now handles both string and numeric JSON-RPC versions. Fixed in messages.cfm.
+
+2. **Component Not Found Errors**
+   - **Error**: "Could not find the ColdFusion component or interface"
+   - **Solution**: Components must use fully qualified paths (e.g., `mcpcfc.components.ClassName`)
+
+3. **SSE Connection Issues**
+   - Check that SSE endpoint is accessible at `/mcpcfc/endpoints/sse.cfm`
+   - Verify session ID is being passed correctly
+   - Check for heartbeat messages in the browser console
+
+4. **General Debugging**
+   - Check ColdFusion logs for errors
+   - Ensure Application.cfc is loaded (restart CF if needed)
+   - Verify CORS headers are set correctly
+   - Check browser console for JavaScript errors
+   - Add `?debug=1` to messages.cfm URL for detailed logging
 
 ## Next Steps
 

@@ -3,6 +3,15 @@
 ## Vision
 Create the first official CFML/CFScript SDK for the Model Context Protocol, enabling ColdFusion developers to easily build MCP servers that integrate with AI applications.
 
+## Current Implementation Status
+
+The basic MCP server is now **working** with the following components implemented:
+- ✅ JSON-RPC 2.0 message processing
+- ✅ SSE transport for real-time communication
+- ✅ Tool registration and execution
+- ✅ Session management
+- ✅ Browser-based test client
+
 ## Core SDK Components
 
 ### 1. Base Classes
@@ -120,14 +129,22 @@ component extends="mcp.sdk.MCPServer" {
 4. **Enterprise Integration** - Connect legacy systems to AI
 5. **Rapid Development** - CF's productivity advantages
 
+## Lessons Learned from Initial Implementation
+
+1. **Component Path Resolution** - ColdFusion requires fully qualified paths for components in certain contexts
+2. **JSON Handling** - Need to handle both string and numeric JSON values for protocol fields
+3. **Variable Scoping** - Cannot use `var` declarations outside of functions
+4. **Error Handling** - Detailed error messages are crucial for debugging MCP implementations
+
 ## Next Steps
 
-1. **GitHub Repository** - Set up official repo
+1. **GitHub Repository** - Set up official repo ✅ (https://github.com/revsmoke/mcpcfc)
 2. **Documentation Site** - Comprehensive guides
 3. **Example Servers** - Real-world implementations
 4. **Community Feedback** - Gather requirements
 5. **Adobe Partnership** - Potential official support
 6. **ForgeBox Package** - Easy distribution
+7. **Refactor to SDK Pattern** - Extract reusable components from current implementation
 
 ## Contributing
 

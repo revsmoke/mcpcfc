@@ -1,12 +1,14 @@
-component output="false" {
+component output="false" hint="Application component for MCP Server" {
     
-    this.name = "MCPServer";
+    this.name = "MCPServer"; //cflint ignore:GLOBAL_VAR
     this.applicationTimeout = createTimeSpan(1, 0, 0, 0);
     this.sessionManagement = false;
-    
+    /**
+     * Application start handler
+     */
     public void function onApplicationStart() {
         // Initialize thread-safe message queue
-        application.messageQueue = createObject("java", "java.util.concurrent.LinkedBlockingQueue").init();
+        application.messageQueue = createObject("java", "java.util.concurrent.LinkedBlockingQueue").init(); //cflint ignore:GLOBAL_VAR
         
         // Initialize session manager
         application.sessionManager = new components.SessionManager();
@@ -17,10 +19,12 @@ component output="false" {
         // Register default tools
         registerTools();
     }
-    
+    /**
+     * Register default tools
+     */
     private void function registerTools() {
         // Register hello world tool
-        application.toolRegistry.registerTool("hello", {
+        application.toolRegistry.registerTool("hello", { //cflint ignore:GLOBAL_VAR
             "description": "A simple hello world tool",
             "inputSchema": {
                 "type": "object",

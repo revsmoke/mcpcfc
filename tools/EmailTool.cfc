@@ -1,10 +1,12 @@
-component displayname="EmailTool" {
+component displayname="EmailTool" hint="ColdFusion MCP Email Tool - Provides email functionality" {
     
     /**
-     * ColdFusion MCP Email Tool - Provides email functionality
+     * Execute an email tool
+     * 
+     * @param toolName The name of the tool to execute
+     * @param args The arguments to pass to the tool
      */
-    
-    public struct function executeTool(required string toolName, required struct args) {
+    public struct function executeTool(required string toolName, required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         switch(arguments.toolName) {
             case "sendEmail":
                 return sendEmail(arguments.args);
@@ -23,7 +25,7 @@ component displayname="EmailTool" {
         }
     }
     
-    private struct function sendEmail(required struct args) {
+    private struct function sendEmail(required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         validateRequiredParams(arguments.args, ["to", "subject", "body"]);
         
         try {
@@ -66,10 +68,11 @@ component displayname="EmailTool" {
             };
         }
     }
-    
-    private struct function sendHTMLEmail(required struct args) {
+    /**
+     * Send an HTML email
+     */
+    private struct function sendHTMLEmail(required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         validateRequiredParams(arguments.args, ["to", "subject", "htmlBody"]);
-        
         try {
             // Use ColdFusion's cfmail tag functionality
             var mailService = new mail();
@@ -116,7 +119,10 @@ component displayname="EmailTool" {
         }
     }
     
-    private struct function validateEmailAddress(required struct args) {
+    /**
+     * Validate an email address
+     */
+    private struct function validateEmailAddress(required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         validateRequiredParams(arguments.args, ["email"]);
         
         try {
@@ -154,7 +160,10 @@ component displayname="EmailTool" {
         }
     }
     
-    private void function validateRequiredParams(required struct args, required array required) {
+    /**
+     * Validate required parameters
+     */
+    private void function validateRequiredParams(required struct args, required array required) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         for (var param in arguments.required) {
             if (!structKeyExists(arguments.args, param) || len(trim(arguments.args[param])) == 0) {
                 throw(type="InvalidParams", message="Missing required parameter: #param#");

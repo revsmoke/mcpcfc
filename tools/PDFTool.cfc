@@ -1,4 +1,4 @@
-component displayname="PDFTool" {
+component displayname="PDFTool" hint="PDF Tool" {
     
     /**
      * Example of a ColdFusion-specific tool that leverages CF's built-in PDF capabilities
@@ -72,6 +72,13 @@ component displayname="PDFTool" {
         }
     }
     
+    /**
+     * Extracts text content from a specified PDF file.
+     * 
+     * @param {struct} args The arguments for the tool call.
+     *      - pdfPath (string) The path to the PDF file (relative to /mcpcfc/temp/ or absolute).
+     * @return {struct} A struct containing the extracted text or an error message.
+     */
     private struct function extractTextFromPDF(required struct args) {
         validateRequiredParams(arguments.args, ["pdfPath"]);
         

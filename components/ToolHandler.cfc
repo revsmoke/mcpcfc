@@ -1,4 +1,4 @@
-component displayname="ToolHandler" {
+component displayname="ToolHandler" hint="Handles the execution of registered tools and routes to specialized tool handlers." {
     
     public struct function executeTool(required string toolName, required struct args) {
         try {
@@ -61,7 +61,7 @@ component displayname="ToolHandler" {
         var queryResult = queryExecute(
             arguments.args.query,
             {},
-            {datasource: arguments.args.datasource}
+            {"datasource": arguments.args.datasource}
         );        
         // Convert query to array of structs
         var results = [];

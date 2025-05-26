@@ -9,6 +9,20 @@ component displayname="ToolHandler" {
                 case "queryDatabase":
                     return executeQueryDatabase(arguments.args);
                     
+                case "generatePDF":
+                case "extractPDFText":
+                case "mergePDFs":
+                    // Route PDF tools to PDFTool component
+                    var pdfTool = new mcpcfc.tools.PDFTool();
+                    return pdfTool.executeTool(arguments.toolName, arguments.args);
+                    
+                case "sendEmail":
+                case "sendHTMLEmail":
+                case "validateEmailAddress":
+                    // Route email tools to EmailTool component
+                    var emailTool = new mcpcfc.tools.EmailTool();
+                    return emailTool.executeTool(arguments.toolName, arguments.args);
+                    
                 default:
                     throw(type="ToolNotFound", message="Unknown tool: #arguments.toolName#");
             }

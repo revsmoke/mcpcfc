@@ -41,7 +41,7 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 
 ## Registered Tools
 
-1. **hello**: Simple greeting tool
+1. **hello**: Simple greeting tool (✅ TESTED & WORKING)
    - Input: name (string)
    - Output: Personalized greeting
 
@@ -51,6 +51,36 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
    - Use datasource: `mcpcfc_ds`
    - Database: `mcpcfc_db` (MySQL)
    - Available tables: `tools`, `tool_executions`, `example_data`
+
+3. **generatePDF**: PDF generation from HTML (✅ TESTED & WORKING)
+   - Input: html (string), filename (string)
+   - Output: Success message with file location
+   - Files saved to: `/temp/` directory
+
+4. **extractPDFText**: Extract text from PDF files (✅ TESTED & WORKING)
+   - Input: pdfPath (string) - filename or path (relative paths default to temp directory)
+   - Output: Extracted text content from the PDF
+
+5. **mergePDFs**: Merge multiple PDFs into one (✅ TESTED & WORKING)
+   - Input: sourcePaths (array of strings), outputPath (string)
+   - Output: Success message with merged file location
+   - Note: Requires at least 2 PDFs to merge
+
+6. **sendEmail**: Send plain text email (✅ TESTED & WORKING - Simulated Mode)
+   - Input: to (string), subject (string), body (string)
+   - Optional: from, cc, bcc (strings)
+   - Output: Email sent confirmation
+   - Note: Currently in simulation mode, uncomment `mailService.send()` for production
+
+7. **sendHTMLEmail**: Send HTML formatted email (✅ TESTED & WORKING - Simulated Mode)
+   - Input: to (string), subject (string), htmlBody (string)
+   - Optional: textBody, from, cc, bcc (strings)
+   - Output: Email sent confirmation
+   - Note: Currently in simulation mode, uncomment `mailService.send()` for production
+
+8. **validateEmailAddress**: Validate email format (✅ TESTED & WORKING)
+   - Input: email (string)
+   - Output: Validation result (true/false) and message
 
 ## Testing
 
@@ -76,7 +106,10 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 - ✅ JSON-RPC 2.0 protocol working
 - ✅ SSE real-time communication established
 - ✅ Database integration tested and operational
+- ✅ All PDF tools implemented and working (generate, extract text, merge)
+- ✅ Email tools implemented and tested (validation, plain text, HTML)
 - ✅ Browser-based test client fully functional
+- ✅ 8 tools registered and ALL tested successfully!
 - ✅ Ready for AI assistant integration!
 
 ## File Index

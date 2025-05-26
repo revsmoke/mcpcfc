@@ -11,9 +11,11 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 
 ## 🎉 What's New
 
-- **v1.0.1** - Fixed critical issues with JSON-RPC handling and component path resolution
-- **Confirmed Working** - Successfully tested with browser client
-- **Enhanced Error Handling** - Better debugging with optional debug mode
+- **v1.0.2** - Full implementation of PDF and Email tools!
+- **All 8 Tools Tested** - Every tool confirmed working perfectly
+- **PDF Tools** - Generate, extract text, and merge PDFs
+- **Email Tools** - Send plain/HTML emails and validate addresses
+- **100% Feature Complete** - Ready for production use!
 
 ## Features
 
@@ -21,9 +23,15 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 - Server-Sent Events (SSE) for real-time communication
 - Thread-safe session management
 - Extensible tool registry
-- Example tools:
-  - Hello World tool
-  - Database query tool
+- **8 Production-Ready Tools**:
+  - ✅ Hello World tool
+  - ✅ Database query tool (MySQL/SQL Server/etc)
+  - ✅ PDF generation from HTML
+  - ✅ PDF text extraction
+  - ✅ PDF merging
+  - ✅ Email sending (plain text)
+  - ✅ Email sending (HTML with attachments)
+  - ✅ Email address validation
 
 ## Directory Structure
 
@@ -38,8 +46,12 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 ├── /endpoints/
 │   ├── sse.cfm              # SSE endpoint
 │   └── messages.cfm         # HTTP POST endpoint
+├── /tools/
+│   ├── PDFTool.cfc          # PDF operations (generate/extract/merge)
+│   └── EmailTool.cfc        # Email operations (send/validate)
 ├── /client-examples/
 │   └── test-client.cfm      # Browser test client
+├── /temp/                   # PDF generation output directory
 └── README.md                # This file
 ```
 

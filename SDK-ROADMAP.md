@@ -149,6 +149,7 @@ component extends="mcp.sdk.MCPServer" {
 ## Lessons Learned from Implementation
 
 ### Technical Discoveries
+
 1. **Component Path Resolution** - ColdFusion requires fully qualified paths for components in certain contexts
 2. **JSON Handling** - Need to handle both string and numeric JSON values for protocol fields
 3. **Variable Scoping** - Cannot use `var` declarations outside of functions
@@ -159,18 +160,20 @@ component extends="mcp.sdk.MCPServer" {
 8. **Path Handling** - Flexible path resolution improves tool usability
 
 ### Critical Claude Desktop Integration Lessons
-9. **Output Control** - MUST use `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">`
-10. **Struct Ordering** - Use `structNew("ordered")` for ALL JSON-RPC responses
-11. **Notification Handling** - Messages without `id` must return NO response
-12. **Bridge Design** - Stdio bridge must output ONLY JSON to stdout, debug to stderr
-13. **Method Implementation** - Implement ALL methods including optional ones (resources/list, prompts/list)
-14. **Parser Strictness** - Claude Desktop's JSON-RPC parser is EXTREMELY strict about spec compliance
+
+1. **Output Control** - MUST use `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">`
+2. **Struct Ordering** - Use `structNew("ordered")` for ALL JSON-RPC responses
+3. **Notification Handling** - Messages without `id` must return NO response
+4. **Bridge Design** - Stdio bridge must output ONLY JSON to stdout, debug to stderr
+5. **Method Implementation** - Implement ALL methods including optional ones (resources/list, prompts/list)
+6. **Parser Strictness** - Claude Desktop's JSON-RPC parser is EXTREMELY strict about spec compliance
 
 ### Architecture Insights
-15. **Protocol Bridge** - Simple bash script with curl successfully bridges HTTP/SSE to stdio
-16. **Session Management** - Each Claude Desktop connection maintains independent session
-17. **No SSE Required** - For Claude Desktop, simple HTTP POST/response is sufficient
-18. **Error Logging** - Use `cflog` instead of outputting errors to response stream
+
+1. **Protocol Bridge** - Simple bash script with curl successfully bridges HTTP/SSE to stdio
+2. **Session Management** - Each Claude Desktop connection maintains independent session
+3. **No SSE Required** - For Claude Desktop, simple HTTP POST/response is sufficient
+4. **Error Logging** - Use `cflog` instead of outputting errors to response stream
 
 ## Next Steps
 

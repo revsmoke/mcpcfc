@@ -3,13 +3,13 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
     /**
      * Processes a JSON-RPC request and returns a response.
      * 
-     * @param {struct} request The incoming JSON-RPC request object.
-     * @param {string} sessionId The unique session identifier for the client.
+     * @param request {struct} The incoming JSON-RPC request object.
+     * @param sessionId {string} The unique session identifier for the client.
      * @return {struct} The JSON-RPC response object.
      */
-    public struct function processRequest(required struct request, required string sessionId) {
+    public struct function processRequest(required struct request, required string sessionId) {  //cflint ignore:ARG_HINT_MISSING_SCRIPT,FUNCTION_TOO_COMPLEX
         // Use ordered struct to maintain JSON-RPC field order
-        var response = structNew("ordered");
+        var response = [:];
         response["jsonrpc"] = "2.0";
         
         // Check if this is a notification (no id means it's a notification)
@@ -24,27 +24,27 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
             // Route to appropriate handler
             switch(arguments.request.method) {
                 case "initialize":
-                    response.result = handleInitialize(arguments.request.params);
+                    response["result"] = handleInitialize(arguments.request.params);
                     break;
                     
                 case "tools/list":
-                    response.result = handleToolsList();
+                    response["result"] = handleToolsList();
                     break;
                     
                 case "tools/call":
-                    response.result = handleToolCall(arguments.request.params);
+                    response["result"] = handleToolCall(arguments.request.params);
                     break;
                     
                 case "resources/list":
-                    response.result = handleResourcesList();
+                    response["result"] = handleResourcesList();
                     break;
                     
                 case "prompts/list":
-                    response.result = handlePromptsList();
+                    response["result"] = handlePromptsList();
                     break;
                     
                 case "ping":
-                    response.result = {};
+                    response["result"] = {};
                     break;
                     
                 case "notifications/initialized":
@@ -59,17 +59,17 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
             }
             
         } catch (MethodNotFound e) {
-            var errorStruct = structNew("ordered");
+            var errorStruct = [:];
             errorStruct["code"] = -32601;
             errorStruct["message"] = e.message;
             response["error"] = errorStruct;
         } catch (InvalidParams e) {
-            var errorStruct = structNew("ordered");
+            var errorStruct = [:];
             errorStruct["code"] = -32602;
             errorStruct["message"] = e.message;
             response["error"] = errorStruct;
         } catch (any e) {
-            var errorStruct = structNew("ordered");
+            var errorStruct = [:];
             errorStruct["code"] = -32603;
             errorStruct["message"] = "Internal error: #e.message#";
             response["error"] = errorStruct;
@@ -89,19 +89,19 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
     /**
 	 * Handles the initialize request
      * 
-     * @param {struct} params The request parameters
+     * @param params {struct} The request parameters
 	 */
     private struct function handleInitialize(struct params = {}) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
-        var result = structNew("ordered");
-        var capabilities = structNew("ordered");
-        var tools = structNew("ordered");
-        var serverInfo = structNew("ordered");
+        var result = [:];
+        var capabilities = [:];
+        var tools = [:];
+        var serverInfo = [:];
         
         tools["listChanged"] = true;
         
         capabilities["tools"] = tools;
-        capabilities["resources"] = structNew("ordered");
-        capabilities["prompts"] = structNew("ordered");
+        capabilities["resources"] = [:];
+        capabilities["prompts"] = [:];
         
         serverInfo["name"] = "coldfusion-mcp-server";
         serverInfo["version"] = "1.0.0";
@@ -118,14 +118,14 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @return {struct} The list of tools
      */
     private struct function handleToolsList() {
-        var result = structNew("ordered");
+        var result = [:];
         result["tools"] = application.toolRegistry.listTools(); //cflint ignore:GLOBAL_VAR
         return result;
     }
     /**
      * Handles the tools/call request
      * 
-     * @param {struct} params The request parameters
+     * @param params {struct} The request parameters
      * @return {struct} The result of the tool call
      */
     private struct function handleToolCall(required struct params) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
@@ -146,7 +146,7 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @return {struct} The list of resources (empty for now)
      */
     private struct function handleResourcesList() {
-        var result = structNew("ordered");
+        var result = [:];
         result["resources"] = []; // Empty array as we don't have resources yet
         return result;
     }
@@ -156,15 +156,15 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @return {struct} The list of prompts (empty for now)
      */
     private struct function handlePromptsList() {
-        var result = structNew("ordered");
+        var result = [:];
         result["prompts"] = []; // Empty array as we don't have prompts yet
         return result;
     }
     /**
      * Sends an SSE message to the client
      * 
-     * @param {string} sessionId The unique session identifier for the client
-     * @param {struct} message The message to send
+     * @param sessionId {string} The unique session identifier for the client
+     * @param message {struct} The message to send
      */
     private void function sendSSEMessage(required string sessionId, required struct message) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         application.messageQueue.put({  //cflint ignore:GLOBAL_VAR

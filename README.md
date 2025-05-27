@@ -1,6 +1,8 @@
-# MCPCFC - ColdFusion MCP Server
+# 🚀 MCPCFC - ColdFusion MCP Server
 
-🌐 **[mcpcfc.dev](https://mcpcfc.dev)** | 📦 [GitHub](https://github.com/revsmoke/mcpcfc) | 📚 [Documentation](https://mcpcfc.dev/docs)
+-**Bring AI Superpowers to Your ColdFusion Applications**
+
+The world's first Model Context Protocol (MCP) server for ColdFusion!
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
@@ -8,91 +10,170 @@
 [![Status: Working](https://img.shields.io/badge/Status-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 [![Claude Desktop: Working](https://img.shields.io/badge/Claude%20Desktop-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 
-**The world's first Model Context Protocol (MCP) server implementation for ColdFusion!**
+[**Get Started →**](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md) | [**View Demo**](https://github.com/revsmoke/mcpcfc#demo) | [**Documentation**](https://github.com/revsmoke/mcpcfc/wiki)
 
-This project enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications through a standardized protocol.
+---
 
-## 🎉 What's New
+> 🎉 **NEW: Version 1.0.3** - All 8 tools working perfectly with Claude Desktop! [See what's new →](https://github.com/revsmoke/mcpcfc/releases/tag/v1.0.3)
 
-- **v1.0.3** - Claude Desktop integration FULLY WORKING! All 8 tools tested and confirmed! 🚀
-- **Claude Desktop Support** - Connect your ColdFusion tools directly to Claude Desktop
-- **v1.0.2** - Full implementation of PDF and Email tools!
-- **All 8 Tools Tested** - Every tool confirmed working perfectly in BOTH browser AND Claude Desktop!
-- **PDF Tools** - Generate, extract text, and merge PDFs
-- **Email Tools** - Send plain/HTML emails and validate addresses
-- **100% Feature Complete** - Ready for production use!
+---
 
-## Features
+## 🌟 What is MCPCFC?
 
-- JSON-RPC 2.0 protocol implementation
-- Server-Sent Events (SSE) for real-time communication
-- Thread-safe session management
-- Extensible tool registry
-- **Claude Desktop Integration** via stdio bridge
-- **Remote MCP Support** via HTTP/SSE
-- **8 Production-Ready Tools**:
-  - ✅ Hello World tool
-  - ✅ Database query tool (MySQL/SQL Server/etc)
-  - ✅ PDF generation from HTML
-  - ✅ PDF text extraction
-  - ✅ PDF merging
-  - ✅ Email sending (plain text)
-  - ✅ Email sending (HTML with attachments)
-  - ✅ Email address validation
+MCPCFC enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLMs through the standardized Model Context Protocol.
 
-## Directory Structure
+**In simple terms**: Your ColdFusion apps can now talk to AI, and AI can use your CF tools!
+
+### 🎯 Perfect For
+
+- **Government Agencies** - Modernize legacy CF systems with AI capabilities
+- **Enterprise Teams** - Add AI features without replacing existing infrastructure  
+- **CF Developers** - Build the next generation of intelligent applications
+- **Digital Transformation** - Bridge the gap between legacy and cutting-edge tech
+
+---
+
+## ⚡ Features at a Glance
+
+### 🛠️ 8 Production-Ready Tools
+
+✅ **PDF Operations** - Generate, extract text, and merge PDFs  
+✅ **Email Automation** - Send HTML/plain emails, validate addresses  
+✅ **Database Queries** - Natural language database interactions  
+✅ **Extensible Design** - Easy to add your own tools  
+
+### 🔧 Technical Excellence
+
+✅ **JSON-RPC 2.0** Protocol - Industry-standard communication  
+✅ **Real-time SSE** Support - Live updates and streaming  
+✅ **Thread-Safe** Design - Production-ready architecture  
+✅ **Claude Desktop** Ready - Works out of the box  
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Browser Testing (5 minutes)
+
+```bash
+# Clone the repository
+git clone https://github.com/revsmoke/mcpcfc.git
+
+# Place in your ColdFusion webroot
+# Navigate to http://localhost:8500/mcpcfc/
+# Open the test client and start using AI tools!
+```
+
+### Option 2: Claude Desktop Integration (10 minutes)
+
+1. **Install MCPCFC** in your CF webroot
+2. **Make bridge executable**: `chmod +x cf-mcp-clean-bridge.sh`
+3. **Add to Claude Desktop config**:
+
+   ```json
+   {
+   "mcpServers": {
+      "coldfusion-mcp": {
+         "command": "/path/to/mcpcfc/cf-mcp-clean-bridge.sh"
+      }
+   }
+   }
+   ```
+
+4. **Restart Claude Desktop** - Your CF tools are now available!
+
+**[📚 Full Setup Guide →](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md)**
+
+---
+
+## 🎬 See It In Action
+
+### Working Tools Demo
+
+```text
+🤖 Claude: "Generate a PDF invoice for customer John Doe"
+📄 MCPCFC: *Creates PDF with CF's built-in PDF tools*
+
+🤖 Claude: "Email it to john@example.com"  
+📧 MCPCFC: *Sends email with the PDF attached*
+
+🤖 Claude: "Show me all customers from the database"
+🗄️ MCPCFC: *Queries your CF datasource and returns results*
+```
+
+### Live Example
+
+```cfscript
+// Your existing CF code
+component {
+    function generateReport(customerId) {
+        // Your business logic here
+    }
+}
+
+// Now accessible to AI assistants!
+// Claude can call: "Generate a report for customer 123"
+```
+
+---
+
+## 📊 Why MCPCFC?
+
+| Challenge | MCPCFC Solution |
+|-----------|----------------|
+| Legacy CF systems can't use modern AI | ✅ Bridge CF to any AI assistant |
+| Complex integration requirements | ✅ Drop-in solution, minimal setup |
+| Security concerns | ✅ Built-in controls and query limits |
+| Limited CF community tools | ✅ Open source and extensible |
+
+---
+
+## 🏗️ Architecture
+
+```text
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Claude    │────▶│    MCPCFC    │────▶│ Your CF App │
+│  Desktop    │◀────│  MCP Server  │◀────│   & Tools   │
+└─────────────┘     └──────────────┘     └─────────────┘
+       ↓                    ↓                     ↓
+   AI Assistant      JSON-RPC 2.0          PDF, Email,
+                    + SSE Transport          Database
+```
+
+### Directory Structure
 
 ```text
 /mcpcfc/
 ├── Application.cfc           # Application configuration
-├── /components/
-│   ├── JSONRPCProcessor.cfc  # JSON-RPC message processing
-│   ├── SessionManager.cfc    # Session state management
-│   ├── ToolHandler.cfc       # Tool execution handler
-│   └── ToolRegistry.cfc      # Tool registration/management
-├── /endpoints/
-│   ├── sse.cfm              # SSE endpoint
-│   └── messages.cfm         # HTTP POST endpoint
-├── /tools/
-│   ├── PDFTool.cfc          # PDF operations (generate/extract/merge)
-│   └── EmailTool.cfc        # Email operations (send/validate)
-├── /client-examples/
-│   └── test-client.cfm      # Browser test client
-├── /temp/                   # PDF generation output directory
-├── cf-mcp-clean-bridge.sh   # Claude Desktop stdio bridge
-└── README.md                # This file
+├── /components/             # Core MCP components
+├── /endpoints/              # HTTP/SSE endpoints
+├── /tools/                  # Tool implementations
+├── /client-examples/        # Test clients
+├── cf-mcp-clean-bridge.sh   # Claude Desktop bridge
+└── README.md               # You are here!
 ```
 
-## Getting Started
+---
 
-**[📚 See the Quick Start Guide for detailed setup instructions](QUICK_START.md)**
+## 🔧 Available Tools
 
-### Quick Test (Browser)
-1. Clone this repository: `git clone https://github.com/revsmoke/mcpcfc.git`
-2. Place in your ColdFusion webroot
-3. Navigate to `http://localhost:8500/mcpcfc/`
-4. Test with the included client at: <http://localhost:8500/mcpcfc/client-examples/test-client.cfm>
-5. Click "Connect" → "Initialize" → Test the tools!
+### Current Tools (v1.0.3)
 
-### Claude Desktop Integration
-1. Make the bridge script executable: `chmod +x cf-mcp-clean-bridge.sh`
-2. Add to your Claude Desktop config:
-   ```json
-   {
-     "mcpServers": {
-       "coldfusion-mcp": {
-         "command": "/path/to/mcpcfc/cf-mcp-clean-bridge.sh"
-       }
-     }
-   }
-   ```
-3. Restart Claude Desktop and your ColdFusion tools will be available!
+| Tool | Description | Status |
+|------|-------------|--------|
+| **hello** | Simple greeting tool | ✅ Working |
+| **queryDatabase** | Execute SELECT queries | ✅ Working |
+| **generatePDF** | Create PDFs from HTML | ✅ Working |
+| **extractPDFText** | Extract text from PDFs | ✅ Working |
+| **mergePDFs** | Combine multiple PDFs | ✅ Working |
+| **sendEmail** | Send plain text emails | ✅ Working |
+| **sendHTMLEmail** | Send HTML emails | ✅ Working |
+| **validateEmailAddress** | Validate email format | ✅ Working |
 
-## Adding New Tools
-
-To add a new tool, register it in Application.cfc:
+### Adding Custom Tools
 
 ```cfscript
+// 1. Register in Application.cfc
 application.toolRegistry.registerTool("myTool", {
     "description": "My custom tool",
     "inputSchema": {
@@ -102,98 +183,101 @@ application.toolRegistry.registerTool("myTool", {
         }
     }
 });
-```
 
-Then implement the handler in ToolHandler.cfc:
-
-```cfscript
+// 2. Implement in ToolHandler.cfc
 case "myTool":
     return executeMyTool(arguments.args);
 ```
 
-## Configuration
+---
 
-### Database Configuration
+## 🛡️ Security & Configuration
 
-Update the datasource names in your tool implementations to match your ColdFusion datasources.
+### Database Security
 
-### Security
+- Only SELECT queries allowed by default
+- Parameterized queries prevent SQL injection
+- Configure datasources in your tool implementations
 
-- Only SELECT queries are allowed by default
-- Add authentication/authorization as needed
-- Implement rate limiting for production
+### Recommended Settings
 
-## API Endpoints
+- Add authentication layer
+- Implement rate limiting  
+- Use environment variables for sensitive data
+- Enable audit logging
 
-- **SSE Endpoint**: `/mcpcfc/endpoints/sse.cfm?sessionId={sessionId}`
-- **Message Endpoint**: `/mcpcfc/endpoints/messages.cfm?sessionId={sessionId}`
+---
 
-## Protocol Support
+## 🤝 Contributing
 
-- MCP Protocol Version: 2024-11-05
-- JSON-RPC Version: 2.0
-- Transport: SSE + HTTP POST
+We need your help to make MCPCFC even better!
 
-## Troubleshooting
+### How to Contribute
 
-### Common Issues and Solutions
+1. **Star the repo** - Help others discover MCPCFC
+2. **Report issues** - Found a bug? Let us know!
+3. **Submit PRs** - Add features or fix issues
+4. **Share your use cases** - Tell us how you're using it
+5. **Write documentation** - Help others get started
 
-1. **JSON-RPC Version Error**
-   - **Error**: "Invalid JSON-RPC version: missing"
-   - **Solution**: The server now handles both string and numeric JSON-RPC versions. Fixed in messages.cfm.
+**[Contributing Guide →](https://github.com/revsmoke/mcpcfc/blob/main/CONTRIBUTING.md)**
 
-2. **Component Not Found Errors**
-   - **Error**: "Could not find the ColdFusion component or interface"
-   - **Solution**: Components must use fully qualified paths (e.g., `mcpcfc.components.ClassName`)
+### Roadmap
 
-3. **SSE Connection Issues**
-   - Check that SSE endpoint is accessible at `/mcpcfc/endpoints/sse.cfm`
-   - Verify session ID is being passed correctly
-   - Check for heartbeat messages in the browser console
+- [ ] Authentication providers (OAuth, SAML)
+- [ ] More tool templates (Excel, FTP, SOAP)
+- [ ] WebSocket transport option
+- [ ] Docker container support
+- [ ] Tool marketplace
 
-4. **Claude Desktop Integration Issues**
-   - **Error**: "Server transport closed unexpectedly"
-   - **Solution**: Make sure you're using cf-mcp-clean-bridge.sh and it's executable
-   - **Error**: JSON parsing errors
-   - **Solution**: Ensure ColdFusion output control is properly configured (enableCFOutputOnly="true")
-   - Check logs at `~/Library/Logs/Claude/mcp-server-coldfusion.log`
+---
 
-5. **General Debugging**
-   - Check ColdFusion logs for errors
-   - Ensure Application.cfc is loaded (restart CF if needed)
-   - Verify CORS headers are set correctly
-   - Check browser console for JavaScript errors
-   - Add `?debug=1` to messages.cfm URL for detailed logging
+## 📚 Resources
 
-## Next Steps
+- **[Quick Start Guide](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md)** - Get running in minutes
+- **[API Documentation](https://github.com/revsmoke/mcpcfc/wiki/API-Documentation)** - Detailed API reference
+- **[Troubleshooting](https://github.com/revsmoke/mcpcfc/wiki/Troubleshooting)** - Common issues and solutions
+- **[Examples](https://github.com/revsmoke/mcpcfc/tree/main/examples)** - Sample implementations
 
-- Add authentication mechanism
-- Implement more tools for your use cases
-- Add Redis for distributed session storage
-- Implement WebSocket transport for better performance
+### Community
 
-## Contributing
+- **[GitHub Discussions](https://github.com/revsmoke/mcpcfc/discussions)** - Ask questions, share ideas
+- **[Issues](https://github.com/revsmoke/mcpcfc/issues)** - Report bugs or request features
+- **Email**: <hello@mcpcfc.dev>
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+---
 
-## License
+## 🙏 Acknowledgments
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **[Anthropic](https://anthropic.com)** - For creating the Model Context Protocol
+- **The ColdFusion Community** - For keeping CF alive and thriving
+- **Early Adopters** - For testing and providing feedback
+- **You** - For being part of this journey!
 
-## Acknowledgments
+---
 
-- Thanks to Anthropic for creating the Model Context Protocol
-- The ColdFusion community for keeping the platform alive and thriving
-- All contributors who help make this project better
+## 📄 License
 
-## Links
+MCPCFC is open source software licensed under the [MIT License](https://github.com/revsmoke/mcpcfc/blob/main/LICENSE).
 
-- [GitHub Repository](https://github.com/revsmoke/mcpcfc)
-- [Report Issues](https://github.com/revsmoke/mcpcfc/issues)
-- [Model Context Protocol Docs](https://modelcontextprotocol.io)
+---
+
+## 🚀 Ready to Get Started?
+
+### [**Download MCPCFC**](https://github.com/revsmoke/mcpcfc/archive/refs/heads/main.zip) | [**View on GitHub**](https://github.com/revsmoke/mcpcfc) | [**Read the Docs**](https://github.com/revsmoke/mcpcfc/wiki)
+
+### Show Your Support
+
+If MCPCFC helps your project, please consider:
+
+- ⭐ Starring the repository
+- 📢 Sharing with your network  
+- 🤝 Contributing to the project
 
 ---
 
 ## CFLOVE
 
-**Made with ❤️ for the ColdFusion community!**
+-**Made with ❤️ for the ColdFusion community**
+
+🌐 [mcpcfc.dev](https://mcpcfc.dev) | 📧 <hello@mcpcfc.dev>

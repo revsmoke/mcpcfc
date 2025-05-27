@@ -9,12 +9,14 @@
 ## Installation
 
 ### Option 1: Git Clone
+
 ```bash
 cd /path/to/your/webroot
 git clone https://github.com/revsmoke/mcpcfc.git
 ```
 
 ### Option 2: CommandBox (Coming Soon)
+
 ```bash
 box install mcpcfc
 ```
@@ -22,8 +24,9 @@ box install mcpcfc
 ## Basic Setup
 
 1. **Navigate to the installation**
-   ```
-   http://localhost:8500/mcpcfc/
+
+   ```html
+   [http://localhost:8500/mcpcfc/](http://localhost:8500/mcpcfc/)
    ```
 
 2. **Test the server**
@@ -35,29 +38,31 @@ box install mcpcfc
 ## Creating Your First Tool
 
 1. Create a new CFC in `/tools`:
-```cfscript
-component displayname="MyTool" {
-    public struct function execute(required struct args) {
-        return {
-            "content": [{
-                "type": "text",
-                "text": "Hello from MyTool!"
-            }]
-        };
+
+    ```cfscript
+    component displayname="MyTool" {
+        public struct function execute(required struct args) {
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": "Hello from MyTool!"
+                }]
+            };
+        }
     }
-}
-```
+    ```
 
 2. Register it in `Application.cfc`:
-```cfscript
-application.toolRegistry.registerTool("myTool", {
-    "description": "My custom tool",
-    "inputSchema": {
-        "type": "object",
-        "properties": {}
-    }
-});
-```
+
+    ```cfscript
+    application.toolRegistry.registerTool("myTool", {
+        "description": "My custom tool",
+        "inputSchema": {
+            "type": "object",
+            "properties": {}
+        }
+    });
+    ```
 
 3. Restart your CF application and test!
 
@@ -68,6 +73,7 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 ### Quick Setup
 
 1. **Make the bridge script executable**:
+
    ```bash
    chmod +x /Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/cf-mcp-clean-bridge.sh
    ```
@@ -92,12 +98,14 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 
 ### Troubleshooting
 
-- **Check ColdFusion is running**: Visit http://localhost:8500/mcpcfc/
+- **Check ColdFusion is running**: Visit <http://localhost:8500/mcpcfc/>
 - **Check logs**: Look in `~/Library/Logs/Claude/mcp-server-coldfusion.log`
-- **Test the bridge manually**: 
-  ```bash
-  echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./cf-mcp-clean-bridge.sh
-  ```
+- **Test the bridge manually**:
+
+    ```bash
+    echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./cf-mcp-clean-bridge.sh
+    ```
+
 - **Common issues**:
   - If you see "permission denied", make sure the script is executable
   - If you see empty responses, check that ColdFusion output control is properly configured
@@ -131,7 +139,7 @@ Your ColdFusion MCP server implementation remains pure ColdFusion - the bridge o
 
 To use your ColdFusion MCP server remotely with Claude via the API (MCP Connector):
 
-### Prerequisites
+### Prerequisites for Remote MCP Server
 
 1. **Public URL**: Your server must be accessible via HTTPS from the internet
 2. **Security**: Implement authentication (see Security section below)
@@ -140,11 +148,13 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
 ### Configuration Steps
 
 1. **Deploy to a public server** with HTTPS enabled:
-   ```
+
+   ```text
    https://your-domain.com/mcpcfc/endpoints/sse.cfm
    ```
 
 2. **Add authentication** to your endpoints (recommended):
+
    ```cfscript
    // In endpoints/sse.cfm and messages.cfm
    if (!structKeyExists(url, "token") || url.token != application.mcpAuthToken) {
@@ -154,6 +164,7 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
    ```
 
 3. **Use with Claude API** by including the MCP configuration:
+
    ```python
    import anthropic
    
@@ -175,9 +186,10 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
    )
    ```
 
-### Security Considerations
+### Security Considerations for Remote MCP Server
 
 1. **Authentication Token**: Generate a secure token in Application.cfc:
+
    ```cfscript
    application.mcpAuthToken = hash(createUUID() & now(), "SHA-256");
    ```
@@ -185,6 +197,7 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
 2. **HTTPS Only**: Never expose MCP endpoints over HTTP in production
 
 3. **Rate Limiting**: Implement request throttling:
+
    ```cfscript
    // Example rate limiting
    if (application.requestCount[cgi.remote_addr] > 100) {
@@ -194,6 +207,7 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
    ```
 
 4. **IP Whitelisting** (optional):
+
    ```cfscript
    var allowedIPs = ["1.2.3.4", "5.6.7.8"];
    if (!arrayFind(allowedIPs, cgi.remote_addr)) {
@@ -204,6 +218,7 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
 ### Testing Your Remote Server
 
 1. **Verify HTTPS access**:
+
    ```bash
    curl https://your-domain.com/mcpcfc/endpoints/sse.cfm?token=your-token
    ```

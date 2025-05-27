@@ -175,6 +175,120 @@ component extends="mcp.sdk.MCPServer" {
 3. **No SSE Required** - For Claude Desktop, simple HTTP POST/response is sufficient
 4. **Error Logging** - Use `cflog` instead of outputting errors to response stream
 
+## Next Step Requests
+
+- Please review these next step requests and add them to the Next Steps section:
+
+Great question! Based on my testing, here are some enhancements that would make the queryDatabase tool even more useful:
+
+### 🎯 High Priority Additions
+
+#### 1. **Schema Explorer Tool**
+
+    A dedicated tool like `getDatabaseSchema` that returns:
+    - All tables with row counts
+    - Column details (types, constraints, indexes)
+    - Foreign key relationships
+    - Views and stored procedures (if any)
+
+This would eliminate the need for complex INFORMATION_SCHEMA queries.
+
+#### 2. **Query Builder/Helper**
+
+    A tool that helps construct common queries:
+
+    ```javascript
+    buildQuery({
+    table: "example_data",
+    select: ["name", "department", "AVG(salary) as avg_salary"],
+    where: { is_active: 1 },
+    groupBy: ["department"],
+    orderBy: ["avg_salary DESC"],
+    limit: 10
+    })
+    ```
+
+#### 3. **Pagination Support**
+
+    For large result sets:
+    ```javascript
+    queryDatabase({
+    datasource: "mcpcfc_ds",
+    query: "SELECT * FROM large_table",
+    page: 1,
+    pageSize: 100
+    })
+    ```
+
+#### 4. **Multi-Query Execution**
+
+    Execute multiple queries in one call:
+    ```javascript
+    queryDatabase({
+    datasource: "mcpcfc_ds",
+    queries: [
+        "SELECT COUNT(*) as total FROM example_data",
+        "SELECT department, COUNT(*) as cnt FROM example_data GROUP BY department"
+    ]
+    })
+    ```
+
+    ## 🔧 Nice-to-Have Features
+
+#### 5. **Query Metadata**
+
+    Return additional info with results:
+    - Execution time
+    - Rows affected/returned
+    - Query plan (EXPLAIN output)
+    - Memory usage
+
+#### 6. **Export Capabilities**
+
+    Options to format results as:
+    - CSV
+    - JSON (already have this)
+    - Markdown table
+    - SQL INSERT statements
+
+#### 7. **Parameterized Queries**
+
+    For safer dynamic queries:
+    ```javascript
+    queryDatabase({
+    datasource: "mcpcfc_ds",
+    query: "SELECT * FROM example_data WHERE department = ? AND salary > ?",
+    params: ["Engineering", 80000]
+    })
+    ```
+
+#### 8. **Query Validation**
+
+Pre-flight check to validate SQL syntax before execution, with helpful error messages.
+
+#### 9. **Common Query Templates**
+
+    Pre-built queries for common tasks:
+    - `getTableStats(tableName)` - row count, size, last modified
+    - `findDuplicates(table, columns)` 
+    - `getRecentChanges(table, dateColumn, days)`
+
+#### 10. **Connection Pool Info**
+
+    A tool to check database connection health:
+    - Active connections
+    - Database version
+    - Available datasources
+    - Connection limits
+
+## 💡 Most Impactful Addition
+
+If I had to pick **one** enhancement, I'd choose the **Schema Explorer Tool**. It would save significant time and make database exploration much more intuitive. Currently, I have to write complex INFORMATION_SCHEMA queries just to understand the database structure.
+
+Would any of these align with your use cases? I'd be happy to elaborate on any of these suggestions or discuss other possibilities!
+
+------
+
 ## Next Steps
 
 1. **GitHub Repository** - Set up official repo ✅ ([https://github.com/revsmoke/mcpcfc](https://github.com/revsmoke/mcpcfc))

@@ -1,6 +1,7 @@
+<cfsetting enableCFOutputOnly="true">
+<cfcontent type="application/json" reset="yes">
 <cfscript>
 // Set response headers
-cfheader(name="Content-Type", value="application/json");
 cfheader(name="Access-Control-Allow-Origin", value="*");
 
 // Initialize variables
@@ -46,19 +47,26 @@ try {
     processor = new mcpcfc.components.JSONRPCProcessor();
     response = processor.processRequest(jsonRequest, sessionId);
     
-    // Send response
-    writeOutput(serializeJson(response));
+    // Send response only if not empty (notifications return empty struct)
+    if (!structIsEmpty(response)) {
+        writeOutput(serializeJson(response));
+    }
     
 } catch (any e) {
-    // Return JSON-RPC error
-    errorResponse = {
-        "jsonrpc": "2.0",
-        "id": structKeyExists(jsonRequest, "id") ? jsonRequest.id : "",
-        "error": {
-            "code": -32603,
-            "message": "Internal error: #e.message#"
-        }
-    };
+    // Log error to file instead of outputting
+    cflog(file="mcp_error", application="true", type="Error", 
+          text="Error in messages.cfm: #e.message# - #e.detail# - Request: #requestBody#");
+    
+    // Return JSON-RPC error with ordered struct
+    errorResponse = structNew("ordered");
+    errorResponse["jsonrpc"] = "2.0";
+    errorResponse["id"] = structKeyExists(jsonRequest, "id") ? jsonRequest.id : javacast("null", "");
+    
+    errorStruct = structNew("ordered");
+    errorStruct["code"] = -32603;
+    errorStruct["message"] = "Internal error: #e.message#";
+    errorResponse["error"] = errorStruct;
+    
     writeOutput(serializeJson(errorResponse));
 }
 </cfscript>

@@ -1,23 +1,33 @@
 {
   "name": "mcpcfc",
-  "version": "1.0.0",
-  "description": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html) [![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)",
-  "main": "playwright-test.js",
+  "version": "1.0.2",
+  "description": "ColdFusion MCP Server - The world's first Model Context Protocol server for ColdFusion",
+  "main": "cf-mcp-bridge.js",
   "directories": {
     "example": "examples"
   },
-  "scripts": {},
+  "scripts": {
+    "start": "node cf-mcp-bridge.js",
+    "test:playwright": "playwright test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/revsmoke/mcpcfc.git"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "coldfusion",
+    "claude",
+    "ai",
+    "model-context-protocol"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/revsmoke/mcpcfc/issues"
   },
   "homepage": "https://github.com/revsmoke/mcpcfc#readme",
+  "dependencies": {},
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/node": "^22.15.21"

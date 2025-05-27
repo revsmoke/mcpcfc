@@ -1,3 +1,4 @@
+<cfsetting enableCFOutputOnly="true">
 <cfscript>
 // Set SSE headers
 cfheader(name="Content-Type", value="text/event-stream; charset=utf-8");

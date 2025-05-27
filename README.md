@@ -1,5 +1,7 @@
 # MCPCFC - ColdFusion MCP Server
 
+🌐 **[mcpcfc.dev](https://mcpcfc.dev)** | 📦 [GitHub](https://github.com/revsmoke/mcpcfc) | 📚 [Documentation](https://mcpcfc.dev/docs)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
 [![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)

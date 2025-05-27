@@ -1,6 +1,12 @@
 component displayname="ToolHandler" hint="Handles the execution of registered tools and routes to specialized tool handlers." {
-    
-    public struct function executeTool(required string toolName, required struct args) {
+    /**
+     * Executes a tool based on the provided tool name and arguments.
+     * 
+     * @param toolName {string} The name of the tool to execute
+     * @param args {struct} The arguments to pass to the tool
+     * @return {struct} The result of the tool execution
+     */
+    public struct function executeTool(required string toolName, required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         try {
             switch(arguments.toolName) {
                 case "hello":
@@ -38,7 +44,13 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
         }
     }
     
-    private struct function executeHello(required struct args) {
+    /**
+     * Executes the hello tool.
+     * 
+     * @param args {struct} The arguments to pass to the tool
+     * @return {struct} The result of the tool execution
+     */
+    private struct function executeHello(required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         validateRequiredParams(arguments.args, ["name"]);
         
         return {
@@ -49,7 +61,13 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
         };
     }
     
-    private struct function executeQueryDatabase(required struct args) {
+    /**
+     * Executes the queryDatabase tool.
+     * 
+     * @param args {struct} The arguments to pass to the tool
+     * @return {struct} The result of the tool execution
+     */
+    private struct function executeQueryDatabase(required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         validateRequiredParams(arguments.args, ["query", "datasource"]);
         
         // Security check - only allow SELECT queries in this example
@@ -81,7 +99,13 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
         };
     }
     
-    private void function validateRequiredParams(required struct args, required array required) {
+    /**
+     * Validates that all required parameters are present and not empty.
+     * 
+     * @param args {struct} The arguments to validate
+     * @param required {array} The required parameters
+     */
+    private void function validateRequiredParams(required struct args, required array required) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         for (var param in arguments.required) {
             if (!structKeyExists(arguments.args, param) || len(trim(arguments.args[param])) == 0) {
                 throw(type="InvalidParams", message="Missing required parameter: #param#");

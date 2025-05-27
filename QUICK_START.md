@@ -67,7 +67,12 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 
 ### Quick Setup
 
-1. **Add to your Claude Desktop config**:
+1. **Make the bridge script executable**:
+   ```bash
+   chmod +x /Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/cf-mcp-clean-bridge.sh
+   ```
+
+2. **Add to your Claude Desktop config**:
 
    Open `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 
@@ -81,9 +86,9 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
    }
    ```
 
-2. **Restart Claude Desktop**
+3. **Restart Claude Desktop**
 
-3. **Verify the connection** - You should see your ColdFusion tools available in Claude!
+4. **Verify the connection** - You should see your ColdFusion tools available in Claude!
 
 ### Troubleshooting
 
@@ -91,15 +96,20 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 - **Check logs**: Look in `~/Library/Logs/Claude/mcp-server-coldfusion.log`
 - **Test the bridge manually**: 
   ```bash
-  echo '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}' | ./cf-mcp-clean-bridge.sh
+  echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./cf-mcp-clean-bridge.sh
   ```
+- **Common issues**:
+  - If you see "permission denied", make sure the script is executable
+  - If you see empty responses, check that ColdFusion output control is properly configured
+  - If you see JSON parsing errors, ensure you're using cf-mcp-clean-bridge.sh (not the old versions)
 
 ### How it Works
 
 - Your ColdFusion MCP server remains 100% ColdFusion (HTTP/SSE based)
-- The bridge script (`cf-mcp-bridge.sh`) uses curl to translate between:
-  - Claude Desktop's stdio protocol
-  - ColdFusion MCP's HTTP/SSE protocol
+- The bridge script (`cf-mcp-clean-bridge.sh`) uses curl to translate between:
+  - Claude Desktop's stdio protocol (line-delimited JSON)
+  - ColdFusion MCP's HTTP protocol
+- All logging goes to stderr, only JSON responses go to stdout
 - This is necessary because Claude Desktop can only spawn command-line processes
 
 ### Why a Bridge is Needed
@@ -107,6 +117,13 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 1. **Claude Desktop limitation**: Only supports stdio communication
 2. **ColdFusion architecture**: Designed for web applications, not stdio servers
 3. **Protocol mismatch**: HTTP/SSE ↔ stdio requires translation
+
+### Key Implementation Details
+
+1. **ColdFusion Output Control**: The endpoints use `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">` to ensure clean JSON output
+2. **JSON-RPC Field Ordering**: Uses `structNew("ordered")` to maintain proper field order (jsonrpc, id, result/error)
+3. **Notification Handling**: Messages without an ID field are notifications and don't require a response
+4. **No SSE for Claude Desktop**: The bridge uses simple HTTP POST requests to avoid response duplication
 
 Your ColdFusion MCP server implementation remains pure ColdFusion - the bridge only handles protocol translation!
 

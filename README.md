@@ -4,6 +4,7 @@
 [![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
 [![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)
 [![Status: Working](https://img.shields.io/badge/Status-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
+[![Claude Desktop: Working](https://img.shields.io/badge/Claude%20Desktop-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 
 **The world's first Model Context Protocol (MCP) server implementation for ColdFusion!**
 
@@ -11,6 +12,8 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 
 ## 🎉 What's New
 
+- **v1.0.3** - Claude Desktop integration now fully working!
+- **Claude Desktop Support** - Connect your ColdFusion tools directly to Claude Desktop
 - **v1.0.2** - Full implementation of PDF and Email tools!
 - **All 8 Tools Tested** - Every tool confirmed working perfectly
 - **PDF Tools** - Generate, extract text, and merge PDFs
@@ -23,6 +26,8 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 - Server-Sent Events (SSE) for real-time communication
 - Thread-safe session management
 - Extensible tool registry
+- **Claude Desktop Integration** via stdio bridge
+- **Remote MCP Support** via HTTP/SSE
 - **8 Production-Ready Tools**:
   - ✅ Hello World tool
   - ✅ Database query tool (MySQL/SQL Server/etc)
@@ -52,6 +57,7 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 ├── /client-examples/
 │   └── test-client.cfm      # Browser test client
 ├── /temp/                   # PDF generation output directory
+├── cf-mcp-clean-bridge.sh   # Claude Desktop stdio bridge
 └── README.md                # This file
 ```
 
@@ -59,11 +65,26 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 
 **[📚 See the Quick Start Guide for detailed setup instructions](QUICK_START.md)**
 
+### Quick Test (Browser)
 1. Clone this repository: `git clone https://github.com/revsmoke/mcpcfc.git`
 2. Place in your ColdFusion webroot
 3. Navigate to `http://localhost:8500/mcpcfc/`
 4. Test with the included client at: <http://localhost:8500/mcpcfc/client-examples/test-client.cfm>
 5. Click "Connect" → "Initialize" → Test the tools!
+
+### Claude Desktop Integration
+1. Make the bridge script executable: `chmod +x cf-mcp-clean-bridge.sh`
+2. Add to your Claude Desktop config:
+   ```json
+   {
+     "mcpServers": {
+       "coldfusion-mcp": {
+         "command": "/path/to/mcpcfc/cf-mcp-clean-bridge.sh"
+       }
+     }
+   }
+   ```
+3. Restart Claude Desktop and your ColdFusion tools will be available!
 
 ## Adding New Tools
 
@@ -128,7 +149,14 @@ Update the datasource names in your tool implementations to match your ColdFusio
    - Verify session ID is being passed correctly
    - Check for heartbeat messages in the browser console
 
-4. **General Debugging**
+4. **Claude Desktop Integration Issues**
+   - **Error**: "Server transport closed unexpectedly"
+   - **Solution**: Make sure you're using cf-mcp-clean-bridge.sh and it's executable
+   - **Error**: JSON parsing errors
+   - **Solution**: Ensure ColdFusion output control is properly configured (enableCFOutputOnly="true")
+   - Check logs at `~/Library/Logs/Claude/mcp-server-coldfusion.log`
+
+5. **General Debugging**
    - Check ColdFusion logs for errors
    - Ensure Application.cfc is loaded (restart CF if needed)
    - Verify CORS headers are set correctly

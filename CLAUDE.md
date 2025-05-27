@@ -202,3 +202,67 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
 - **test-complete-sequence.sh**: Tests all MCP protocol methods
 - **test-bridge-interactive.sh**: Interactive testing with named pipes
 - **test-stdio-simple.sh**: Basic connectivity tests
+- **test-jsonrpc-format.sh**: Validates JSON-RPC response formatting
+
+## Lessons Learned - CRITICAL FOR FUTURE PROJECTS
+
+### 1. ColdFusion Output Control is CRITICAL
+- **Problem**: ColdFusion outputs EVERYTHING by default - whitespace, HTML error pages, debug info
+- **Solution**: MUST use `<cfsetting enableCFOutputOnly="true">` (not enableCFOutput)
+- **Also Required**: `<cfcontent type="application/json" reset="yes">` to clear any buffered content
+- **Key Insight**: Even a single space or newline breaks JSON-RPC parsing
+
+### 2. JSON-RPC Field Order MATTERS
+- **Problem**: ColdFusion structs don't maintain insertion order
+- **Solution**: Use `structNew("ordered")` for ALL JSON responses
+- **Required Order**: `jsonrpc`, then `id`, then `result`/`error`
+- **Error Objects**: Must have `code` before `message`
+- **Why**: Claude Desktop's parser is EXTREMELY strict about JSON-RPC spec
+
+### 3. Notifications Have Special Rules
+- **Problem**: Sending responses to notifications causes parser errors
+- **Key Rule**: Messages without an `id` field are notifications
+- **Solution**: Return empty struct `{}` and output NOTHING for notifications
+- **Example**: `notifications/initialized` must not receive any response
+
+### 4. Bridge Script Design
+- **Requirement**: stdout must contain ONLY valid JSON responses
+- **Solution**: Log all debug info to stderr: `echo "debug" >&2`
+- **Never**: Mix debug output with JSON responses on stdout
+- **Handle**: Empty responses properly (don't output empty strings)
+
+### 5. Implement ALL Methods (Even Optional Ones)
+- **Problem**: Claude Desktop repeatedly calls `resources/list` and `prompts/list`
+- **Solution**: Implement these methods even if they return empty arrays
+- **Why**: Reduces error noise and improves stability
+
+### 6. ColdFusion-Specific Gotchas
+- **Attribute Names**: Use `enableCFOutputOnly` not `enableCFOutput`
+- **Component Paths**: Must use fully qualified paths like `mcpcfc.components.ClassName`
+- **Error Handling**: Use `cflog` for errors, never output to response stream
+- **Java Integration**: `createObject("java", "java.util.concurrent.LinkedBlockingQueue")` works great
+
+### 7. Testing Strategy
+- **Start Simple**: Test each component in isolation first
+- **Use Clean Bridge**: Create multiple bridge versions for debugging
+- **Check Logs**: Both CF logs and Claude Desktop logs are essential
+- **Manual Testing**: `echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | ./bridge.sh`
+
+### 8. What Made It Finally Work
+1. Strict output control with proper CF settings
+2. Ordered structs for JSON field ordering
+3. Proper notification handling (no response)
+4. Clean bridge script with stderr logging
+5. Implementation of all expected methods
+
+### 9. Architecture Insights
+- **Protocol Mismatch**: ColdFusion is HTTP-based, Claude Desktop needs stdio
+- **Bridge Solution**: Simple bash script with curl works perfectly
+- **No SSE Needed**: For Claude Desktop, simple HTTP POST/response is sufficient
+- **Session Management**: Each bridge instance maintains its own session
+
+### 10. Debugging Approach
+- **Isolate Issues**: Test CF server directly with curl first
+- **Check Output**: Look for ANY extra characters in responses
+- **Validate JSON**: Ensure strict JSON-RPC compliance
+- **Read Error Logs**: ZodError messages indicate parser validation failures

@@ -178,12 +178,13 @@ component extends="mcp.sdk.MCPServer" {
 ## Next Steps
 
 ### 🎉 Release Milestone
+
 1. **GitHub Repository** - ✅ COMPLETE! Repository established at [https://github.com/revsmoke/mcpcfc](https://github.com/revsmoke/mcpcfc)
 2. **First Release** - ✅ PUBLISHED! Version available at [https://github.com/revsmoke/mcpcfc/releases](https://github.com/revsmoke/mcpcfc/releases)
 
 ### 🎯 High Priority Database Tool Enhancements
 
-#### 1. **Schema Explorer Tool**
+1. **Schema Explorer Tool**
    - Dedicated `getDatabaseSchema` tool that returns:
      - All tables with row counts
      - Column details (types, constraints, indexes)
@@ -191,43 +192,41 @@ component extends="mcp.sdk.MCPServer" {
      - Views and stored procedures (if any)
    - Eliminates need for complex INFORMATION_SCHEMA queries
 
-#### 2. **Query Builder/Helper**
+2. **Query Builder/Helper**
    - Tool to construct common queries programmatically:
-   ```javascript
-   buildQuery({
-     table: "example_data",
-     select: ["name", "department", "AVG(salary) as avg_salary"],
-     where: { is_active: 1 },
-     groupBy: ["department"],
-     orderBy: ["avg_salary DESC"],
-     limit: 10
-   })
-   ```
 
-#### 3. **Pagination Support**
+        buildQuery({
+        table: "example_data",
+        select: ["name", "department", "AVG(salary) as avg_salary"],
+        where: { is_active: 1 },
+        groupBy: ["department"],
+        orderBy: ["avg_salary DESC"],
+        limit: 10
+        })
+
+3. **Pagination Support**
    - Handle large result sets efficiently:
-   ```javascript
-   queryDatabase({
-     datasource: "mcpcfc_ds",
-     query: "SELECT * FROM large_table",
-     page: 1,
-     pageSize: 100
-   })
-   ```
 
-#### 4. **Multi-Query Execution**
-   - Execute multiple queries in one call:
-   ```javascript
-   queryDatabase({
-     datasource: "mcpcfc_ds",
-     queries: [
-       "SELECT COUNT(*) as total FROM example_data",
-       "SELECT department, COUNT(*) as cnt FROM example_data GROUP BY department"
-     ]
+    queryDatabase({
+        datasource: "mcpcfc_ds",
+        query: "SELECT * FROM large_table",
+        page: 1,
+        pageSize: 100
    })
-   ```
 
-### 📋 Additional Priorities
+4. **Multi-Query Execution**
+
+    - Execute multiple queries in one call:
+
+    queryDatabase({
+        datasource: "mcpcfc_ds",
+        queries: [
+        "SELECT COUNT(*) as total FROM example_data",
+        "SELECT department, COUNT(*) as cnt FROM example_data GROUP BY department"
+        ]
+    })
+
+   ### 📋 Additional Priorities
 
 5. **Documentation Site** - Comprehensive guides for all 8 tools
 6. **Example Servers** - Real-world implementations

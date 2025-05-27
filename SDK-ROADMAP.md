@@ -195,14 +195,14 @@ component extends="mcp.sdk.MCPServer" {
 2. **Query Builder/Helper**
    - Tool to construct common queries programmatically:
 
-        buildQuery({
+    buildQuery({
         table: "example_data",
         select: ["name", "department", "AVG(salary) as avg_salary"],
         where: { is_active: 1 },
         groupBy: ["department"],
         orderBy: ["avg_salary DESC"],
         limit: 10
-        })
+    })
 
 3. **Pagination Support**
    - Handle large result sets efficiently:

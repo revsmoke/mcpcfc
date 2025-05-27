@@ -35,6 +35,14 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
                     response.result = handleToolCall(arguments.request.params);
                     break;
                     
+                case "resources/list":
+                    response.result = handleResourcesList();
+                    break;
+                    
+                case "prompts/list":
+                    response.result = handlePromptsList();
+                    break;
+                    
                 case "ping":
                     response.result = {};
                     break;
@@ -131,6 +139,26 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
         // Execute tool
         var toolHandler = new mcpcfc.components.ToolHandler();
         return toolHandler.executeTool(toolName, toolArgs);
+    }
+    /**
+     * Handles the resources/list request
+     * 
+     * @return {struct} The list of resources (empty for now)
+     */
+    private struct function handleResourcesList() {
+        var result = structNew("ordered");
+        result["resources"] = []; // Empty array as we don't have resources yet
+        return result;
+    }
+    /**
+     * Handles the prompts/list request
+     * 
+     * @return {struct} The list of prompts (empty for now)
+     */
+    private struct function handlePromptsList() {
+        var result = structNew("ordered");
+        result["prompts"] = []; // Empty array as we don't have prompts yet
+        return result;
     }
     /**
      * Sends an SSE message to the client

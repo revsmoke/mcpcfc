@@ -15,8 +15,11 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 3. Fixed SSE heartbeat integer overflow error in sse.cfm
 4. Fixed component path resolution in messages.cfm and JSONRPCProcessor.cfc (now using fully qualified paths like `mcpcfc.components.ClassName`)
 5. Database query tool now fully working with `mcpcfc_ds` datasource and `mcpcfc_db` MySQL database
-6. Implemented stdio bridge for Claude Desktop integration (cf-mcp-simple-bridge.sh)
+6. Implemented stdio bridge for Claude Desktop integration (cf-mcp-clean-bridge.sh)
 7. Fixed JSON-RPC field ordering using structNew("ordered") to ensure spec compliance
+8. Added `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">` to eliminate extra output
+9. Implemented proper notification handling (no response for notifications)
+10. Added resources/list and prompts/list handlers to eliminate "method not found" errors
 
 ## Key Components
 
@@ -113,7 +116,7 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 - ✅ Browser-based test client fully functional
 - ✅ 8 tools registered and ALL tested successfully!
 - ✅ Ready for AI assistant integration!
-- ✅ Claude Desktop integration WORKING! - stdio bridge fixed with cf-mcp-bridge-simple.sh
+- ✅ Claude Desktop integration WORKING! - stdio bridge fixed with cf-mcp-clean-bridge.sh
 
 ## File Index
 
@@ -142,9 +145,10 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
    - Can be used as Remote MCP with Claude API
 
 2. **Local MCP Server (Claude Desktop)**: NOW WORKING! ✅
-   - Fixed with `cf-mcp-simple-bridge.sh`
-   - Successfully handles initialize, tools/list, and tools/call
-   - Tested with complete MCP protocol sequence
+   - Fixed with `cf-mcp-clean-bridge.sh`
+   - Successfully shows in Claude Desktop with all tools listed
+   - Handles all required MCP methods: initialize, tools/list, resources/list, prompts/list
+   - Proper notification handling (no response for notifications)
 
 ### Solution Found
 1. **Initial Issue**: The server was returning responses both via HTTP POST response AND SSE, causing duplication

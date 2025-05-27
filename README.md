@@ -12,10 +12,10 @@ This project enables ColdFusion applications to serve as tool providers for AI a
 
 ## 🎉 What's New
 
-- **v1.0.3** - Claude Desktop integration now fully working!
+- **v1.0.3** - Claude Desktop integration FULLY WORKING! All 8 tools tested and confirmed! 🚀
 - **Claude Desktop Support** - Connect your ColdFusion tools directly to Claude Desktop
 - **v1.0.2** - Full implementation of PDF and Email tools!
-- **All 8 Tools Tested** - Every tool confirmed working perfectly
+- **All 8 Tools Tested** - Every tool confirmed working perfectly in BOTH browser AND Claude Desktop!
 - **PDF Tools** - Generate, extract text, and merge PDFs
 - **Email Tools** - Send plain/HTML emails and validate addresses
 - **100% Feature Complete** - Ready for production use!

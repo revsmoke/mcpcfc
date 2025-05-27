@@ -136,5 +136,14 @@ function registerTools(toolRegistry) {
     // Register Email tools component
     emailTool = createObject("component", "mcpcfc.tools.EmailTool").init();
     toolRegistry.registerComponent(emailTool);
+    
+    // Register REPL tools component (CF2023+ only)
+    try {
+        replTool = createObject("component", "mcpcfc.cli-tools.REPLTool").init();
+        toolRegistry.registerComponent(replTool);
+    } catch (any e) {
+        // REPL tools not available in this environment
+        transport.logDebug("REPL tools not available: " & e.message);
+    }
 }
 </cfscript>

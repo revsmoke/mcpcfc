@@ -64,12 +64,67 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 
 ## Implementation Status
 
-- [ ] Phase 1: Native CFML Stdio Bridge
-- [ ] Phase 2: REPL Integration Tool
+- [x] Phase 1: Native CFML Stdio Bridge ✅
+- [x] Phase 2: REPL Integration Tool ✅
 - [ ] Phase 3: Server Management Tools
 - [ ] Phase 4: Package Management Integration
 - [ ] Phase 5: Development Workflow Tools
 - [ ] Phase 6: Advanced Database Tools
+
+## REPL Tools Available (NEW!)
+
+### 1. **executeCode**
+Execute CFML code in an isolated context:
+```json
+{
+  "name": "executeCode",
+  "arguments": {
+    "code": "x = 10 * 5; writeOutput('Result: ' & x); return x;",
+    "returnOutput": true,
+    "timeout": 30
+  }
+}
+```
+
+### 2. **evaluateExpression**
+Quick expression evaluation:
+```json
+{
+  "name": "evaluateExpression",
+  "arguments": {
+    "expression": "dateFormat(now(), 'yyyy-mm-dd')",
+    "format": "string"
+  }
+}
+```
+
+### 3. **testSnippet**
+Run code with assertions:
+```json
+{
+  "name": "testSnippet",
+  "arguments": {
+    "code": "result = calculateTax(100, 0.08);",
+    "assertions": [
+      {"expression": "result == 8", "message": "Tax should be 8"}
+    ],
+    "measurePerformance": true
+  }
+}
+```
+
+### 4. **inspectVariable**
+Debug variable contents:
+```json
+{
+  "name": "inspectVariable",
+  "arguments": {
+    "setupCode": "user = {id: 1, name: 'John', roles: ['admin', 'user']};",
+    "variableName": "user",
+    "depth": 3
+  }
+}
+```
 
 ## Backward Compatibility
 

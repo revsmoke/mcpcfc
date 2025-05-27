@@ -166,6 +166,7 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 
 ### Claude Desktop Configuration
 
+#### Option 1: Traditional Bridge (Works with CF2016+)
 To use with Claude Desktop, update your config file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
@@ -173,6 +174,22 @@ To use with Claude Desktop, update your config file at `~/Library/Application Su
   "mcpServers": {
     "coldfusion-mcp": {
       "command": "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/cf-mcp-clean-bridge.sh"
+    }
+  }
+}
+```
+
+#### Option 2: Native CF2023 CLI Bridge (Requires CF2023+) 🆕
+For ColdFusion 2023 users, use the native CLI bridge for better performance:
+
+```json
+{
+  "mcpServers": {
+    "coldfusion-mcp-cf2023": {
+      "command": "cfml",
+      "args": [
+        "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/cli-bridge/cf-mcp-cli-bridge-v2.cfm"
+      ]
     }
   }
 }

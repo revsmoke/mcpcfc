@@ -1,0 +1,14 @@
+MCPCFC Cleanup Log
+Date: Tue May 27 16:58:42 EDT 2025
+
+- test-bridge-interactive.sh
+- test-complete-sequence.sh
+- test-jsonrpc-format.sh
+- test-stdio-bridge.sh
+- test-stdio-simple.sh
+- cleanup-obsolete-files.sh
+- cleanup-log-20250527-103023.txt
+- temp/merged-cf-mcp.pdf
+- temp/test-cf-mcp-2.pdf
+- temp/test-cf-mcp.pdf
+Removed 10 files

@@ -1,0 +1,19 @@
+MCPCFC Cleanup Log
+Date: Tue May 27 10:30:23 EDT 2025
+Removed 14 files
+
+Files removed:
+- cf-mcp-bridge-debug.sh
+- cf-mcp-bridge-v2.sh
+- cf-mcp-bridge-simple.sh
+- cf-mcp-stdio-bridge.sh
+- cf-mcp-bridge.sh
+- endpoints/debug-messages.cfm
+- endpoints/messages-debug.cfm
+- test-debug.cfm
+- test-jsonrpc.cfm
+- test-messages.cfm
+- simple-test.cfm
+- temp/test.pdf
+- temp/test2.pdf
+- temp/merged.pdf

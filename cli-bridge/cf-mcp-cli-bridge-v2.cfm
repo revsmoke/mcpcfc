@@ -145,5 +145,14 @@ function registerTools(toolRegistry) {
         // REPL tools not available in this environment
         transport.logDebug("REPL tools not available: " & e.message);
     }
+    
+    // Register Server Management tools component (CF2023+ only)
+    try {
+        serverTool = createObject("component", "mcpcfc.cli-tools.ServerManagementTool").init();
+        toolRegistry.registerComponent(serverTool);
+    } catch (any e) {
+        // Server tools not available in this environment
+        transport.logDebug("Server management tools not available: " & e.message);
+    }
 }
 </cfscript>

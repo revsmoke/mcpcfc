@@ -66,7 +66,7 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 
 - [x] Phase 1: Native CFML Stdio Bridge ✅
 - [x] Phase 2: REPL Integration Tool ✅
-- [ ] Phase 3: Server Management Tools
+- [x] Phase 3: Server Management Tools ✅
 - [ ] Phase 4: Package Management Integration
 - [ ] Phase 5: Development Workflow Tools
 - [ ] Phase 6: Advanced Database Tools
@@ -122,6 +122,60 @@ Debug variable contents:
     "setupCode": "user = {id: 1, name: 'John', roles: ['admin', 'user']};",
     "variableName": "user",
     "depth": 3
+  }
+}
+```
+
+## Server Management Tools (NEW!)
+
+### 1. **serverStatus**
+Get comprehensive server information:
+```json
+{
+  "name": "serverStatus",
+  "arguments": {
+    "includeSystemInfo": true,
+    "includeMemory": true,
+    "includeDataSources": false,
+    "includeMappings": false
+  }
+}
+```
+
+### 2. **configManager**
+Read and manage server configuration:
+```json
+{
+  "name": "configManager",
+  "arguments": {
+    "action": "get",
+    "category": "runtime"
+  }
+}
+```
+
+### 3. **logStreamer**
+Read and filter log files:
+```json
+{
+  "name": "logStreamer",
+  "arguments": {
+    "logFile": "application.log",
+    "lines": 50,
+    "filter": "error",
+    "fromTail": true
+  }
+}
+```
+
+### 4. **clearCache**
+Clear various CF caches:
+```json
+{
+  "name": "clearCache",
+  "arguments": {
+    "cacheType": "template",
+    "path": "/specific/path"
   }
 }
 ```

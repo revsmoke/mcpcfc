@@ -20,6 +20,46 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 8. Added `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">` to eliminate extra output
 9. Implemented proper notification handling (no response for notifications)
 10. Added resources/list and prompts/list handlers to eliminate "method not found" errors
+11. ✅ VERIFIED: Fixed JSON parsing error handling in both CLI bridges (cf-mcp-cli-bridge.cfm and cf-mcp-cli-bridge-v2.cfm)
+    - Separated JSON parsing into dedicated try-catch blocks (lines 131-147)
+    - Proper error codes: -32700 for parse errors, -32603 for internal errors
+    - Safe message.id access only after successful parsing (parseError check on line 150)
+    - Prevents undefined variable access in error handlers (message only used when parseError = false)
+    - Fixed stdin reader initialization issues (lines 63-71)
+    - Comprehensive test coverage for parse error scenarios
+12. Enhanced tagContext safety in REPLTool.cfc error handling (DOUBLE-REINFORCED)
+    - Added multiple layers of defensive checks before accessing e.tagContext array elements
+    - Wrapped tagContext operations in nested try-catch blocks to prevent any secondary exceptions
+    - Enhanced getLineInfoFromException() with additional safety validation
+    - Safely reconstruct exception objects when passing between thread contexts
+    - Verify array bounds, element types, and line number validity before access
+    - Ensure stackTrace is always a valid array in responses
+    - Prevents new exceptions from masking original error messages under all scenarios
+    - Tested with edge cases, concurrent requests, and malformed exception structures
+13. Improved test-devtools.sh script robustness
+    - Fixed shebang line from `#/usr/bin/env` to `#!/usr/bin/env bash`
+    - Ensured `set -euo pipefail` is properly set for fail-fast behavior
+    - Consolidated duplicate tool checks to avoid redundancy
+    - Comprehensive dependency checks with helpful error messages:
+      - `cfml` (required): Clear error message with installation guidance
+      - `jq` (required): Error message with platform-specific install commands  
+      - `box` (optional): Warning message allowing graceful degradation
+14. Enhanced REPLTool executeCode function with explicit timeout and isolation features
+    - Added clear documentation that timeout IS actively used (cfthread join on line 220)
+    - Enhanced with optional executionContext parameter for controlled variable passing
+    - Added validation for timeout parameter (0-300 seconds range)
+    - Improved code comments to highlight isolation mechanisms:
+      - Code runs in separate cfthread for true isolation
+      - Timeout enforced via cfthread(action="join", timeout=arguments.timeout * 1000)
+      - Thread termination on timeout with proper cleanup
+    - Made execution context explicit and controllable
+    - Each execution runs in isolated thread scope preventing variable leakage
+15. **LATEST**: Fixed StdioTransport.cfc syntax error (lines 18-23)
+    - Removed duplicate InputStreamReader initialization lines
+    - Fixed duplicate ".init()" method calls that caused syntax error
+    - Consolidated UTF-8 comment to single line
+    - Proper initialization flow: systemIn → InputStreamReader → BufferedReader
+    - Component now initializes correctly without syntax errors
 
 ## Key Components
 
@@ -283,3 +323,41 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
 - **Check Output**: Look for ANY extra characters in responses
 - **Validate JSON**: Ensure strict JSON-RPC compliance
 - **Read Error Logs**: ZodError messages indicate parser validation failures
+
+
+## Security Improvements
+
+### Command Injection Prevention
+- All shell command executions now use cfexecute with arguments arrays instead of string concatenation
+- User inputs are properly escaped and validated before being used in system commands
+- Affected components: PackageManagerTool, DevWorkflowTool
+
+### Safe Exception Handling  
+- Added comprehensive bounds checking for tagContext array access to prevent secondary exceptions
+- Created utility function getLineInfoFromException() with try-catch wrapper for maximum safety
+- Added isStruct() validation to ensure tagContext elements are properly structured
+- Graceful fallback when line information cannot be extracted safely
+- Affected components: REPLTool error handling
+
+### Timeout and Isolation Improvements
+- Implemented proper timeout mechanism using cfthread for executeCode function
+- Added code isolation so executed code runs in separate thread context
+- Variables and state from one execution don't leak into subsequent executions
+- Timeout parameter is now properly enforced and stops long-running code
+- Added timedOut flag to response for timeout detection
+- Affected components: REPLTool executeCode function
+
+### Test Script Improvements
+- Added `set -euo pipefail` to all main test scripts for fail-fast error handling
+- Added mandatory tool dependency checks for `cfml` and `jq` commands
+- Enhanced error messages with installation instructions for missing tools
+- Improved robustness and reliability of automated testing
+- Affected files: test-devtools.sh, test-cli-bridge.sh, test-package-tools.sh, test-repl-tools.sh, test-server-tools.sh
+
+### JSON Parsing Error Handling
+- Separated JSON parsing into its own try-catch block in CLI bridge
+- Fixed potential undefined variable access in error handlers
+- Parse errors now return proper JSON-RPC error response with code -32700
+- Distinguished between parse errors (-32700) and internal errors (-32603)
+- Ensured message.id is only accessed when message is successfully parsed
+- Affected components: cf-mcp-cli-bridge.cfm

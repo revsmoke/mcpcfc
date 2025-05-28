@@ -170,27 +170,30 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         };
         
         try {
-            // Build the box install command
-            var cmd = "box install " & arguments.packageName;
+            // Build the command arguments array
+            var cmdArgs = ["install"];
             
+            // Add package name with optional version
             if (len(arguments.version)) {
-                cmd &= "@" & arguments.version;
+                arrayAppend(cmdArgs, arguments.packageName & "@" & arguments.version);
+            } else {
+                arrayAppend(cmdArgs, arguments.packageName);
             }
             
             if (arguments.saveDev) {
-                cmd &= " --saveDev";
+                arrayAppend(cmdArgs, "--saveDev");
             }
             
             if (arguments.force) {
-                cmd &= " --force";
+                arrayAppend(cmdArgs, "--force");
             }
             
             if (arguments.production) {
-                cmd &= " --production";
+                arrayAppend(cmdArgs, "--production");
             }
             
-            // Execute the command
-            var exec = executeCommand(cmd);
+            // Execute the command with arguments array
+            var exec = executeCommandWithArgs("box", cmdArgs);
             
             if (exec.success) {
                 result.message = "Package installed successfully";
@@ -281,14 +284,16 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         };
         
         try {
-            // Use box search command
-            var cmd = "box search " & arguments.query;
+            // Build command arguments array
+            var cmdArgs = ["search", arguments.query];
             
             if (arguments.type != "all") {
-                cmd &= " --type=" & arguments.type;
+                arrayAppend(cmdArgs, "--type=" & arguments.type);
             }
             
-            var exec = executeCommand(cmd & " --json");
+            arrayAppend(cmdArgs, "--json");
+            
+            var exec = executeCommandWithArgs("box", cmdArgs);
             
             if (exec.success) {
                 var searchResults = deserializeJSON(exec.output);
@@ -336,17 +341,18 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         };
         
         try {
-            var cmd = "box update";
+            // Build command arguments array
+            var cmdArgs = ["update"];
             
             if (len(arguments.packageName)) {
-                cmd &= " " & arguments.packageName;
+                arrayAppend(cmdArgs, arguments.packageName);
             }
             
             if (arguments.force) {
-                cmd &= " --force";
+                arrayAppend(cmdArgs, "--force");
             }
             
-            var exec = executeCommand(cmd);
+            var exec = executeCommandWithArgs("box", cmdArgs);
             
             if (exec.success) {
                 result.message = "Packages updated successfully";
@@ -382,13 +388,14 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         };
         
         try {
-            var cmd = "box uninstall " & arguments.packageName;
+            // Build command arguments array
+            var cmdArgs = ["uninstall", arguments.packageName];
             
             if (!arguments.removeDependencies) {
-                cmd &= " --keep-dependencies";
+                arrayAppend(cmdArgs, "--keep-dependencies");
             }
             
-            var exec = executeCommand(cmd);
+            var exec = executeCommandWithArgs("box", cmdArgs);
             
             if (exec.success) {
                 result.message = "Package removed successfully";
@@ -452,6 +459,9 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
                     reloadModule(arguments.moduleName);
                     result.message = "Module '" & arguments.moduleName & "' reloaded successfully";
                     break;
+                    
+                default:
+                    throw(message="Unsupported action: '" & arguments.action & "'. Valid actions are: list, load, unload, reload");
             }
             
         } catch (any e) {
@@ -473,12 +483,66 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         };
         
         try {
+            // Parse command string into executable and arguments
+            var commandParts = listToArray(arguments.command, " ");
+            
+            if (arrayLen(commandParts) == 0) {
+                throw(message="Empty command provided");
+            }
+            
+            var executable = commandParts[1];
+            var commandArgs = "";
+            
+            // Build arguments string from remaining parts
+            if (arrayLen(commandParts) > 1) {
+                commandArgs = arrayToList(arraySlice(commandParts, 2), " ");
+            }
+            
             // Execute command using cfexecute
             var executeResult = "";
             var executeError = "";
             
             cfexecute(
+                name = executable,
+                arguments = commandArgs,
+                variable = "executeResult",
+                errorVariable = "executeError",
+                timeout = 60
+            );
+            
+            result.output = executeResult;
+            
+            if (len(executeError)) {
+                result.success = false;
+                result.error = executeError;
+            }
+            
+        } catch (any e) {
+            result.success = false;
+            result.error = e.message;
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Execute a command with arguments array to prevent injection
+     */
+    private struct function executeCommandWithArgs(required string command, required array arguments) {
+        var result = {
+            success: true,
+            output: "",
+            error: ""
+        };
+        
+        try {
+            // Execute command using cfexecute with arguments array
+            var executeResult = "";
+            var executeError = "";
+            
+            cfexecute(
                 name = arguments.command,
+                arguments = arguments.arguments,
                 variable = "executeResult",
                 errorVariable = "executeError",
                 timeout = 60

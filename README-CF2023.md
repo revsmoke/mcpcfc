@@ -15,7 +15,7 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 ### 1. Native CFML Bridge
 ```bash
 # Instead of: ./cf-mcp-clean-bridge.sh
-# Now just: cfml cf-mcp-cli-bridge.cfm
+# Now just: cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm
 ```
 
 ### 2. Cross-Platform Support
@@ -39,7 +39,7 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 
 - **Adobe ColdFusion 2023** or higher
 - **CommandBox 5.0+** (for package management features)
-- **Java 11+**
+- **Java 17+**  (required by ColdFusion 2023; CommandBox 5.0+ supports Java 11 but CF2023 mandates Java 17)
 
 ## Quick Start
 
@@ -49,16 +49,21 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
    ```
 
 2. **Configure Claude Desktop**:
+   
+   Edit your Claude Desktop configuration file (usually located at `~/.config/claude-desktop/config.json` on macOS/Linux or `%APPDATA%\Claude\config.json` on Windows):
+
    ```json
    {
      "mcpServers": {
        "coldfusion-mcp-cf2023": {
          "command": "cfml",
-         "args": ["/path/to/mcpcfc/cli-bridge/cf-mcp-cli-bridge.cfm"]
+         "args": ["/path/to/mcpcfc/cli-bridge/cf-mcp-cli-bridge-v2.cfm"]
        }
      }
    }
    ```
+   
+   > **Note**: This branch uses `cf-mcp-cli-bridge-v2.cfm` which includes enhanced features for CF2023. The original `cf-mcp-cli-bridge.cfm` is also available for compatibility.
 
 3. **Start using enhanced tools!**
 

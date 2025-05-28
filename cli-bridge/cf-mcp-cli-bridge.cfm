@@ -59,19 +59,26 @@ toolRegistry.registerComponent(pdfTool);
 emailTool = createObject("component", "mcpcfc.tools.EmailTool").init();
 toolRegistry.registerComponent(emailTool);
 
-// Function to read from stdin
+// Initialize stdin reader once for reuse - prevents performance issues and blocking
+try {
+    // Create a single BufferedReader for the process lifetime with UTF-8 encoding
+    systemIn = createObject("java", "java.lang.System").in;
+    inputStreamReader = createObject("java", "java.io.InputStreamReader").init(systemIn, "UTF-8");
+    bufferedReader = createObject("java", "java.io.BufferedReader").init(inputStreamReader);
+} catch (any e) {
+    logError("Failed to initialize stdin reader: " & e.message);
+    createObject("java", "java.lang.System").exit(1);
+}
+
 function readStdin() {
     try {
-        // Create Java System.in reader
-        systemIn = createObject("java", "java.lang.System").in;
-        inputStreamReader = createObject("java", "java.io.InputStreamReader").init(systemIn);
-        bufferedReader = createObject("java", "java.io.BufferedReader").init(inputStreamReader);
-        
-        // Read line from stdin
-        line = bufferedReader.readLine();
+        // Read line from the pre-initialized buffered reader
+        var line = bufferedReader.readLine();
+        // Return null to signal EOF to the caller
         if (isNull(line)) {
-            return "";
+            return javacast("null", "");
         }
+        return line;
         return line;
     } catch (any e) {
         logError("Error reading stdin: " & e.message);
@@ -81,10 +88,9 @@ function readStdin() {
 
 // Function to write to stdout
 function writeStdout(message) {
-    // Use writeOutput to send to stdout
-    writeOutput(message & chr(10));
-    // Ensure output is flushed
-    getPageContext().getOut().flush();
+    // Use Java's System.out.println for CLI-safe output
+    // This auto-flushes and works correctly in CLI mode
+    createObject("java", "java.lang.System").out.println(message);
 }
 
 // Function to write to stderr for logging
@@ -113,49 +119,84 @@ try {
         // Read message from stdin
         input = readStdin();
         
-        // Check for empty input (EOF)
+        // EOF – shut down gracefully
+        if (isNull(input)) {
+            logDebug("EOF detected, shutting down.");
         if (len(trim(input)) == 0) {
-            logDebug("Empty input received, continuing...");
+            // Blank line – but if the reader previously errored out we should exit.
+            if (input EQ "") {
+                logError("Stdin returned empty string repeatedly – terminating.");
+                break;
+            }
+            continue;
+        }
+            // Blank line – but if the reader previously errored out we should exit.
+            if (input EQ "") {
+                logError("Stdin returned empty string repeatedly – terminating.");
+                break;
+            }
             continue;
         }
         
         logDebug("Received input: " & input);
         
+        // First, try to parse the JSON in a separate try-catch
+        var message = "";
+        var parseError = false;
+        
         try {
-            // Parse JSON
+            // Parse JSON - this is the only place where message gets defined
             message = deserializeJSON(input);
-            
-            // Process the message
-            response = messageProcessor.processMessage(
-                message = message,
-                sessionId = sessionId,
-                sessionManager = sessionManager,
-                toolHandler = toolHandler,
-                toolRegistry = toolRegistry
-            );
-            
-            // Send response to stdout (only if there is one)
-            if (!structIsEmpty(response)) {
-                responseJson = serializeJSON(response);
-                writeStdout(responseJson);
-                logDebug("Sent response: " & responseJson);
-            } else {
-                logDebug("No response for notification");
-            }
-            
-        } catch (any e) {
-            // Send error response
-            errorResponse = structNew("ordered");
+            logDebug("JSON parsed successfully");
+        } catch (any parseException) {
+            // JSON parsing failed - create parse error response
+            parseError = true;
+            var errorResponse = structNew("ordered");
             errorResponse["jsonrpc"] = "2.0";
-            if (isDefined("message.id")) {
-                errorResponse["id"] = message.id;
-            }
+            errorResponse["id"] = javacast("null", ""); // Parse errors always have null ID per JSON-RPC spec
             errorResponse["error"] = structNew("ordered");
-            errorResponse["error"]["code"] = -32603;
-            errorResponse["error"]["message"] = "Internal error: " & e.message;
+            errorResponse["error"]["code"] = -32700; // Parse error code
+            errorResponse["error"]["message"] = "Parse error: " & parseException.message;
             
             writeStdout(serializeJSON(errorResponse));
-            logError("Message processing error: " & e.message);
+            logError("JSON parse error: " & parseException.message);
+        }
+        
+        // Only proceed if parsing was successful
+        if (!parseError) {
+            try {
+                // Process the message
+                var response = messageProcessor.processMessage(
+                    message = message,
+                    sessionId = sessionId,
+                    sessionManager = sessionManager,
+                    toolHandler = toolHandler,
+                    toolRegistry = toolRegistry
+                );
+                
+                // Send response to stdout (only if there is one)
+                if (!structIsEmpty(response)) {
+                    var responseJson = serializeJSON(response);
+                    writeStdout(responseJson);
+                    logDebug("Sent response: " & responseJson);
+                } else {
+                    logDebug("No response for notification");
+                }
+                
+            } catch (any processingException) {
+                // Message processing failed - create internal error response
+                // Only reference message.id if message was successfully parsed
+                var msgId = (isStruct(message) && structKeyExists(message, "id")) ? message.id : javacast("null", "");
+                var errorResponse = structNew("ordered");
+                errorResponse["jsonrpc"] = "2.0";
+                errorResponse["id"] = msgId;
+                errorResponse["error"] = structNew("ordered");
+                errorResponse["error"]["code"] = -32603; // Internal error code
+                errorResponse["error"]["message"] = "Internal error: " & processingException.message;
+                
+                writeStdout(serializeJSON(errorResponse));
+                logError("Message processing error: " & processingException.message);
+            }
         }
     }
     

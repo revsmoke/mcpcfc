@@ -1,4 +1,13 @@
-#!/bin/bash
+#/usr/bin/env bash
+set -euo pipefail
+
+for cmd in cfml jq; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "ERROR: Required command '$cmd' is missing." >&2
+    exit 1
+  fi
+done
+set -euo pipefail
 
 # Test script for Development Workflow tools in CF2023 CLI Bridge
 
@@ -8,11 +17,28 @@ echo "==========================================="
 # Change to script directory
 cd "$(dirname "$0")/../.."
 
-# Check if CommandBox tools are installed
+# Check if required tools are installed
 echo "Checking for required tools..."
+
+# Check for cfml (ColdFusion CLI)
+if ! command -v cfml &> /dev/null; then
+    echo "ERROR: cfml command not found. ColdFusion 2023 CLI is required."
+    echo "Ensure ColdFusion 2023 is installed and cfml is in your PATH."
+    exit 1
+fi
+
+# Check for jq (JSON processor)
+if ! command -v jq &> /dev/null; then
+    echo "ERROR: jq not found. jq is required for JSON processing."
+    echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
+    exit 1
+fi
+
+# Check for CommandBox (optional but recommended)
 if ! command -v box &> /dev/null; then
     echo "WARNING: CommandBox not found. Dev workflow tools require CommandBox."
     echo "Install from: https://www.ortussolutions.com/products/commandbox"
+    echo "Dev tools will run in simulation mode."
 fi
 
 # Test 1: Initialize

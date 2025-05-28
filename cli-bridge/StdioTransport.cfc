@@ -4,60 +4,31 @@ component displayname="StdioTransport" hint="Handles stdio communication for MCP
     property name="systemOut" type="any";
     property name="systemErr" type="any";
     property name="isRunning" type="boolean" default="true";
+public StdioTransport function init() {
+    try {
+        // Java I/O handles
+        variables.systemOut  = createObject("java", "java.lang.System").out;
+        variables.systemErr  = createObject("java", "java.lang.System").err;
 
-    /**
-     * Initialize the stdio transport
-     */
-    public StdioTransport function init() {
-        // Initialize Java objects for stdio
-        variables.systemOut = createObject("java", "java.lang.System").out;
-        variables.systemErr = createObject("java", "java.lang.System").err;
-        
-        // Create buffered reader for stdin
-        var systemIn = createObject("java", "java.lang.System").in;
-        var inputStreamReader = createObject("java", "java.io.InputStreamReader").init(systemIn);
-        variables.inputReader = createObject("java", "java.io.BufferedReader").init(inputStreamReader);
-        
-        variables.isRunning = true;
-        
-        return this;
-    }
+        // Buffered UTF-8 reader for stdin
+        var systemIn         = createObject("java", "java.lang.System").in;
+        var inputStreamReader = createObject("java", "java.io.InputStreamReader")
+                                .init(systemIn, "UTF-8");
+        variables.inputReader = createObject("java", "java.io.BufferedReader")
+                                .init(inputStreamReader);
 
-    /**
-     * Read a line from stdin
-     * @return The line read from stdin, or empty string if EOF
-     */
-    public string function readLine() {
-        try {
-            var line = variables.inputReader.readLine();
-            if (isNull(line)) {
-                variables.isRunning = false;
-                return "";
-            }
-            return line;
-        } catch (any e) {
-            logError("Error reading from stdin: " & e.message);
-            return "";
-        }
-    }
-
-    /**
-     * Write a message to stdout
-     * @message The message to write
-     */
-    public void function writeMessage(required string message) {
-        variables.systemOut.println(arguments.message);
-        variables.systemOut.flush();
-    }
-
-    /**
-     * Write a JSON response to stdout
-     * @response The response struct to serialize and send
-     */
-    public void function writeResponse(required struct response) {
+        variables.isRunning  = true;
+public void function writeResponse(required struct response) {
+    try {
         var json = serializeJSON(arguments.response);
         writeMessage(json);
+    } catch (any e) {
+        logError("Failed to serialize response: " & e.message);
+        writeMessage('{"error": "Failed to serialize response"}');
     }
+}
+    }
+}
 
     /**
      * Log a message to stderr
@@ -65,14 +36,13 @@ component displayname="StdioTransport" hint="Handles stdio communication for MCP
      * @level The log level (DEBUG, INFO, WARN, ERROR)
      */
     public void function log(required string message, string level = "INFO") {
-        var timestamp = dateTimeFormat(now(), "yyyy-mm-dd HH:nn:ss");
+var timestamp = dateTimeFormat(now(), "yyyy-MM-dd HH:nn:ss");
         variables.systemErr.println("[#arguments.level#] #timestamp# - #arguments.message#");
     }
 
     /**
      * Log an error to stderr
-     * @message The error message
-     */
+
     public void function logError(required string message) {
         log(arguments.message, "ERROR");
         writeLog(text=arguments.message, type="error", file="cf-mcp-cli");
@@ -80,8 +50,7 @@ component displayname="StdioTransport" hint="Handles stdio communication for MCP
 
     /**
      * Log debug information to stderr
-     * @message The debug message
-     */
+
     public void function logDebug(required string message) {
         log(arguments.message, "DEBUG");
     }

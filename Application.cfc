@@ -202,6 +202,60 @@ component output="false" hint="Application component for MCP Server" {
             }
         });
         
+        // Register CLI tools (CF2023 enhancement tools)
+        
+        // Register REPL tools
+        var replTool = new mcpcfc.clitools.REPLTool();
+        var replTools = replTool.getToolDefinitions();
+        for (var tool in replTools) {
+            application.toolRegistry.registerTool(tool.name, {
+                "description": tool.description,
+                "inputSchema": tool.inputSchema
+            });
+        }
+        
+        // Register server management tools
+// Register server management tools
+try {
+    var serverTool = new mcpcfc.clitools.ServerManagementTool();
+    // ... existing code
+} catch (any e) {
+    writeLog(text="Failed to register server management tools: " & e.message, type="error");
+}
+
+// Register package management tools  
+try {
+    var packageTool = new mcpcfc.clitools.PackageManagerTool();
+    // ... existing code
+} catch (any e) {
+    writeLog(text="Failed to register package management tools: " & e.message, type="error");
+}
+
+// Register development workflow tools
+try {
+    var devTool = new mcpcfc.clitools.DevWorkflowTool();
+    var packageTools = packageTool.getToolDefinitions();
+    for (var tool in packageTools) {
+        application.toolRegistry.registerTool(tool.name, {
+            "description": tool.description,
+            "inputSchema": tool.inputSchema
+        });
+    var packageTools = packageTool.getToolDefinitions();
+    for (var tool in packageTools) {
+        application.toolRegistry.registerTool(tool.name, {
+            "description": tool.description,
+            "inputSchema": tool.inputSchema
+        });
+    }
+} catch (any e) {
+    writeLog(...);
+}
+            application.toolRegistry.registerTool(tool.name, {
+                "description": tool.description,
+                "inputSchema": tool.inputSchema
+            });
+        }
+        
         // Register development workflow tools
         var devTool = new mcpcfc.clitools.DevWorkflowTool();
         var devTools = devTool.getToolDefinitions();

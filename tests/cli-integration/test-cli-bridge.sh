@@ -1,9 +1,22 @@
 #!/bin/bash
 
+# Ensure script fails fast on errors
+set -euo pipefail
+
 # Test script for CF2023 CLI Bridge
 
 echo "Testing CF2023 MCP CLI Bridge..."
 echo "================================"
+
+# Check if required tools are installed
+echo "Checking for required tools..."
+
+# Check for cfml (ColdFusion CLI)
+if ! command -v cfml &> /dev/null; then
+    echo "ERROR: cfml command not found. ColdFusion 2023 CLI is required."
+    echo "Ensure ColdFusion 2023 is installed and cfml is in your PATH."
+    exit 1
+fi
 
 # Test 1: Initialize
 echo -e "\n1. Testing initialize..."

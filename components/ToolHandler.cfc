@@ -29,6 +29,35 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                     var emailTool = new mcpcfc.tools.EmailTool();
                     return emailTool.executeTool(arguments.toolName, arguments.args);
                     
+                case "executeCode":
+                case "evaluateExpression":
+                case "inspectVariable":
+                case "testSnippet":
+                    // Route REPL tools to REPLTool component
+                    var replTool = new mcpcfc.clitools.REPLTool();
+                    var result = invoke(replTool, arguments.toolName, arguments.args);
+                    return result;
+                    
+                case "serverStatus":
+                case "configManager":
+                case "clearCache":
+                case "logStreamer":
+                case "moduleManager":
+                    // Route server management tools to ServerManagementTool component
+                    var serverTool = new mcpcfc.clitools.ServerManagementTool();
+                    var result = invoke(serverTool, arguments.toolName, arguments.args);
+                    return result;
+                    
+                case "packageInstaller":
+                case "packageList":
+                case "packageSearch":
+                case "packageUpdate":
+                case "packageRemove":
+                    // Route package management tools to PackageManagerTool component
+                    var packageTool = new mcpcfc.clitools.PackageManagerTool();
+                    var result = invoke(packageTool, arguments.toolName, arguments.args);
+                    return result;
+                    
                 case "codeFormatter":
                 case "codeLinter":
                 case "testRunner":

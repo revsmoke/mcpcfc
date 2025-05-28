@@ -165,7 +165,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                     used: formatBytes(runtime.totalMemory() - runtime.freeMemory()),
                     free: formatBytes(runtime.freeMemory()),
                     max: formatBytes(runtime.maxMemory()),
-                    percentUsed: round((runtime.totalMemory() - runtime.freeMemory()) / runtime.totalMemory() * 100)
+                    percentUsed: round((runtime.totalMemory() - runtime.freeMemory()) / runtime.maxMemory() * 100)
                 };
             }
             
@@ -201,6 +201,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
             success: true,
             action: arguments.action,
             data: {},
+            message: "",
             error: ""
         };
         
@@ -224,6 +225,9 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                     result.data = setConfigSetting(arguments.category, arguments.setting, arguments.value);
                     result.warning = "Changes may require server restart to take effect";
                     break;
+                    
+                default:
+                    throw(message="Unsupported action: '" & arguments.action & "'. Valid actions are: list, get, set");
             }
             
         } catch (any e) {
@@ -260,34 +264,80 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                 throw(message="Log file not found: " & arguments.logFile);
             }
             
-            // Read the log file
-            var fileContent = fileRead(logPath);
-            var allLines = listToArray(fileContent, chr(10));
-            result.totalLines = arrayLen(allLines);
-            
-            // Apply filter if provided
-            if (len(arguments.filter)) {
-                result.filtered = true;
-                var filteredLines = [];
-                for (var line in allLines) {
-                    if (findNoCase(arguments.filter, line)) {
-                        arrayAppend(filteredLines, line);
+            // Stream the log file to avoid memory issues with large files
+            if (arguments.fromTail) {
+                // Use Java RandomAccessFile for efficient tail reading
+                var file = createObject("java", "java.io.RandomAccessFile").init(logPath, "r");
+                var fileLength = file.length();
+                var linesFound = 0;
+                var tempLines = [];
+                var buffer = createObject("java", "java.lang.StringBuilder");
+                
+                try {
+                    // Start from end of file and work backwards
+                    var pos = fileLength - 1;
+                    
+                    while (pos >= 0 && linesFound < arguments.lines * 2) { // Read extra for filtering
+                        file.seek(pos);
+                        var ch = file.read();
+                        
+                        if (ch == 10 || pos == 0) { // newline or start of file
+                            var line = buffer.reverse().toString();
+                            buffer.setLength(0); // clear buffer
+                            
+                            if (len(trim(line)) > 0) {
+                                // Apply filter if needed
+                                if (!len(arguments.filter) || findNoCase(arguments.filter, line)) {
+                                    arrayPrepend(tempLines, line);
+                                    linesFound++;
+                                }
+                            }
+                        } else if (ch != 13) { // ignore carriage return
+                            buffer.append(chr(ch));
+                        }
+                        
+                        pos--;
                     }
+                    
+                    // Take only requested number of lines
+                    var startIdx = max(1, arrayLen(tempLines) - arguments.lines + 1);
+                    for (var i = startIdx; i <= arrayLen(tempLines); i++) {
+                        arrayAppend(result.entries, parseLogLine(tempLines[i]));
+                    }
+                    
+                    result.totalLines = linesFound; // Approximate count
+                    
+                } finally {
+                    file.close();
                 }
-                allLines = filteredLines;
+                
+            } else {
+                // Read from beginning using line-by-line streaming
+                var fileObj = fileOpen(logPath, "read");
+                var linesRead = 0;
+                var matchedLines = 0;
+                
+                try {
+                    while (!fileIsEOF(fileObj) && matchedLines < arguments.lines) {
+                        var line = fileReadLine(fileObj);
+                        linesRead++;
+                        
+                        // Apply filter if needed
+                        if (!len(arguments.filter) || findNoCase(arguments.filter, line)) {
+                            arrayAppend(result.entries, parseLogLine(line));
+                            matchedLines++;
+                        }
+                    }
+                    
+                    result.totalLines = linesRead;
+                    
+                } finally {
+                    fileClose(fileObj);
+                }
             }
             
-            // Get requested lines
-            if (arguments.fromTail) {
-                var startIndex = max(1, arrayLen(allLines) - arguments.lines + 1);
-                for (var i = startIndex; i <= arrayLen(allLines); i++) {
-                    arrayAppend(result.entries, parseLogLine(allLines[i]));
-                }
-            } else {
-                var endIndex = min(arguments.lines, arrayLen(allLines));
-                for (var i = 1; i <= endIndex; i++) {
-                    arrayAppend(result.entries, parseLogLine(allLines[i]));
-                }
+            if (len(arguments.filter)) {
+                result.filtered = true;
             }
             
         } catch (any e) {
@@ -341,6 +391,9 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                     cacheRemoveAll();
                     arrayAppend(result.cleared, "All caches cleared (template, component, query)");
                     break;
+                    
+                default:
+                    throw(message="Unsupported cache type: '" & arguments.cacheType & "'. Valid types are: template, component, query, all");
             }
             
         } catch (any e) {
@@ -467,15 +520,33 @@ component displayname="ServerManagementTool" hint="Server management tools for C
             message: arguments.line
         };
         
-        // Try to parse standard CF log format
-        var matches = reMatch("^""([^""]+)""\s+(\w+)\s+(.+)$", arguments.line);
-        if (arrayLen(matches)) {
-            entry.timestamp = matches[1];
-            entry.level = matches[2];
-            entry.message = matches[3];
-        }
-        
+        // Try to parse standard CF log format: "timestamp" LEVEL message
+        // Pattern matches: "2024-01-15 10:30:45" INFO This is the log message
+        var pattern = '^"([^"]+)"\s+(\w+)\s+(.+)$';
+        var m = reFind(pattern, arguments.line, 1, true);
+
+        if ( m.pos[1] gt 0 ) {
+            entry.timestamp = mid( arguments.line, m.pos[2], m.len[2] );
+            entry.level     = mid( arguments.line, m.pos[3], m.len[3] );
+            entry.message   = mid( arguments.line, m.pos[4], m.len[4] );
+            return entry;
+        } else {
+             // Try alternative format without quotes: timestamp LEVEL message
+             // Pattern matches: 2024-01-15 10:30:45 INFO This is the log message
+             pattern = '^(\S+\s+\S+)\s+(\w+)\s+(.+)$';
+            m = reFind( pattern, arguments.line, 1, true );
+
+        if ( m.pos[1] gt 0 ) {
+             entry.timestamp = mid( arguments.line, m.pos[2], m.len[2] );
+             entry.level     = mid( arguments.line, m.pos[3], m.len[3] );
+             entry.message   = mid( arguments.line, m.pos[4], m.len[4] );
+             return entry;
+         }
+
+        // Fall-back: return raw line information when no pattern matches
         return entry;
     }
-
-}
+        return entry;
+    }
+        return entry;
+    }

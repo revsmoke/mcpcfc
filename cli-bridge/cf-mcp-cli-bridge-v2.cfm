@@ -31,53 +31,77 @@ try {
         // Read message from stdin
         input = transport.readLine();
         
-        // Skip empty lines
+        // Check for EOF (null or readLine returns null)
+        if (isNull(input)) {
+            transport.logDebug("EOF detected on stdin, shutting down gracefully");
+            break;
+        }
+        // Skip empty lines but keep listening
         if (len(trim(input)) == 0) {
             continue;
         }
         
         transport.logDebug("Received: " & input);
         
+        // First, try to parse the JSON in a separate try-catch
+        var message = "";
+        var parseError = false;
+        
         try {
             // Parse JSON message
+            var message = {};
             message = deserializeJSON(input);
+            transport.logDebug("JSON parsed successfully");
+        } catch (any parseException) {
+            // JSON parsing failed - create parse error response
+            parseError = true;
+            var errorResponse = structNew("ordered");
+            errorResponse["jsonrpc"] = "2.0";
+            errorResponse["id"] = javacast("null", ""); // Parse errors always have null ID per JSON-RPC spec
+            errorResponse["error"] = structNew("ordered");
+            errorResponse["error"]["code"] = -32700; // Parse error code
+            errorResponse["error"]["message"] = "Parse error: " & parseException.message;
             
-            // Process the message
-            response = messageProcessor.processMessage(
-                message = message,
-                sessionId = sessionId,
-                sessionManager = sessionManager,
-                toolHandler = toolHandler,
-                toolRegistry = toolRegistry
-            );
-            
-            // Send response (only for non-notifications)
-            if (!structIsEmpty(response)) {
-                transport.writeResponse(response);
-                transport.logDebug("Sent response for: " & (isDefined("message.method") ? message.method : "unknown"));
-            } else {
-                transport.logDebug("No response for notification: " & message.method);
-            }
-            
-        } catch (any e) {
-            // Handle parsing or processing errors
-            transport.logError("Error processing message: " & e.message);
-            
-            // Send error response if message had an ID
-            if (isDefined("message.id")) {
-                errorResponse = structNew("ordered");
+            transport.writeResponse(errorResponse);
+            transport.logError("JSON parse error: " & parseException.message);
+        }
+        
+        // Only proceed if parsing was successful
+        if (!parseError) {
+            try {
+                // Process the message
+                var response = messageProcessor.processMessage(
+                    message = message,
+                    sessionId = sessionId,
+                    sessionManager = sessionManager,
+                    toolHandler = toolHandler,
+                    toolRegistry = toolRegistry
+                );
+                
+                // Send response (only for non-notifications)
+                if (!structIsEmpty(response)) {
+                    transport.writeResponse(response);
+                    transport.logDebug("Sent response for: " & (structKeyExists(message, "method") ? message.method : "unknown"));
+                } else {
+                    transport.logDebug("No response for notification: " & message.method);
+                }
+                
+} catch (any processingException) {
+                // Message processing failed - create internal error response
+                var errorResponse = structNew("ordered");
                 errorResponse["jsonrpc"] = "2.0";
-                errorResponse["id"] = message.id;
+                errorResponse["id"] = ( structKeyExists(message, "id") ? message.id : javacast("null", "") );
                 errorResponse["error"] = structNew("ordered");
-                errorResponse["error"]["code"] = -32603;
-                errorResponse["error"]["message"] = "Internal error: " & e.message;
+                errorResponse["error"]["code"] = -32603; // Internal error
+                errorResponse["error"]["message"] = "Internal error: " & processingException.message;
                 
                 transport.writeResponse(errorResponse);
+                transport.logError("Message processing error: " & processingException.message);
             }
         }
     }
     
-    transport.logDebug("CLI Bridge shutting down normally");
+     transport.logDebug("CLI Bridge shutting down normally");
     transport.exit(0);
     
 } catch (any e) {

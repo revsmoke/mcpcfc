@@ -126,14 +126,15 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
      * @executionContext Optional struct of variables to make available in execution scope
      */
     public struct function executeCode(required string code, boolean returnOutput = true, numeric timeout = 30, struct executionContext = {}) {
-var result = {
-     success: true,
-     output: "",
-     error: "",
-     executionTime: 0,
-     timedOut: false,
-    stackTrace: []
- };
+        var result = {
+            success: true,
+            output: "",
+            error: "",
+            returnValue: "",
+            executionTime: 0,
+            timedOut: false,
+            stackTrace: []
+        };
         
         var startTime = getTickCount();
         var threadName = "executeCode_" & createUUID();
@@ -230,6 +231,8 @@ var result = {
                     var threadResult = threadInfo.result;
                     result.output = threadResult.output;
                     result.success = threadResult.success;
+                    result.returnValue = structKeyExists(threadResult, "returnValue") ? threadResult.returnValue : "";
+                    
                     if (!threadResult.success) {
                         // Safely reconstruct exception object for line info extraction
                         var reconstructedException = {
@@ -240,12 +243,14 @@ var result = {
                         // Only add tagContext if it's a valid array with elements
                         if (isArray(threadResult.stackTrace) && arrayLen(threadResult.stackTrace) > 0) {
                             reconstructedException.tagContext = threadResult.stackTrace;
-245     result.error = threadResult.error & getLineInfoFromException(reconstructedException);
-246     if ( structKeyExists( threadResult, "errorDetail" ) ) {
-247         result.errorDetail = threadResult.errorDetail;
-248     }
-}
-}
+                        }
+                        
+                        result.error = threadResult.error & getLineInfoFromException(reconstructedException);
+
+                        if (structKeyExists(threadResult, "errorDetail")) {
+                            result.errorDetail = threadResult.errorDetail;
+                        }
+
                         result.stackTrace = threadResult.stackTrace;
                     }
                 } else {
@@ -554,4 +559,4 @@ var result = {
         return arr;
     }
 
-}
+}}}}}}}}

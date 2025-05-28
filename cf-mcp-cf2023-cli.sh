@@ -14,14 +14,4 @@ if ! command -v cfml &> /dev/null; then
 fi
 
 # Launch the CF CLI bridge
-BRIDGE="$SCRIPT_DIR/cli-bridge/cf-mcp-cli-bridge-v2.cfm"
-if [[ ! -f "$BRIDGE" ]]; then
-  echo "Error: CLI bridge not found at $BRIDGE" >&2
-  exit 1
-fi
-exec cfml "$BRIDGE"
-if [[ ! -f "$BRIDGE" ]]; then
-  echo "Error: CLI bridge not found at $BRIDGE" >&2
-  exit 1
-fi
 exec cfml "$BRIDGE"

@@ -1,4 +1,5 @@
 #/usr/bin/env bash
+@@
 set -euo pipefail
 
 for cmd in cfml jq; do
@@ -7,8 +8,6 @@ for cmd in cfml jq; do
     exit 1
   fi
 done
-set -euo pipefail
-
 # Test script for Development Workflow tools in CF2023 CLI Bridge
 
 echo "Testing CF2023 Development Workflow Tools..."

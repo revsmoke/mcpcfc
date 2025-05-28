@@ -313,7 +313,14 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             // Evaluate the expression
             var value = evaluate( arguments.expression );
             if ( isSimpleValue( value ) ) {
-                result.type = lcase( javacast( "string", typeof( value ) ) );
+                // For simple values, determine the type
+                if (isNumeric(value)) {
+                    result.type = "numeric";
+                } else if (isBoolean(value)) {
+                    result.type = "boolean";
+                } else {
+                    result.type = "string";
+                }
             } else {
                 result.type = getMetadata( value ).name ?: "unknown";
             }
@@ -559,4 +566,4 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         return arr;
     }
 
-}}}}}}}}
+}

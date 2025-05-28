@@ -122,20 +122,16 @@ try {
         // EOF – shut down gracefully
         if (isNull(input)) {
             logDebug("EOF detected, shutting down.");
-        if (len(trim(input)) == 0) {
-            // Blank line – but if the reader previously errored out we should exit.
-            if (input EQ "") {
-                logError("Stdin returned empty string repeatedly – terminating.");
-                break;
-            }
-            continue;
+            break; // graceful shutdown on EOF
         }
-            // Blank line – but if the reader previously errored out we should exit.
-            if (input EQ "") {
-                logError("Stdin returned empty string repeatedly – terminating.");
-                break;
-            }
-            continue;
+
+        if (len(trim(input)) == 0) {
+             // Blank line – but if the reader previously errored out we should exit.
+             if (input EQ "") {
+                 logError("Stdin returned empty string repeatedly – terminating.");
+                 break;
+             }
+             continue;
         }
         
         logDebug("Received input: " & input);

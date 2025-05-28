@@ -524,11 +524,11 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         
         return result;
     }
-    
-    /**
-     * Execute a command with arguments array to prevent injection
-     */
-    private struct function executeCommandWithArgs(required string command, required array arguments) {
+private struct function executeCommandWithArgs(required string executable, required array cmdArgs) {
+ ...
+    cfexecute(
+        name      = executable,
+        arguments = arrayToList( cmdArgs, " " ), // TODO: add proper shell escaping
         var result = {
             success: true,
             output: "",
@@ -540,9 +540,12 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
             var executeResult = "";
             var executeError = "";
             
+            // Convert array of arguments to space-separated string
+            var argsString = arrayToList(arguments.cmdArgs, " ");
+            
             cfexecute(
                 name = arguments.command,
-                arguments = arguments.arguments,
+                arguments = argsString,
                 variable = "executeResult",
                 errorVariable = "executeError",
                 timeout = 60

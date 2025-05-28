@@ -205,13 +205,17 @@ component output="false" hint="Application component for MCP Server" {
         // Register CLI tools (CF2023 enhancement tools)
         
         // Register REPL tools
-        var replTool = new mcpcfc.clitools.REPLTool();
-        var replTools = replTool.getToolDefinitions();
-        for (var tool in replTools) {
-            application.toolRegistry.registerTool(tool.name, {
-                "description": tool.description,
-                "inputSchema": tool.inputSchema
-            });
+        try {
+            var replTool = new mcpcfc.clitools.REPLTool();
+            var replTools = replTool.getToolDefinitions();
+            for (var tool in replTools) {
+                application.toolRegistry.registerTool(tool.name, {
+                    "description": tool.description,
+                    "inputSchema": tool.inputSchema
+                });
+            }
+        } catch (any e) {
+            writeLog(text="Failed to register REPL tools: " & e.message, type="error");
         }
         
         // Register server management tools

@@ -1,8 +1,8 @@
 {
     "name":"MCPCFC - ColdFusion MCP Server",
-    "version":"0.1.0",
+    "version":"0.0.0",
     "author":"MCPCFC Contributors",
-    "location":"https://github.com/revsmoke/mcpcfc",
+    "location":"ForgeboxStorage",
     "homepage":"https://github.com/revsmoke/mcpcfc",
     "documentation":"https://github.com/revsmoke/mcpcfc/blob/main/README.md",
     "repository":{
@@ -11,8 +11,10 @@
     },
     "bugs":"https://github.com/revsmoke/mcpcfc/issues",
     "slug":"mcpcfc",
-    "shortDescription":"The world's first Model Context Protocol (MCP) server implementation for ColdFusion",
+    "shortDescription":"A sweet package",
     "description":"Enable your ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications through the Model Context Protocol.",
+    "instructions":"",
+    "changelog":"",
     "type":"modules",
     "keywords":[
         "mcp",
@@ -27,14 +29,53 @@
         "sse",
         "json-rpc"
     ],
-    "engines":{
-        "coldfusion":"2016+",
-        "lucee":"5+"
-    },
+    "private":false,
+    "projectURL":"",
     "license":[
         {
             "type":"MIT",
             "URL":"https://github.com/revsmoke/mcpcfc/blob/main/LICENSE"
         }
-    ]
+    ],
+    "contributors":[],
+    "dependencies":{},
+    "devDependencies":{
+        "testbox":"^6.3.2+16"
+    },
+    "installPaths":{
+        "testbox":"testbox/"
+    },
+    "scripts":{},
+    "ignore":[
+        "**/.*",
+        "/test/",
+        "/tests/"
+    ],
+    "testbox":{
+        "runner":[
+            {
+                "default":""
+            }
+        ],
+        "labels":"",
+        "excludes":"",
+        "reporter":"",
+        "bundles":"",
+        "recurse":true,
+        "directory":"tests.specs",
+        "testBundles":"",
+        "testSuites":"",
+        "testSpecs":"",
+        "verbose":true,
+        "watchDelay":500,
+        "watchPaths":"**.cfc",
+        "options":{}
+    },
+    "reinitWatchDirectory":"",
+    "reinitWatchDelay":500,
+    "reinitWatchPaths":"",
+    "engines":{
+        "coldfusion":"2016+",
+        "lucee":"5+"
+    }
 }

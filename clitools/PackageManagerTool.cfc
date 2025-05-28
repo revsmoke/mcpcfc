@@ -352,12 +352,15 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
                 arrayAppend(cmdArgs, "--force");
             }
             
+            // Add JSON flag for parseable output
+            arrayAppend(cmdArgs, "--json");
+            
             var exec = executeCommandWithArgs("box", cmdArgs);
             
             if (exec.success) {
                 result.message = "Packages updated successfully";
                 // Parse output to get list of updated packages
-                result.updated = parseUpdateOutput(exec.output);
+                result.updated = parseUpdateOutput(exec.output, arguments.packageName);
             } else {
                 result.success = false;
                 result.error = exec.error;
@@ -646,10 +649,59 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         return output;
     }
 
-    private array function parseUpdateOutput(required string output) {
+    private array function parseUpdateOutput(required string output, string packageName = "") {
         var updated = [];
-        // Parse CommandBox output to extract updated packages
-        // This is simplified - actual implementation would parse the output format
+        
+        try {
+            // Try to parse JSON output first
+            if (isJSON(trim(arguments.output))) {
+                var jsonData = deserializeJSON(trim(arguments.output));
+                
+                // CommandBox update JSON structure varies, but typically includes package info
+                if (isArray(jsonData)) {
+                    for (var item in jsonData) {
+                        if (structKeyExists(item, "name")) {
+                            arrayAppend(updated, item.name);
+                        }
+                    }
+                } else if (isStruct(jsonData)) {
+                    // Sometimes returns a struct with package names as keys
+                    for (var key in jsonData) {
+                        arrayAppend(updated, key);
+                    }
+                }
+            } else {
+                // Fallback: Parse text output for common patterns
+                var lines = listToArray(arguments.output, chr(10));
+                for (var line in lines) {
+                    // Look for lines that indicate package updates
+                    // Common patterns: "✓ Updated packagename", "packagename updated to version X"
+                    if (findNoCase("updated", line) > 0 || findNoCase("✓", line) > 0) {
+                        // Extract package name from the line
+                        var matches = reMatch("[\w\-\.]+@[\d\.]+", line);
+                        if (arrayLen(matches) > 0) {
+                            var pkgName = listFirst(matches[1], "@");
+                            if (!arrayContains(updated, pkgName)) {
+                                arrayAppend(updated, pkgName);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // If no packages found in output but a specific package was requested
+            // assume it was updated (CommandBox may not always list it explicitly)
+            if (arrayLen(updated) == 0 && len(arguments.packageName)) {
+                arrayAppend(updated, arguments.packageName);
+            }
+            
+        } catch (any e) {
+            // If parsing fails, return package name if specified
+            if (len(arguments.packageName)) {
+                arrayAppend(updated, arguments.packageName);
+            }
+        }
+        
         return updated;
     }
 

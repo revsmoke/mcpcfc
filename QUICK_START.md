@@ -1,19 +1,27 @@
-# Quick Start Guide
+# Quick Start Guide - CF2023 Enhanced Edition
 
 ## Prerequisites
 
+### For Basic Features (8 Original Tools)
 - Adobe ColdFusion 2016+ or Lucee 5+
 - A web server (IIS, Apache, or built-in)
 - Modern web browser for testing
 
+### For Enhanced Features (28 Total Tools) 🆕
+- Adobe ColdFusion 2023+
+- CommandBox 6.0+ (for package/dev tools)
+- Modern web browser for testing
+
 ## Installation
 
-### Option 1: Git Clone
+### Option 1: Git Clone (Recommended for CF2023 Features)
 
 ```bash
 cd /path/to/your/webroot
-git clone https://github.com/revsmoke/mcpcfc.git
+git clone -b cf2023-cli-enhancement https://github.com/revsmoke/mcpcfc.git
 ```
+
+This gets you the enhanced CF2023 branch with all 28 tools!
 
 ### Option 2: CommandBox (Coming Soon)
 
@@ -70,7 +78,7 @@ box install mcpcfc
 
 Claude Desktop requires MCP servers to communicate via stdio (standard input/output), while your ColdFusion MCP server uses HTTP/SSE. A minimal bridge script handles this protocol translation.
 
-### Quick Setup
+### Quick Setup for CF2023 Enhanced Edition
 
 1. **Make the bridge script executable**:
 
@@ -94,7 +102,9 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 
 3. **Restart Claude Desktop**
 
-4. **Verify the connection** - You should see your ColdFusion tools available in Claude!
+4. **Verify the connection** - You should see all 28 ColdFusion tools available in Claude!
+   - 8 Original tools (PDF, Email, Database)
+   - 20 New CLI tools (REPL, Server Management, Package Management, Dev Workflow)
 
 ### Troubleshooting
 
@@ -235,10 +245,60 @@ To use your ColdFusion MCP server remotely with Claude via the API (MCP Connecto
 
 Your ColdFusion MCP server is now available as a remote service!
 
+## CF2023 Enhanced Features
+
+### New Tools Available
+With the CF2023 enhanced edition, you get 20 additional tools:
+
+**REPL Integration (4 tools)**
+- `executeCode` - Run CFML code in isolated context
+- `evaluateExpression` - Quick expression evaluation
+- `testSnippet` - Run code with test assertions
+- `inspectVariable` - Debug variable contents
+
+**Server Management (4 tools)**
+- `serverStatus` - Get server information
+- `configManager` - Manage server configuration
+- `logStreamer` - Read and filter logs
+- `clearCache` - Clear ColdFusion caches
+
+**Package Management (6 tools)** - Requires CommandBox
+- `packageInstaller` - Install ForgeBox packages
+- `packageList` - List installed packages
+- `packageSearch` - Search ForgeBox
+- `packageUpdate` - Update packages
+- `packageRemove` - Uninstall packages
+- `moduleManager` - Manage ColdBox modules
+
+**Development Workflow (5 tools)** - Requires CommandBox
+- `codeFormatter` - Format CFML code
+- `codeLinter` - Analyze code quality
+- `testRunner` - Execute TestBox tests
+- `generateDocs` - Create documentation
+- `watchFiles` - Monitor file changes
+
+### CommandBox Setup
+For package and dev tools to work:
+
+```bash
+# Install CommandBox (if not installed)
+brew install commandbox
+
+# Initialize your project
+cd /path/to/mcpcfc
+box init
+box install testbox --saveDev
+```
+
+## Security Notes
+
+⚠️ **REPL Tools Security Warning**: The REPL tools execute arbitrary CFML code. Use only in trusted development environments. See README-CF2023.md for security details.
+
 ## Need Help?
 
+- Check the [CF2023 documentation](README-CF2023.md)
 - Check the [full documentation](README.md)
 - Open an [issue](https://github.com/revsmoke/mcpcfc/issues)
 - Join the discussion!
 
-Happy coding! 🚀
+Happy coding with CF2023 enhancements! 🚀

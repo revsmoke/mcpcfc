@@ -258,10 +258,16 @@ component displayname="ServerManagementTool" hint="Server management tools for C
         };
         
         try {
-            var logPath = server.coldfusion.rootdir & "/logs/" & arguments.logFile;
+            // Sanitize log file name to prevent path traversal attacks
+            var sanitizedLogFile = sanitizeLogFileName(arguments.logFile);
+            if (sanitizedLogFile == "") {
+                throw(message="Invalid log file name: " & arguments.logFile);
+            }
+            
+            var logPath = server.coldfusion.rootdir & "/logs/" & sanitizedLogFile;
             
             if (!fileExists(logPath)) {
-                throw(message="Log file not found: " & arguments.logFile);
+                throw(message="Log file not found: " & sanitizedLogFile);
             }
             
             // Stream the log file to avoid memory issues with large files
@@ -525,28 +531,45 @@ component displayname="ServerManagementTool" hint="Server management tools for C
         var pattern = '^"([^"]+)"\s+(\w+)\s+(.+)$';
         var m = reFind(pattern, arguments.line, 1, true);
 
-        if ( m.pos[1] gt 0 ) {
-            entry.timestamp = mid( arguments.line, m.pos[2], m.len[2] );
-            entry.level     = mid( arguments.line, m.pos[3], m.len[3] );
-            entry.message   = mid( arguments.line, m.pos[4], m.len[4] );
-            return entry;
+        if (m.pos[1] gt 0) {
+            entry.timestamp = mid(arguments.line, m.pos[2], m.len[2]);
+            entry.level = mid(arguments.line, m.pos[3], m.len[3]);
+            entry.message = mid(arguments.line, m.pos[4], m.len[4]);
         } else {
-             // Try alternative format without quotes: timestamp LEVEL message
-             // Pattern matches: 2024-01-15 10:30:45 INFO This is the log message
-             pattern = '^(\S+\s+\S+)\s+(\w+)\s+(.+)$';
-            m = reFind( pattern, arguments.line, 1, true );
+            // Try alternative format without quotes: timestamp LEVEL message
+            // Pattern matches: 2024-01-15 10:30:45 INFO This is the log message
+            pattern = '^(\S+\s+\S+)\s+(\w+)\s+(.+)$';
+            m = reFind(pattern, arguments.line, 1, true);
 
-        if ( m.pos[1] gt 0 ) {
-             entry.timestamp = mid( arguments.line, m.pos[2], m.len[2] );
-             entry.level     = mid( arguments.line, m.pos[3], m.len[3] );
-             entry.message   = mid( arguments.line, m.pos[4], m.len[4] );
-             return entry;
-         }
+            if (m.pos[1] gt 0) {
+                entry.timestamp = mid(arguments.line, m.pos[2], m.len[2]);
+                entry.level = mid(arguments.line, m.pos[3], m.len[3]);
+                entry.message = mid(arguments.line, m.pos[4], m.len[4]);
+            }
+        }
 
-        // Fall-back: return raw line information when no pattern matches
+        // Return the entry (either parsed or raw)
         return entry;
     }
-        return entry;
+
+    /**
+     * Sanitize log file name to prevent path traversal attacks
+     * @logFile The log file name to sanitize
+     * @return Sanitized filename or empty string if invalid
+     */
+    private string function sanitizeLogFileName(required string logFile) {
+        // Extract only the filename from the path (remove any directory traversal)
+        var filename = listLast(arguments.logFile, "/\");
+        
+        // Validate filename against safe pattern
+        // Allow only alphanumeric characters, dots, underscores, hyphens
+        var safePattern = "^[a-zA-Z0-9._-]+$";
+        
+        if (reFind(safePattern, filename)) {
+            return filename;
+        } else {
+            return "";
+        }
     }
-        return entry;
-    }
+
+}

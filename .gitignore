@@ -44,3 +44,4 @@ node_modules/
 /playwright/.cache/
 .CLAUDE.local.md
 screenshots/
+testbox

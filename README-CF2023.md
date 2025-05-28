@@ -67,7 +67,7 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 - [x] Phase 1: Native CFML Stdio Bridge ✅
 - [x] Phase 2: REPL Integration Tool ✅
 - [x] Phase 3: Server Management Tools ✅
-- [ ] Phase 4: Package Management Integration
+- [x] Phase 4: Package Management Integration ✅
 - [ ] Phase 5: Development Workflow Tools
 - [ ] Phase 6: Advanced Database Tools
 
@@ -176,6 +176,82 @@ Clear various CF caches:
   "arguments": {
     "cacheType": "template",
     "path": "/specific/path"
+  }
+}
+```
+
+## Package Management Tools (NEW!)
+
+### 1. **packageInstaller**
+Install packages from ForgeBox:
+```json
+{
+  "name": "packageInstaller",
+  "arguments": {
+    "packageName": "testbox@5.0.0",
+    "saveDev": true,
+    "force": false
+  }
+}
+```
+
+### 2. **packageList**
+List installed packages:
+```json
+{
+  "name": "packageList",
+  "arguments": {
+    "showDependencies": true,
+    "format": "tree"
+  }
+}
+```
+
+### 3. **packageSearch**
+Search ForgeBox repository:
+```json
+{
+  "name": "packageSearch",
+  "arguments": {
+    "query": "coldbox modules",
+    "type": "modules",
+    "limit": 10
+  }
+}
+```
+
+### 4. **packageUpdate**
+Update packages to latest versions:
+```json
+{
+  "name": "packageUpdate",
+  "arguments": {
+    "packageName": "specific-package",
+    "force": false
+  }
+}
+```
+
+### 5. **packageRemove**
+Remove installed packages:
+```json
+{
+  "name": "packageRemove",
+  "arguments": {
+    "packageName": "unwanted-package",
+    "removeDependencies": true
+  }
+}
+```
+
+### 6. **moduleManager**
+Manage ColdBox modules:
+```json
+{
+  "name": "moduleManager",
+  "arguments": {
+    "action": "reload",
+    "moduleName": "myModule"
   }
 }
 ```

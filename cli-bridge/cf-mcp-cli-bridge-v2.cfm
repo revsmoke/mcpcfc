@@ -154,5 +154,14 @@ function registerTools(toolRegistry) {
         // Server tools not available in this environment
         transport.logDebug("Server management tools not available: " & e.message);
     }
+    
+    // Register Package Manager tools component (CF2023+ and CommandBox)
+    try {
+        packageTool = createObject("component", "mcpcfc.cli-tools.PackageManagerTool").init();
+        toolRegistry.registerComponent(packageTool);
+    } catch (any e) {
+        // Package tools not available in this environment
+        transport.logDebug("Package manager tools not available: " & e.message);
+    }
 }
 </cfscript>

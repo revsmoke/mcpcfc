@@ -41,6 +41,44 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 - **CommandBox 5.0+** (for package management features)
 - **Java 17+**  (required by ColdFusion 2023; CommandBox 5.0+ supports Java 11 but CF2023 mandates Java 17)
 
+## 🔒 Security Considerations
+
+**CRITICAL SECURITY WARNING**: The REPL tools (`executeCode`, `evaluateExpression`, `testSnippet`, `inspectVariable`) execute arbitrary CFML code using the `evaluate()` function. 
+
+### Trust Boundary
+- **TRUSTED ENVIRONMENTS ONLY**: Only use these tools in trusted development environments
+- **TRUSTED USERS ONLY**: Only allow trusted developers/AI assistants to execute code
+- **NO PRODUCTION USE**: Never expose REPL tools in production environments
+
+### Security Measures Implemented
+1. **Basic Whitelist Filtering**: Blocks known dangerous functions and patterns
+2. **Thread Isolation**: Code executes in separate cfthread context
+3. **Timeout Protection**: Code execution limited by timeout controls
+4. **Error Containment**: Exceptions are caught and contained
+
+### Blocked Operations
+The security filter blocks code containing:
+- File operations (`cffile`, `fileRead`, `fileWrite`, etc.)
+- System commands (`cfexecute`, `createObject`)
+- Network operations (`cfhttp`, `cfmail`)
+- Database operations (`cfquery`, `cfstoredproc`)
+- System access (`system.`, `runtime.`, Java reflection)
+- Scope modifications (`application.`, `server.`, `session.`)
+
+### Limitations
+- **Not a complete sandbox**: Determined attackers may find bypasses
+- **Pattern-based filtering**: May have false positives/negatives  
+- **No resource limits**: Code can still consume CPU/memory within timeout
+- **Variable scope access**: Code can access variables in current thread scope
+
+### Recommendations for Production
+1. **Disable REPL tools** in production builds
+2. **Use ColdFusion sandbox security** for additional protection
+3. **Network isolation** - run MCP server on isolated network
+4. **User authentication** - implement proper access controls
+5. **Audit logging** - log all code execution attempts
+6. **Resource monitoring** - monitor CPU/memory usage
+
 ## Quick Start
 
 1. **Clone this branch**:

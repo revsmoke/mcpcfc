@@ -524,11 +524,7 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         
         return result;
     }
-private struct function executeCommandWithArgs(required string executable, required array cmdArgs) {
- ...
-    cfexecute(
-        name      = executable,
-        arguments = arrayToList( cmdArgs, " " ), // TODO: add proper shell escaping
+    private struct function executeCommandWithArgs(required string executable, required array cmdArgs) {
         var result = {
             success: true,
             output: "",
@@ -541,10 +537,11 @@ private struct function executeCommandWithArgs(required string executable, requi
             var executeError = "";
             
             // Convert array of arguments to space-separated string
+            // TODO: add proper shell escaping for security
             var argsString = arrayToList(arguments.cmdArgs, " ");
             
             cfexecute(
-                name = arguments.command,
+                name = arguments.executable,
                 arguments = argsString,
                 variable = "executeResult",
                 errorVariable = "executeError",

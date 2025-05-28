@@ -175,8 +175,17 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                     }
                     
                     // Execute code in isolated scope with timeout protection
-                    // Note: Since evaluate() is limited, we execute the code directly
-                    // For better isolation, consider using a sandbox approach
+                    // SECURITY WARNING: evaluate() executes arbitrary CFML code
+                    // This should only be used in trusted environments with trusted code
+                    if (!isCodeSafe(attributes.codeToExecute)) {
+                        threadResult.success = false;
+                        threadResult.error = "Code contains potentially unsafe operations";
+                        threadResult.returnValue = "";
+                        threadResult.output = "";
+                        thread.result = threadResult;
+                        continue;
+                    }
+                    
                     if (attributes.shouldReturnOutput) {
                         savecontent variable="threadResult.output" {
                             // Make context variables available
@@ -310,6 +319,13 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         };
         
         try {
+            // Security check for expression evaluation
+            if (!isCodeSafe(arguments.expression)) {
+                result.success = false;
+                result.error = "Expression contains potentially unsafe operations";
+                return result;
+            }
+            
             // Evaluate the expression
             var value = evaluate( arguments.expression );
             if ( isSimpleValue( value ) ) {
@@ -382,6 +398,13 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         }
         
         try {
+            // Security check for code execution
+            if (!isCodeSafe(arguments.code)) {
+                result.success = false;
+                result.error = "Code contains potentially unsafe operations";
+                return result;
+            }
+            
             // Execute the code
             savecontent variable="result.output" {
                 evaluate(arguments.code);
@@ -396,7 +419,13 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                 };
                 
                 try {
-                    assertResult.passed = evaluate(assertion.expression) ? true : false;
+                    // Security check for assertion expression
+                    if (!isCodeSafe(assertion.expression)) {
+                        assertResult.passed = false;
+                        assertResult.error = "Assertion expression contains potentially unsafe operations";
+                    } else {
+                        assertResult.passed = evaluate(assertion.expression) ? true : false;
+                    }
                 } catch (any e) {
                     assertResult.passed = false;
                     assertResult.error = e.message;
@@ -440,6 +469,20 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         };
         
         try {
+            // Security check for setup code
+            if (!isCodeSafe(arguments.setupCode)) {
+                result.success = false;
+                result.error = "Setup code contains potentially unsafe operations";
+                return result;
+            }
+            
+            // Security check for variable name (could contain code)
+            if (!isCodeSafe(arguments.variableName)) {
+                result.success = false;
+                result.error = "Variable name contains potentially unsafe operations";
+                return result;
+            }
+            
             // Execute setup code
             evaluate(arguments.setupCode);
             
@@ -564,6 +607,74 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             arrayAppend(arr, row);
         }
         return arr;
+    }
+
+    /**
+     * Basic security check for code safety
+     * WARNING: This is not a comprehensive security sandbox
+     * Use only in trusted environments with trusted users
+     */
+    private boolean function isCodeSafe(required string code) {
+        var codeToCheck = lcase(trim(arguments.code));
+        
+        // List of potentially dangerous operations to block
+        var dangerousPatterns = [
+            "createobject", // Could create Java objects, files, etc.
+            "cfexecute", // Execute system commands
+            "cffile", // File operations
+            "cfdirectory", // Directory operations
+            "cfregistry", // Registry access
+            "cfhttp", // HTTP requests (could be used for SSRF)
+            "cfmail", // Email sending
+            "cfldap", // LDAP operations
+            "cfquery", // Database access (depends on context)
+            "cfstoredproc", // Stored procedure calls
+            "cfinclude", // Include other files
+            "cfmodule", // Load modules
+            "cfobject", // Create objects
+            "cfinvoke", // Invoke components
+            "fileread", // File reading functions
+            "filewrite", // File writing functions
+            "directorylist", // Directory listing
+            "expandpath", // Path expansion could reveal system info
+            "gettempdirectory", // System path access
+            "system.", // Java System class access
+            "runtime.", // Java Runtime access
+            "class.forname", // Dynamic class loading
+            ".exec(", // Runtime.exec() calls
+            "processbuilder", // Process creation
+            "cflock", // Could be used for DoS
+            "cfthread", // Nested threading
+            "application.", // Application scope modification
+            "server.", // Server scope access
+            "session.", // Session scope modification (depends on context)
+            "request.", // Request scope modification
+            "cgi.", // CGI scope access
+            "url.", // URL scope access
+            "form." // Form scope access
+        ];
+        
+        // Check for dangerous patterns
+        for (var pattern in dangerousPatterns) {
+            if (findNoCase(pattern, codeToCheck) > 0) {
+                return false;
+            }
+        }
+        
+        // Check for suspicious keywords that might indicate system access
+        var suspiciousKeywords = [
+            "getclass()", "getmetadata()", "getfunctionlist()", 
+            "gettaglist()", "cfusion", "coldfusion", "admin",
+            "password", "secret", "key", "token", "credential"
+        ];
+        
+        for (var keyword in suspiciousKeywords) {
+            if (findNoCase(keyword, codeToCheck) > 0) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
 }

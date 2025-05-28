@@ -163,5 +163,14 @@ function registerTools(toolRegistry) {
         // Package tools not available in this environment
         transport.logDebug("Package manager tools not available: " & e.message);
     }
+    
+    // Register Dev Workflow tools component (CF2023+ and CommandBox)
+    try {
+        devTool = createObject("component", "mcpcfc.cli-tools.DevWorkflowTool").init();
+        toolRegistry.registerComponent(devTool);
+    } catch (any e) {
+        // Dev tools not available in this environment
+        transport.logDebug("Dev workflow tools not available: " & e.message);
+    }
 }
 </cfscript>

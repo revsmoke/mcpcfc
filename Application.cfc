@@ -201,5 +201,15 @@ component output="false" hint="Application component for MCP Server" {
                 "required": ["email"]
             }
         });
+        
+        // Register development workflow tools
+        var devTool = new mcpcfc.clitools.DevWorkflowTool();
+        var devTools = devTool.getToolDefinitions();
+        for (var tool in devTools) {
+            application.toolRegistry.registerTool(tool.name, {
+                "description": tool.description,
+                "inputSchema": tool.inputSchema
+            });
+        }
     }
 }

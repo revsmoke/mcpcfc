@@ -29,6 +29,20 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                     var emailTool = new mcpcfc.tools.EmailTool();
                     return emailTool.executeTool(arguments.toolName, arguments.args);
                     
+                case "codeFormatter":
+                case "codeLinter":
+                case "testRunner":
+                case "generateDocs":
+                case "watchFiles":
+                    // Route development workflow tools to DevWorkflowTool component
+                    var devTool = new mcpcfc.clitools.DevWorkflowTool();
+                    
+                    // Use invoke to call the method dynamically
+                    var result = invoke(devTool, arguments.toolName, arguments.args);
+                    
+                    // Return result (already in MCP format from DevWorkflowTool)
+                    return result;
+                    
                 default:
                     throw(type="ToolNotFound", message="Unknown tool: #arguments.toolName#");
             }

@@ -68,7 +68,7 @@ This branch represents the next evolution of MCPCFC, leveraging Adobe ColdFusion
 - [x] Phase 2: REPL Integration Tool ✅
 - [x] Phase 3: Server Management Tools ✅
 - [x] Phase 4: Package Management Integration ✅
-- [ ] Phase 5: Development Workflow Tools
+- [x] Phase 5: Development Workflow Tools ✅ (COMPLETED 2025-05-28)
 - [ ] Phase 6: Advanced Database Tools
 
 ## REPL Tools Available (NEW!)
@@ -252,6 +252,82 @@ Manage ColdBox modules:
   "arguments": {
     "action": "reload",
     "moduleName": "myModule"
+  }
+}
+```
+
+## Development Workflow Tools (NEW!)
+
+> **Note**: These tools require CommandBox to be installed. Currently running in simulation mode until CommandBox is installed.
+
+### 1. **codeFormatter**
+Format CFML code using cfformat:
+```json
+{
+  "name": "codeFormatter",
+  "arguments": {
+    "code": "component{function test(){var x=1;return x;}}",
+    "settings": {
+      "indentSize": 4,
+      "insertSpaces": true,
+      "maxLineLength": 120
+    }
+  }
+}
+```
+
+### 2. **codeLinter**
+Analyze code for issues using cflint:
+```json
+{
+  "name": "codeLinter",
+  "arguments": {
+    "filePath": "./components/MyComponent.cfc",
+    "rules": "strict",
+    "format": "json",
+    "includeWarnings": true
+  }
+}
+```
+
+### 3. **testRunner**
+Run TestBox tests with coverage:
+```json
+{
+  "name": "testRunner",
+  "arguments": {
+    "directory": "./tests",
+    "bundles": "specs.unit.UserTest",
+    "reporter": "json",
+    "coverage": true
+  }
+}
+```
+
+### 4. **generateDocs**
+Generate documentation from components:
+```json
+{
+  "name": "generateDocs",
+  "arguments": {
+    "sourcePath": "./components",
+    "outputPath": "./docs",
+    "format": "html",
+    "includePrivate": false
+  }
+}
+```
+
+### 5. **watchFiles**
+Watch files for changes and run actions:
+```json
+{
+  "name": "watchFiles",
+  "arguments": {
+    "paths": ["./components", "./tests"],
+    "extensions": ["cfc", "cfm"],
+    "action": "test",
+    "debounce": 1000
   }
 }
 ```

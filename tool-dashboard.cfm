@@ -112,18 +112,18 @@
         <p style="margin: 5px 0 0 0; opacity: 0.8;">Real-time monitoring of MCPCFC tool executions</p>
     </div>
     
+    <cftry>
     <cfscript>
-    try {
         // Get filter parameters
         param name="url.hours" default="24";
         param name="url.tool" default="";
         param name="url.session" default="";
         
-        var hoursBack = val(url.hours);
+        hoursBack = val(url.hours);
         if (hoursBack <= 0) hoursBack = 24;
         
         // Calculate statistics
-        var stats = queryExecute("
+        stats = queryExecute("
             SELECT 
                 COUNT(*) as total_executions,
                 COUNT(DISTINCT tool_name) as unique_tools,
@@ -143,7 +143,7 @@
         }, {datasource: "mcpcfc_ds"});
         
         // Get tool-specific statistics
-        var toolStats = queryExecute("
+        toolStats = queryExecute("
             SELECT 
                 tool_name,
                 COUNT(*) as execution_count,
@@ -164,7 +164,7 @@
         }, {datasource: "mcpcfc_ds"});
         
         // Calculate success rate
-        var successRate = stats.total_executions > 0 
+        successRate = stats.total_executions > 0 
             ? (stats.success_count / stats.total_executions * 100) 
             : 0;
     </cfscript>
@@ -207,10 +207,10 @@
         <div class="stat-card">
             <h3>Success Rate</h3>
             <div class="stat-value success-rate"><cfoutput>#numberFormat(successRate, "99.9")#%</cfoutput></div>
-            <div style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+            <div style="margin-top: 10px; font-size: 0.9em; color: ##7f8c8d;">
                 <cfoutput>
-                    <span style="color: #27ae60;">✓ #numberFormat(stats.success_count)# Success</span> | 
-                    <span style="color: #e74c3c;">✗ #numberFormat(stats.failure_count)# Failed</span>
+                    <span style="color: ##27ae60;">✓ #numberFormat(stats.success_count)# Success</span> | 
+                    <span style="color: ##e74c3c;">✗ #numberFormat(stats.failure_count)# Failed</span>
                 </cfoutput>
             </div>
         </div>
@@ -218,7 +218,7 @@
         <div class="stat-card">
             <h3>Average Execution Time</h3>
             <div class="stat-value"><cfoutput>#numberFormat(stats.avg_execution_time, "999")#ms</cfoutput></div>
-            <div style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+            <div style="margin-top: 10px; font-size: 0.9em; color: ##7f8c8d;">
                 Max: <cfoutput>#numberFormat(stats.max_execution_time)#ms</cfoutput>
             </div>
         </div>
@@ -244,7 +244,9 @@
             </thead>
             <tbody>
                 <cfoutput query="toolStats">
-                    <cfset toolSuccessRate = execution_count > 0 ? (success_count / execution_count * 100) : 0>
+                    <cfsilent>
+                        <cfset toolSuccessRate = execution_count > 0 ? (success_count / execution_count * 100) : 0>
+                    </cfsilent>
                     <tr>
                         <td><strong>#tool_name#</strong></td>
                         <td>#numberFormat(execution_count)#</td>
@@ -267,7 +269,7 @@
     
     <!-- Recent Executions -->
     <cfscript>
-        var recentExecutions = queryExecute("
+        recentExecutions = queryExecute("
             SELECT 
                 id,
                 tool_name,
@@ -326,18 +328,17 @@
         </table>
     </div>
     
+    <div class="refresh-note">
+        Page auto-refreshes every 30 seconds | Last updated: <cfoutput>#timeFormat(now(), "HH:nn:ss")#</cfoutput>
+    </div>
     
-        writeOutput('<div class="refresh-note">');
-        writeOutput('Page auto-refreshes every 30 seconds | Last updated: ' & timeFormat(now(), "HH:nn:ss"));
-        writeOutput('</div>');
-        
-    } catch (any e) {
-        writeOutput('<div class="stat-card" style="background: ##fee; border: 1px solid ##fcc;">');
-        writeOutput('<h3 style="color: ##c00;">Error Loading Dashboard</h3>');
-        writeOutput('<p>' & e.message & '</p>');
-        writeDump(e);
-        writeOutput('</div>');
-    }
-    </cfscript>
+    <cfcatch>
+        <div class="stat-card" style="background: #fee; border: 1px solid #fcc;">
+            <h3 style="color: #c00;">Error Loading Dashboard</h3>
+            <p><cfoutput>#cfcatch.message#</cfoutput></p>
+            <cfdump var="#cfcatch#">
+        </div>
+    </cfcatch>
+    </cftry>
 </body>
 </html>

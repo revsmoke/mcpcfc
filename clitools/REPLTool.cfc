@@ -612,69 +612,190 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
     }
 
     /**
-     * Basic security check for code safety
+     * Enhanced security check for code safety
      * WARNING: This is not a comprehensive security sandbox
      * Use only in trusted environments with trusted users
+     * 
+     * TODO: Future improvements:
+     * - Switch to whitelist approach instead of blacklist
+     * - Parse code into AST for accurate validation
+     * - Add resource usage limits (memory, CPU, execution time)
+     * - Implement logging for all security blocks
      */
     private boolean function isCodeSafe(required string code) {
         var codeToCheck = lcase(trim(arguments.code));
         
-        // List of potentially dangerous operations to block
-        var dangerousPatterns = [
-            "createobject", // Could create Java objects, files, etc.
-            "cfexecute", // Execute system commands
-            "cffile", // File operations
-            "cfdirectory", // Directory operations
-            "cfregistry", // Registry access
-            "cfhttp", // HTTP requests (could be used for SSRF)
-            "cfmail", // Email sending
-            "cfldap", // LDAP operations
-            "cfquery", // Database access (depends on context)
-            "cfstoredproc", // Stored procedure calls
-            "cfinclude", // Include other files
-            "cfmodule", // Load modules
-            "cfobject", // Create objects
-            "cfinvoke", // Invoke components
-            "fileread", // File reading functions
-            "filewrite", // File writing functions
-            "directorylist", // Directory listing
-            "expandpath", // Path expansion could reveal system info
-            "gettempdirectory", // System path access
-            "system.", // Java System class access
-            "runtime.", // Java Runtime access
-            "class.forname", // Dynamic class loading
-            ".exec(", // Runtime.exec() calls
-            "processbuilder", // Process creation
-            "cflock", // Could be used for DoS
-            "cfthread", // Nested threading
-            "application.", // Application scope modification
-            "server.", // Server scope access
-            "session.", // Session scope modification (depends on context)
-            "request.", // Request scope modification
-            "cgi.", // CGI scope access
-            "url.", // URL scope access
-            "form." // Form scope access
+        // Expanded list of dangerous regex patterns with word boundaries
+        var dangerousRegexPatterns = [
+            // Object creation and reflection
+            "\bcreateobject\b", // Could create Java objects, files, etc.
+            "\bnew\s+java\b", // Java object instantiation
+            "\.class\s*\(", // Class access/loading
+            "\.getclass\s*\(", // Reflective class access
+            "\bclass\.forname\b", // Dynamic class loading
+            "\bgetmetadata\s*\(", // Metadata access
+            "\bgetfunctioncaller\s*\(", // Stack inspection
+            
+            // File and system operations
+            "\bcfexecute\b", // Execute system commands
+            "\bcffile\b", // File operations
+            "\bcfdirectory\b", // Directory operations
+            "\bcfregistry\b", // Registry access
+            "\bfileread\b", // File reading functions
+            "\bfilewrite\b", // File writing functions
+            "\bfileopen\b", // File opening
+            "\bfilecopy\b", // File copying
+            "\bfilemove\b", // File moving
+            "\bfiledelete\b", // File deletion
+            "\bfileexists\b", // File existence check
+            "\bdirectorylist\b", // Directory listing
+            "\bdirectorycreate\b", // Directory creation
+            "\bdirectorydelete\b", // Directory deletion
+            "\bexpandpath\b", // Path expansion could reveal system info
+            "\bgettempdirectory\b", // System path access
+            "\bgettemplatepath\b", // Template path access
+            "\bgetcurrenttemplatepath\b", // Current template path
+            "\bgetbasetemplatepath\b", // Base template path
+            
+            // Network operations
+            "\bcfhttp\b", // HTTP requests (could be used for SSRF)
+            "\bcfmail\b", // Email sending
+            "\bcfldap\b", // LDAP operations
+            "\bcfftp\b", // FTP operations
+            "\bcfsocket\b", // Socket operations
+            "\bhttpsend\b", // HTTP sending
+            
+            // Database operations
+            "\bcfquery\b", // Database access
+            "\bcfstoredproc\b", // Stored procedure calls
+            "\bquerynew\b", // Query creation
+            "\bqueryexecute\b", // Query execution
+            "\bcftransaction\b", // Database transactions
+            "\bcfdbinfo\b", // Database info
+            
+            // Code inclusion and execution
+            "\bcfinclude\b", // Include other files
+            "\bcfmodule\b", // Load modules
+            "\bcfobject\b", // Create objects
+            "\bcfinvoke\b", // Invoke components
+            "\bcfimport\b", // Import tags/components
+            "\bcfscript\b", // Script execution
+            "\bevaluate\s*\(", // Dynamic evaluation (nested)
+            "\bprecisionevaluate\s*\(", // Precision evaluation
+            
+            // Java system access
+            "\bsystem\.", // Java System class access
+            "\bruntime\.", // Java Runtime access
+            "\.exec\s*\(", // Runtime.exec() calls
+            "\bprocessbuilder\b", // Process creation
+            "\bthread\.", // Thread manipulation
+            "\bclass\.", // Class manipulation
+            
+            // Threading and locking
+            "\bcflock\b", // Could be used for DoS
+            "\bcfthread\b", // Nested threading
+            "\bsleep\s*\(", // Thread sleeping (DoS)
+            
+            // Scope access and modification
+            "\bapplication\.", // Application scope modification
+            "\bserver\.", // Server scope access
+            "\bsession\.", // Session scope modification
+            "\brequest\.", // Request scope modification
+            "\bcgi\.", // CGI scope access
+            "\burl\.", // URL scope access
+            "\bform\.", // Form scope access
+            "\bcookie\.", // Cookie access
+            "\bclient\.", // Client scope access
+            
+            // Admin and debugging
+            "\bcfadmin\b", // Admin operations
+            "\bcfdump\b", // Could expose sensitive data
+            "\bcftrace\b", // Tracing/debugging
+            "\bcflog\b", // Logging access
+            "\bcfdebug\b", // Debug operations
+            "\bcferror\b", // Error handling manipulation
+            
+            // Component manipulation
+            "\bgetcomponentmetadata\b", // Component metadata
+            "\bgetpagecontext\b", // Page context access
+            "\bgetfunctionlist\b", // Function listing
+            "\bgettaglist\b", // Tag listing
+            
+            // Serialization (potential RCE)
+            "\bobjectload\b", // Object deserialization
+            "\bobjectsave\b", // Object serialization
+            "\bdeserializejson\b", // JSON deserialization with type info
+            "\bdeserializexml\b", // XML deserialization
+            
+            // Cache manipulation
+            "\bcfcache\b", // Cache operations
+            "\bcacheget\b", // Cache reading
+            "\bcacheput\b", // Cache writing
+            "\bcachedelete\b", // Cache deletion
+            "\bcacheclear\b" // Cache clearing
         ];
         
-        // Check for dangerous patterns
-        for (var pattern in dangerousPatterns) {
-            if (findNoCase(pattern, codeToCheck) > 0) {
+        // Check dangerous patterns using regex with word boundaries
+        for (var pattern in dangerousRegexPatterns) {
+            if (reFindNoCase(pattern, codeToCheck) > 0) {
+                // TODO: Log security block with pattern matched
                 return false;
             }
         }
         
-        // Check for suspicious keywords that might indicate system access
+        // Additional regex patterns for reflective and class-loading operations
+        var reflectionPatterns = [
+            "\.class\s*\.", // Access to .class property
+            "\.class\s*\[", // Array access on class
+            "\.getclass\s*\(\s*\)\s*\.", // Method chaining on getClass()
+            "\bclassloader\b", // ClassLoader access
+            "\bgetclassloader\b", // Getting class loader
+            "\bdefineclass\b", // Defining new classes
+            "\bloadclass\b", // Loading classes
+            "\bgetprotectiondomain\b", // Security domain access
+            "\bgetdeclaredmethods\b", // Method reflection
+            "\bgetdeclaredfields\b", // Field reflection
+            "\bsetaccessible\b", // Bypassing access controls
+            "\binvoke\b.*\bmethod\b", // Reflective method invocation
+            "\bnewinstance\b" // Creating instances reflectively
+        ];
+        
+        // Check reflection patterns
+        for (var pattern in reflectionPatterns) {
+            if (reFindNoCase(pattern, codeToCheck) > 0) {
+                // TODO: Log security block for reflection attempt
+                return false;
+            }
+        }
+        
+        // Check for suspicious keywords that might indicate sensitive data access
         var suspiciousKeywords = [
-            "getclass()", "getmetadata()", "getfunctionlist()", 
-            "gettaglist()", "cfusion", "coldfusion", "admin",
-            "password", "secret", "key", "token", "credential"
+            "\bcfusion\b", // ColdFusion internals
+            "\bcoldfusion\b", // ColdFusion references
+            "\badmin\b", // Admin access
+            "\bpassword\b", // Password access
+            "\bsecret\b", // Secret data
+            "\bkey\b", // Key access
+            "\btoken\b", // Token access
+            "\bcredential\b", // Credential access
+            "\bprivate\b", // Private data
+            "\bencrypt\b", // Encryption operations
+            "\bdecrypt\b", // Decryption operations
+            "\bhash\b", // Hashing operations
+            "\bsalt\b" // Salt access
         ];
         
+        // Use regex for keyword matching with word boundaries
         for (var keyword in suspiciousKeywords) {
-            if (findNoCase(keyword, codeToCheck) > 0) {
+            var keywordPattern = "\b" & reReplace(keyword, "([.*+?^${}()|[\]\\])", "\\\1", "all") & "\b";
+            if (reFindNoCase(keywordPattern, codeToCheck) > 0) {
+                // TODO: Log security block for suspicious keyword
                 return false;
             }
         }
+        
+        // TODO: Implement resource usage tracking before execution
+        // TODO: Consider AST parsing for more accurate code analysis
         
         return true;
     }

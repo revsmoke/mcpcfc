@@ -36,7 +36,9 @@
                 output_result TEXT,
                 execution_time INT,
                 executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                session_id VARCHAR(255)
+                session_id VARCHAR(255),
+                success BOOLEAN DEFAULT TRUE,
+                error_message TEXT
             )
         ", {}, {datasource: "mcpcfc_ds"});
         

@@ -205,9 +205,9 @@ try {
         }
         writeOutput('</td>');
         writeOutput('<td>' & numberFormat(exec.execution_time) & 'ms</td>');
-writeOutput('<td><strong>' & encodeForHtml( exec.tool_name ) & '</strong></td>');
-…
-writeOutput('<td style="font-size: 0.85em; color: ##7f8c8d;">' & encodeForHtml( left(exec.session_id,20) ) & '...</td>');
+        writeOutput('<td style="font-size: 0.85em; color: ##7f8c8d;">' & encodeForHtml(left(exec.session_id,20)) & '...</td>');
+        writeOutput('</tr>');
+    }
     
     writeOutput('</tbody>');
     writeOutput('</table>');

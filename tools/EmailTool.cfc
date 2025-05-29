@@ -1,4 +1,4 @@
-component displayname="EmailTool" hint="ColdFusion MCP Email Tool - Provides email functionality" {
+component displayname="EmailTool" hint="ColdFusion MCP Email Tool - Provides email functionality" extends="mcpcfc.tools.BaseTool" {
     
     /**
      * Execute an email tool
@@ -160,14 +160,5 @@ component displayname="EmailTool" hint="ColdFusion MCP Email Tool - Provides ema
         }
     }
     
-    /**
-     * Validate required parameters
-     */
-    private void function validateRequiredParams(required struct args, required array required) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
-        for (var param in arguments.required) {
-            if (!structKeyExists(arguments.args, param) || len(trim(arguments.args[param])) == 0) {
-                throw(type="InvalidParams", message="Missing required parameter: #param#");
-            }
-        }
-    }
+    // validateRequiredParams is now inherited from BaseTool
 }

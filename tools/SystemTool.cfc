@@ -1,4 +1,4 @@
-component displayname="SystemTool" {
+component displayname="SystemTool" extends="mcpcfc.tools.BaseTool" {
     
     /**
      * System utilities for the MCP server
@@ -72,8 +72,8 @@ private struct function restartClaude(required struct args) {
         var result = "";
         cfexecute(
             name=scriptPath,
-            timeout="10"
-           arguments=""  // Explicitly set empty arguments
+            timeout="10",
+            arguments="",
             variable="result"
         );
         

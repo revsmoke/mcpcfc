@@ -1,4 +1,4 @@
-component displayname="PDFTool" hint="PDF Tool" {
+component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" {
     
     /**
      * Example of a ColdFusion-specific tool that leverages CF's built-in PDF capabilities
@@ -186,22 +186,8 @@ component displayname="PDFTool" hint="PDF Tool" {
         }
     }
     
-    private void function validateRequiredParams(required struct args, required array required) {
-        for (var param in arguments.required) {
-            if (!structKeyExists(arguments.args, param)) {
-                throw(type="InvalidParams", message="Missing required parameter: #param#");
-            }
-            
-            // Special handling for arrays
-            if (isArray(arguments.args[param])) {
-                if (arrayLen(arguments.args[param]) == 0) {
-                    throw(type="InvalidParams", message="Empty array for parameter: #param#");
-                }
-            } else if (isSimpleValue(arguments.args[param]) && len(trim(arguments.args[param])) == 0) {
-                throw(type="InvalidParams", message="Empty value for parameter: #param#");
-            }
-        }
-    }
+    // validateRequiredParams is now inherited from BaseTool
+    // The base implementation already handles arrays and empty values
 }
 
 /**

@@ -13,106 +13,106 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
     public array function getToolDefinitions() {
         return [
             {
-                name: "executeCode",
-                description: "Execute CFML code in an isolated context and return the result",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        code: {
-                            type: "string",
-                            description: "The CFML code to execute (CFScript syntax)"
+                name = "executeCode",
+                description = "Execute CFML code in an isolated context and return the result",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        code = {
+                            type = "string",
+                            description = "The CFML code to execute (CFScript syntax)"
                         },
-                        returnOutput: {
-                            type: "boolean",
-                            description: "Whether to capture and return output (default: true)",
-                            default: true
+                        returnOutput = {
+                            type = "boolean",
+                            description = "Whether to capture and return output (default: true)",
+                            default = true
                         },
-                        timeout: {
-                            type: "number",
-                            description: "Maximum execution time in seconds (default: 30)",
-                            default: 30
+                        timeout = {
+                            type = "number",
+                            description = "Maximum execution time in seconds (default: 30)",
+                            default = 30
                         }
                     },
-                    required: ["code"]
+                    required = ["code"]
                 }
             },
             {
-                name: "evaluateExpression",
-                description: "Evaluate a CFML expression and return its value",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        expression: {
-                            type: "string",
-                            description: "The CFML expression to evaluate"
+                name = "evaluateExpression",
+                description = "Evaluate a CFML expression and return its value",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        expression = {
+                            type = "string",
+                            description = "The CFML expression to evaluate"
                         },
-                        format: {
-                            type: "string",
-                            description: "Output format: json, string, or dump",
-                            enum: ["json", "string", "dump"],
-                            default: "json"
+                        format = {
+                            type = "string",
+                            description = "Output format: json, string, or dump",
+                            enum = ["json", "string", "dump"],
+                            default = "json"
                         }
                     },
-                    required: ["expression"]
+                    required = ["expression"]
                 }
             },
             {
-                name: "testSnippet",
-                description: "Execute code with test assertions and return results",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        code: {
-                            type: "string",
-                            description: "The CFML code to test"
+                name = "testSnippet",
+                description = "Execute code with test assertions and return results",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        code = {
+                            type = "string",
+                            description = "The CFML code to test"
                         },
-                        assertions: {
-                            type: "array",
-                            description: "Array of assertions to verify",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    expression: {
-                                        type: "string",
-                                        description: "Expression that should evaluate to true"
+                        assertions = {
+                            type = "array",
+                            description = "Array of assertions to verify",
+                            items = {
+                                type = "object",
+                                properties = {
+                                    expression = {
+                                        type = "string",
+                                        description = "Expression that should evaluate to true"
                                     },
-                                    message: {
-                                        type: "string",
-                                        description: "Error message if assertion fails"
+                                    message = {
+                                        type = "string",
+                                        description = "Error message if assertion fails"
                                     }
                                 }
                             }
                         },
-                        measurePerformance: {
-                            type: "boolean",
-                            description: "Whether to measure execution time and memory",
-                            default: false
+                        measurePerformance = {
+                            type = "boolean",
+                            description = "Whether to measure execution time and memory",
+                            default = false
                         }
                     },
-                    required: ["code"]
+                    required = ["code"]
                 }
             },
             {
-                name: "inspectVariable",
-                description: "Inspect a variable's type, structure, and contents",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        setupCode: {
-                            type: "string",
-                            description: "Code to set up the variable"
+                name = "inspectVariable",
+                description = "Inspect a variable's type, structure, and contents",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        setupCode = {
+                            type = "string",
+                            description = "Code to set up the variable"
                         },
-                        variableName: {
-                            type: "string",
-                            description: "Name of the variable to inspect"
+                        variableName = {
+                            type = "string",
+                            description = "Name of the variable to inspect"
                         },
-                        depth: {
-                            type: "number",
-                            description: "Maximum depth for nested structures (default: 3)",
-                            default: 3
+                        depth = {
+                            type = "number",
+                            description = "Maximum depth for nested structures (default: 3)",
+                            default = 3
                         }
                     },
-                    required: ["setupCode", "variableName"]
+                    required = ["setupCode", "variableName"]
                 }
             }
         ];
@@ -127,13 +127,13 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
      */
     public struct function executeCode(required string code, boolean returnOutput = true, numeric timeout = 30, struct executionContext = {}) {
         var result = {
-            success: true,
-            output: "",
-            error: "",
-            returnValue: "",
-            executionTime: 0,
-            timedOut: false,
-            stackTrace: []
+            success = true,
+            output = "",
+            error = "",
+            returnValue = "",
+            executionTime = 0,
+            timedOut = false,
+            stackTrace = []
         };
         
         var startTime = getTickCount();
@@ -158,11 +158,11 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                 try {
                     // Create isolated variables scope for this thread
                     var threadResult = {
-                        output: "",
-                        success: true,
-                        error: "",
-                        errorDetail: "",
-                        stackTrace: []
+                        output = "",
+                        success = true,
+                        error = "",
+                        errorDetail = "",
+                        stackTrace = []
                     };
                     
                     // Setup execution context variables in isolated scope
@@ -220,11 +220,11 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                     }
                     
                     thread.result = {
-                        output: "",
-                        success: false,
-                        error: e.message,
-                        errorDetail: e.detail,
-                        stackTrace: safeStackTrace
+                        output = "",
+                        success = false,
+                        error = e.message,
+                        errorDetail = e.detail,
+                        stackTrace = safeStackTrace
                     };
                 }
             }
@@ -245,8 +245,8 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                     if (!threadResult.success) {
                         // Safely reconstruct exception object for line info extraction
                         var reconstructedException = {
-                            message: threadResult.error,
-                            detail: threadResult.errorDetail
+                            message = threadResult.error,
+                            detail = threadResult.errorDetail
                         };
                         
                         // Only add tagContext if it's a valid array with elements
@@ -312,10 +312,10 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
      */
     public struct function evaluateExpression(required string expression, string format = "json") {
         var result = {
-            success: true,
-            value: "",
-            type: "",
-            error: ""
+            success = true,
+            value = "",
+            type = "",
+            error = ""
         };
         
         try {
@@ -383,11 +383,11 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         boolean measurePerformance = false
     ) {
         var result = {
-            success: true,
-            output: "",
-            assertions: [],
-            performance: {},
-            error: ""
+            success = true,
+            output = "",
+            assertions = [],
+            performance = {},
+            error = ""
         };
         
         var startTime = getTickCount();
@@ -413,9 +413,9 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             // Run assertions
             for (var assertion in arguments.assertions) {
                 var assertResult = {
-                    expression: assertion.expression,
-                    passed: false,
-                    message: assertion.message ?: "Assertion failed"
+                    expression = assertion.expression,
+                    passed = false,
+                    message = assertion.message ?: "Assertion failed"
                 };
                 
                 try {
@@ -440,8 +440,8 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             // Measure performance if requested
             if (arguments.measurePerformance) {
                 result.performance = {
-                    executionTime: getTickCount() - startTime,
-                    memoryUsed: getJVMMemoryUsage().used - startMemory
+                    executionTime = getTickCount() - startTime,
+                    memoryUsed = getJVMMemoryUsage().used - startMemory
                 };
             }
             
@@ -463,9 +463,9 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         numeric depth = 3
     ) {
         var result = {
-            success: true,
-            variable: {},
-            error: ""
+            success = true,
+            variable = {},
+            error = ""
         };
         
         try {
@@ -496,16 +496,16 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             
             // Build inspection result
             result.variable = {
-                name: arguments.variableName,
-type: isSimpleValue( varToInspect )
-    ? lcase( javacast( "string", typeof( varToInspect ) ) )
-    : getMetadata( varToInspect ).name ?: "unknown",
-                value: inspectValue(varToInspect, arguments.depth),
-                isSimple: isSimpleValue(varToInspect),
-                isObject : isInstanceOf(varToInspect,"java.lang.Object"),
-                isStruct: isStruct(varToInspect),
-                isArray: isArray(varToInspect),
-                isQuery: isQuery(varToInspect)
+                name = arguments.variableName,
+                type = isSimpleValue( varToInspect )
+                    ? lcase( javacast( "string", typeof( varToInspect ) ) )
+                    : getMetadata( varToInspect ).name ?: "unknown",
+                value = inspectValue(varToInspect, arguments.depth),
+                isSimple = isSimpleValue(varToInspect),
+                isObject = isInstanceOf(varToInspect,"java.lang.Object"),
+                isStruct = isStruct(varToInspect),
+                isArray = isArray(varToInspect),
+                isQuery = isQuery(varToInspect)
             };
             
         } catch (any e) {
@@ -541,9 +541,9 @@ type: isSimpleValue( varToInspect )
             return str;
         } else if (isQuery(arguments.value)) {
             return {
-                recordCount: arguments.value.recordCount,
-                columnList: arguments.value.columnList,
-                data: queryToArray(arguments.value)
+                recordCount = arguments.value.recordCount,
+                columnList = arguments.value.columnList,
+                data = queryToArray(arguments.value)
             };
         } else {
             return toString(arguments.value);
@@ -593,10 +593,10 @@ type: isSimpleValue( varToInspect )
     private struct function getJVMMemoryUsage() {
         var runtime = createObject("java", "java.lang.Runtime").getRuntime();
         return {
-            total: runtime.totalMemory(),
-            free: runtime.freeMemory(),
-            used: runtime.totalMemory() - runtime.freeMemory(),
-            max: runtime.maxMemory()
+            total = runtime.totalMemory(),
+            free = runtime.freeMemory(),
+            used = runtime.totalMemory() - runtime.freeMemory(),
+            max = runtime.maxMemory()
         };
     }
 

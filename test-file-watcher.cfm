@@ -105,8 +105,16 @@
         <!-- Start Watcher Section -->
         <div class="section">
             <h2>Start a File Watcher</h2>
-            <form method="post">
-                <input type="hidden" name="action" value="start">
+<cfscript>
+// Generate CSRF token if not exists
+if (!structKeyExists(session, "csrfToken")) {
+    session.csrfToken = hash(createUUID() & now(), "SHA-256");
+}
+</cfscript>
+
+ <form method="post">
+     <input type="hidden" name="action" value="start">
+    <input type="hidden" name="csrfToken" value="<cfoutput>#session.csrfToken#</cfoutput>">
                 
                 <p>
                     <label>Paths to watch (comma-separated):</label><br>
@@ -140,26 +148,49 @@
             <cfscript>
             try {
                 toolHandler = new components.ToolHandler();
-                
-                switch(form.action) {
-                    case "start":
-                        // Start a file watcher
-                        paths = listToArray(form.paths);
-                        extensions = listToArray(form.extensions);
-                        
-                        result = toolHandler.executeTool("watchFiles", {
-                            paths: paths,
-                            extensions: extensions,
-                            action: form.watchAction,
-                            debounce: val(form.debounce)
-                        });
-                        
-                        writeOutput('<div class="section">');
-                        if (structKeyExists(result, "content") && arrayLen(result.content) > 0) {
-                            watchResult = deserializeJson(result.content[1].text);
-                            if (watchResult.success) {
-                                writeOutput('<p class="success">✅ ' & watchResult.message & '</p>');
-                                writeOutput('<p>Watcher ID: <strong>' & watchResult.watcherId & '</strong></p>');
+    // Add CSRF token validation
+    if (!structKeyExists(session, "csrfToken") || !structKeyExists(form, "csrfToken") || 
+        session.csrfToken != form.csrfToken) {
+        throw(type="SecurityError", message="Invalid CSRF token");
+    }
+    
+     // Start a file watcher
+    // Validate and sanitize input
+    if (!len(trim(form.paths))) {
+        throw(type="ValidationError", message="Paths cannot be empty");
+    }
+    paths = listToArray(form.paths).filter(function(path) {
+        return len(trim(path)) > 0 && !find("..", path);
+    });
+    extensions = listToArray(form.extensions).filter(function(ext) {
+        return reMatch("^[a-zA-Z0-9]{1,10}$", trim(ext)).len() > 0;
+    });
+     
+    if (!arrayLen(paths) || !arrayLen(extensions)) {
+        throw(type="ValidationError", message="Valid paths and extensions required");
+    }
+    
+    result = toolHandler.executeTool("watchFiles", {
+         paths: paths,
+         extensions: extensions,
+         action: form.watchAction,
+        debounce: max(100, min(10000, val(form.debounce)))
+     });
+     
+    if (structKeyExists(result, "content") && arrayLen(result.content) > 0) {
+        try {
+            watchResult = deserializeJson(result.content[1].text);
+        } catch (any jsonError) {
+            throw(type="DataError", message="Invalid JSON response from tool");
+        }
+ 
+ } catch (any e) {
+     writeOutput('<div class="section">');
+    writeOutput('<p class="error">❌ Error: ' & encodeForHTML(e.message) & '</p>');
+    // Log error securely instead of exposing via writeDump
+    writeLog(file="application", text="File watcher error: #e.message# #e.detail#");
+     writeOutput('</div>');
+ }
                             } else {
                                 writeOutput('<p class="error">❌ ' & watchResult.error & '</p>');
                             }
@@ -265,29 +296,42 @@
                     </div>
                 </form>
                 
-                <cfif structKeyExists(form, "action") AND form.action EQ "modifyTestFile">
-                    <cfscript>
-                    try {
-                        if (form.testAction EQ "create") {
-                            // Ensure directory exists
-                            testDir = getDirectoryFromPath(testFilePath);
-                            if (!directoryExists(testDir)) {
-                                directoryCreate(testDir);
-                            }
-                            
-                            // Write test file with timestamp
-                            fileWrite(testFilePath, '<!--- Test file modified at: ' & now() & ' --->' & chr(10) & 
-                                                    '<cfoutput>Test file content</cfoutput>');
-                            writeOutput('<p class="success">✅ Test file created/updated!</p>');
-                        } else if (form.testAction EQ "delete" AND testFileExists) {
-                            fileDelete(testFilePath);
-                            writeOutput('<p class="success">✅ Test file deleted!</p>');
-                        }
-                    } catch (any e) {
-                        writeOutput('<p class="error">❌ Error: ' & e.message & '</p>');
-                    }
-                    </cfscript>
-                </cfif>
+<cfif structKeyExists(form, "action") AND form.action EQ "modifyTestFile">
+     <cfscript>
+     try {
+        // Validate CSRF token
+        if (!structKeyExists(session, "csrfToken") || form.csrfToken != session.csrfToken) {
+            throw(type="SecurityError", message="Invalid request");
+        }
+        
+        // Validate file path is within allowed directory
+        allowedDir = expandPath("./tests/");
+        if (!testFilePath.startsWith(allowedDir)) {
+            throw(type="SecurityError", message="Invalid file path");
+        }
+        
+         if (form.testAction EQ "create") {
+             // Ensure directory exists
+             testDir = getDirectoryFromPath(testFilePath);
+             if (!directoryExists(testDir)) {
+                 directoryCreate(testDir);
+             }
+             
+             // Write test file with timestamp
+            var safeContent = '<!--- Test file modified at: ' & encodeForHTML(dateTimeFormat(now(), "yyyy-mm-dd HH:nn:ss")) & ' --->' & chr(10) & 
+                             '<cfoutput>Test file content</cfoutput>';
+            fileWrite(testFilePath, safeContent);
+             writeOutput('<p class="success">✅ Test file created/updated!</p>');
+         } else if (form.testAction EQ "delete" AND testFileExists) {
+             fileDelete(testFilePath);
+             writeOutput('<p class="success">✅ Test file deleted!</p>');
+         }
+     } catch (any e) {
+        writeOutput('<p class="error">❌ Error: ' & encodeForHTML(e.message) & '</p>');
+        writeLog(file="application", text="Test file operation error: #e.message#");
+     }
+     </cfscript>
+ </cfif>
             </div>
         </div>
         
@@ -295,37 +339,58 @@
         <div class="section">
             <h2>Recent File Watcher Logs</h2>
             <div class="log-viewer">
-                <cfscript>
-                try {
-                    // Read the application log
-                    logFile = expandPath("/Applications/ColdFusion2023/cfusion/logs/application.log");
-                    if (fileExists(logFile)) {
-                        // Read last 50 lines
-                        allLines = fileRead(logFile).split("\n");
-                        startLine = max(1, arrayLen(allLines) - 50);
-                        
-                        writeOutput('<pre>');
-                        for (i = startLine; i <= arrayLen(allLines); i++) {
-                            line = allLines[i];
-                            // Highlight file watcher related logs
-                            if (findNoCase("File changes detected", line) || 
-                                findNoCase("watch", line) ||
-                                findNoCase("Test execution", line) ||
-                                findNoCase("Lint", line) ||
-                                findNoCase("Application reloaded", line)) {
-                                writeOutput('<span style="color: ##f39c12;">' & encodeForHtml(line) & '</span>' & chr(10));
-                            } else {
-                                writeOutput(encodeForHtml(line) & chr(10));
-                            }
-                        }
-                        writeOutput('</pre>');
-                    } else {
-                        writeOutput('<p>Log file not found.</p>');
-                    }
-                } catch (any e) {
-                    writeOutput('<p class="error">Error reading logs: ' & e.message & '</p>');
+<cfscript>
+ try {
+    // Add basic access control
+    if (!structKeyExists(session, "isAdmin") || !session.isAdmin) {
+        writeOutput('<p class="error">Access denied: Admin privileges required</p>');
+        return;
+    }
+    
+     // Read the application log
+    // Use server-relative path instead of hardcoded absolute path
+    logFile = server.coldfusion.rootdir & "/logs/application.log";
+    
+     if (fileExists(logFile)) {
+         // Read last 50 lines
+        try {
+            logContent = fileRead(logFile);
+            allLines = logContent.split(chr(10));
+        } catch (any fileError) {
+            writeOutput('<p class="error">Unable to read log file</p>');
+            return;
+        }
+        
+         startLine = max(1, arrayLen(allLines) - 50);
+         
+         writeOutput('<pre>');
+         for (i = startLine; i <= arrayLen(allLines); i++) {
+            line = encodeForHTML(allLines[i]);
+             // Highlight file watcher related logs
+            // Filter out sensitive information
+            if (!findNoCase("password", line) && !findNoCase("secret", line) && 
+                !findNoCase("token", line) && !findNoCase("key", line)) {
+                if (findNoCase("File changes detected", line) || 
+                    findNoCase("watch", line) ||
+                    findNoCase("Test execution", line) ||
+                    findNoCase("Lint", line) ||
+                    findNoCase("Application reloaded", line)) {
+                    writeOutput('<span style="color: ##f39c12;">' & line & '</span>' & chr(10));
+                } else {
+                    writeOutput(line & chr(10));
                 }
-                </cfscript>
+             } else {
+                writeOutput('[SENSITIVE DATA FILTERED]' & chr(10));
+             }
+         }
+         writeOutput('</pre>');
+     } else {
+         writeOutput('<p>Log file not found.</p>');
+     }
+ } catch (any e) {
+    writeOutput('<p class="error">Error reading logs: ' & encodeForHTML(e.message) & '</p>');
+ }
+ </cfscript>
             </div>
         </div>
         

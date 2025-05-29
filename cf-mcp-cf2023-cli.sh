@@ -18,4 +18,10 @@ if [ -z "${BRIDGE:-}" ]; then
     echo "Usage: BRIDGE=<bridge-script> cf-mcp-cf2023-cli.sh" >&2
     exit 1
 @@ -21,3 +21,1
-exec cfml "$BRIDGE"
+# Validate BRIDGE path exists and is readable
+if [[ ! -f "$BRIDGE" ]] || [[ ! -r "$BRIDGE" ]]; then
+    echo "Error: Bridge script not found or not readable: $BRIDGE" >&2
+    exit 1
+fi
+
+ exec cfml "$BRIDGE"

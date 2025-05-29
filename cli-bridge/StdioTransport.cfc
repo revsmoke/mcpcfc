@@ -85,14 +85,15 @@ var timestamp = dateTimeFormat(now(), "yyyy-MM-dd HH:nn:ss");
     /**
      * Close the transport and cleanup resources
      */
-    public void function close() {
-        variables.isRunning = false;
-        try {
-            variables.inputReader.close();
-        } catch (any e) {
-            // Ignore errors on close
-        }
-    }
+public void function close() {
+         variables.isRunning = false;
+         try {
+             variables.inputReader.close();
+         } catch (any e) {
+            // Log but don't throw errors on close
+            variables.systemErr.println("Warning: Error closing input reader: " & e.message);
+         }
+     }
 
     /**
      * Exit the process with a status code

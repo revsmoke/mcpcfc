@@ -3,7 +3,7 @@
     "coldfusion-mcp-cf2023": {
       "command": "cfml",
       "args": [
-        "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/cli-bridge/cf-mcp-cli-bridge-v2.cfm"
+        "${CF_HOME}/cfusion/wwwroot/mcpcfc/cli-bridge/cf-mcp-cli-bridge-v2.cfm"
       ],
       "env": {
         "CF_MCP_DEBUG": "true"

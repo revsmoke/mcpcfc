@@ -43,6 +43,8 @@ component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" 
         
         // Create safe path
         var tempDir = expandPath("/mcpcfc/temp/");
+        // Sanitize filename to prevent path traversal
+        filename = reReplace(filename, "[^a-zA-Z0-9\.\-_]", "", "ALL");
         var pdfPath = tempDir & filename;
         
         try {
@@ -85,7 +87,7 @@ component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" 
         try {
             // Construct path - if path doesn't start with /, assume it's relative to temp directory
             var pdfPath = arguments.args.pdfPath;
-            if (!left(pdfPath, 1) == "/" && !findNoCase(":\", pdfPath)) {
+            if (left(pdfPath, 1) != "/" && !findNoCase(":\", pdfPath)) {
                 pdfPath = "/mcpcfc/temp/" & pdfPath;
             }
             var pdfFile = expandPath(pdfPath);
@@ -140,7 +142,7 @@ component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" 
             var sourceFiles = [];
             for (var path in arguments.args.sourcePaths) {
                 var sourcePath = path;
-                if (!left(sourcePath, 1) == "/" && !findNoCase(":\", sourcePath)) {
+                if (left(sourcePath, 1) != "/" && !findNoCase(":\", sourcePath)) {
                     sourcePath = "/mcpcfc/temp/" & sourcePath;
                 }
                 var fullPath = expandPath(sourcePath);

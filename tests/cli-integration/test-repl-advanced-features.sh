@@ -5,8 +5,11 @@ set -euo pipefail
 
 echo "Testing REPLTool advanced timeout and isolation features..."
 
-# Test 1: Variable isolation - set a variable in one execution
-echo "Test 1: Setting a variable in isolated context..."
+# Generate unique session ID for this test run
+SESSION_ID="test-repl-advanced-$(date +%s)-$$"
+
+ # Test 1: Variable isolation - set a variable in one execution
+ echo "Test 1: Setting a variable in isolated context..."
 RESPONSE1=$(echo '{
     "jsonrpc": "2.0",
     "id": 1,
@@ -18,28 +21,14 @@ RESPONSE1=$(echo '{
     }
 }' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
 
-echo "$RESPONSE1" | jq .
+
 
 # Test 2: Try to access the variable from Test 1 (should fail due to isolation)
 echo ""
 # Generate unique session ID for this test run
-SESSION_ID="test-repl-advanced-$(date +%s)-$$"
+SESSION_ID="test-repl-advanced-$(date +%s)-$"
 
-# Generate unique session ID for this test run
-SESSION_ID="test-repl-advanced-$(date +%s)-$$"
 
- # Test 1: Variable isolation - set a variable in one execution
- echo "Test 1: Setting a variable in isolated context..."
- RESPONSE1=$(echo '{
-     "jsonrpc": "2.0",
-     "id": 1,
-     "method": "executeCode",
-     "params": {
-         "code": "variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);",
-         "returnOutput": true,
-         "timeout": 5
-     }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
  # Test 2: Try to access the variable from Test 1 (should fail due to isolation)
  echo ""
  echo "Test 2: Trying to access variable from previous context (should fail)..."

@@ -1,7 +1,6 @@
 component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
     
-    // Instance variable to store sessionId for tool logging
-    variables.sessionId = "";
+    // No instance variables to ensure thread safety
     
     /**
      * Processes a JSON-RPC request and returns a response.
@@ -11,8 +10,6 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @return {struct} The JSON-RPC response object.
      */
     public struct function processRequest(required struct request, required string sessionId) {  //cflint ignore:ARG_HINT_MISSING_SCRIPT,FUNCTION_TOO_COMPLEX
-        // Store sessionId for use in tool execution
-        variables.sessionId = arguments.sessionId;
         // Use ordered struct to maintain JSON-RPC field order
         var response = [:];
         response["jsonrpc"] = "2.0";
@@ -37,7 +34,7 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
                     break;
                     
                 case "tools/call":
-                    response["result"] = handleToolCall(arguments.request.params);
+                    response["result"] = handleToolCall(arguments.request.params, arguments.sessionId);
                     break;
                     
                 case "resources/list":
@@ -133,7 +130,7 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @param params {struct} The request parameters
      * @return {struct} The result of the tool call
      */
-    private struct function handleToolCall(required struct params) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
+    private struct function handleToolCall(required struct params, required string sessionId) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
         if (!structKeyExists(arguments.params, "name")) {
             throw(type="InvalidParams", message="Missing tool name");
         }
@@ -142,8 +139,8 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
         var toolArgs = structKeyExists(arguments.params, "arguments") ? arguments.params.arguments : {};
         
         // Store sessionId in request scope for logging
-        if (len(variables.sessionId) > 0) {
-            request.sessionId = variables.sessionId;
+        if (len(arguments.sessionId) > 0) {
+            request.sessionId = arguments.sessionId;
         }
         
         // Execute tool

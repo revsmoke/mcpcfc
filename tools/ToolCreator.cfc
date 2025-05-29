@@ -30,28 +30,49 @@ component displayname="ToolCreator" extends="mcpcfc.tools.BaseTool" {
     }
     // validateRequiredParams is now inherited from BaseTool
 
-     private struct function createNewTool(required struct args) {
-     validateRequiredParams(arguments.args, ["toolName", "description", "code"]);
-     
-    // Validate toolName contains only safe characters
-    if ( refindNoCase("^[a-zA-Z][a-zA-Z0-9_]*$", arguments.args.toolName) EQ 0 ) {
-        throw(type="InvalidParams", message="Tool name must contain only alphanumeric characters and underscores");
+private struct function createNewTool(required struct args) {
+    // Add role-based access control
+    if (!structKeyExists(session, "userRole") || session.userRole != "admin") {
+        throw(type="SecurityError", message="Tool creation requires admin privileges");
     }
     
-    // Basic code validation - reject obvious malicious patterns
-    var codeContent = arguments.args.code;
-    var dangerousPatterns = [
-        "<cfexecute", "<cffile", "<cfdirectory", "<cfregistry", "<cfldap",
-        "createObject(""java""", "createObject('java')", 
-        "fileWrite", "fileRead", "fileDelete", "directoryCreate", "directoryDelete",
-        "invoke(", "evaluate(", "cfinclude", "cfmodule",
-        "application.stop", "server.stop", "createObject(""com""",
-        "getPageContext()", "getMetaData()"
-    ];
-    for (var pattern in dangerousPatterns) {
-        if (findNoCase(pattern, codeContent)) {
-            throw(type="SecurityError", message="Code contains potentially dangerous operations");
+     validateRequiredParams(arguments.args, ["toolName", "description", "code"]);
+     
+    // Enhanced toolName validation
+    if (len(arguments.args.toolName) < 3 || len(arguments.args.toolName) > 50 ||
+        refindNoCase("^[a-zA-Z][a-zA-Z0-9_]*$", arguments.args.toolName) EQ 0) {
+         throw(type="InvalidParams", message="Tool name must contain only alphanumeric characters and underscores");
+     }
+     
+    // Check for reserved/system tool names
+    var reservedNames = ["system", "admin", "security", "file", "database", "server"];
+    for (var reserved in reservedNames) {
+        if (findNoCase(reserved, arguments.args.toolName)) {
+            throw(type="InvalidParams", message="Tool name contains reserved keyword: #reserved#");
         }
+    }
+    
+     // Basic code validation - reject obvious malicious patterns
+     var codeContent = arguments.args.code;
+    var dangerousPatterns = [
+         "<cfexecute", "<cffile", "<cfdirectory", "<cfregistry", "<cfldap",
+         "createObject(""java""", "createObject('java')", 
+         "fileWrite", "fileRead", "fileDelete", "directoryCreate", "directoryDelete",
+         "invoke(", "evaluate(", "cfinclude", "cfmodule",
+         "application.stop", "server.stop", "createObject(""com""",
+        "getPageContext()", "getMetaData()", "cfscript", "<cf", 
+        "writeLog", "writeDump", "cfquery", "queryExecute"
+     ];
+    
+     for (var pattern in dangerousPatterns) {
+         if (findNoCase(pattern, codeContent)) {
+            throw(type="SecurityError", message="Code contains forbidden operation: #pattern#");
+         }
+     }
+    
+    // Additional validation: check code length and complexity
+    if (len(codeContent) > 10000) {
+        throw(type="SecurityError", message="Code too long (max 10KB)");
     }
      
      var toolName = arguments.args.toolName;
@@ -100,10 +121,13 @@ component displayname="ToolCreator" extends="mcpcfc.tools.BaseTool" {
     }
 }';
         
-        // Write the new tool file with exclusive lock to prevent race conditions
-        lock name="toolCreator_#fileName#" type="exclusive" timeout="10" {
-            fileWrite(filePath, toolCode);
-        }
+// Write the new tool file with exclusive lock to prevent race conditions
+         lock name="toolCreator_#fileName#" type="exclusive" timeout="10" {
+            // Audit log the tool creation
+            writeLog(file="security", type="information", 
+                     text="Tool created: #toolName# by #getAuthUser()# at #now()#");
+             fileWrite(filePath, toolCode);
+         }
         
         return {
             "content": [{
@@ -113,15 +137,57 @@ component displayname="ToolCreator" extends="mcpcfc.tools.BaseTool" {
         };
     }
     
-    private struct function addToolRegistration(required struct args) {
-        validateRequiredParams(arguments.args, ["toolName", "description", "inputSchema"]);
-        
-var registrationCode = '
- // Auto-generated tool registration
+private struct function addToolRegistration(required struct args) {
+    // Access control check
+    if (!structKeyExists(session, "userRole") || session.userRole != "admin") {
+        throw(type="SecurityError", message="Tool registration requires admin privileges");
+    }
+    
+     validateRequiredParams(arguments.args, ["toolName", "description", "inputSchema"]);
+     
+    // Validate tool name format
+    if (refindNoCase("^[a-zA-Z][a-zA-Z0-9_]*$", arguments.args.toolName) EQ 0) {
+        throw(type="InvalidParams", message="Invalid tool name format");
+    }
+    
+    // Validate description length
+    if (len(arguments.args.description) > 500) {
+        throw(type="InvalidParams", message="Description too long (max 500 characters)");
+    }
+    
+    // Validate inputSchema is proper JSON
+    try {
+        deserializeJson(serializeJson(arguments.args.inputSchema));
+    } catch (any e) {
+        throw(type="InvalidParams", message="Invalid input schema format");
+    }
+    
+ var registrationCode = '
+  // Auto-generated tool registration
+// Created: ' & dateTimeFormat(now(), "yyyy-mm-dd HH:nn:ss") & '
+// Created by: ' & encodeForJavaScript(getAuthUser()) & '
 application.toolRegistry.registerTool("' & encodeForJavaScript(lCase(arguments.args.toolName)) & '", {
-    "description": "' & encodeForJavaScript(arguments.args.description) & '",
-    "inputSchema": ' & serializeJson(arguments.args.inputSchema) & '
- });';
+    "description": "' & encodeForJavaScript(left(arguments.args.description, 500)) & '",
+    "inputSchema": ' & serializeJson(arguments.args.inputSchema) & ',
+    "autoGenerated": true,
+    "requiresApproval": true
+  });';
+        
+        // Log the registration generation
+        writeLog(file="security", type="information", 
+                 text="Registration code generated for tool: #arguments.args.toolName# by #getAuthUser()#");
+        
+        return {
+            "content": [{
+                "type": "text",
+                "text": "Add this registration code to your Application.cfc registerTools() function:#chr(10)##chr(10)##registrationCode#"
+            }]
+        };
+    }
+    
+
+}        writeLog(file="security", type="information", 
+                 text="Registration code generated for tool: #arguments.args.toolName# by #getAuthUser()#");
         
         return {
             "content": [{

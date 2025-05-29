@@ -222,6 +222,9 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                     if (len(arguments.category) == 0 || len(arguments.setting) == 0) {
                         throw(message="Category and setting are required for set action");
                     }
+                    if (len(arguments.value) == 0) {
+                        throw(message="Value is required for set action");
+                    }
                     result.data = setConfigSetting(arguments.category, arguments.setting, arguments.value);
                     result.warning = "Changes may require server restart to take effect";
                     break;
@@ -266,14 +269,24 @@ component displayname="ServerManagementTool" hint="Server management tools for C
             
             var logPath = server.coldfusion.rootdir & "/logs/" & sanitizedLogFile;
             
-            if (!fileExists(logPath)) {
+            // Get canonical path to prevent symlink traversal attacks
+            var javaFile = createObject("java", "java.io.File").init(logPath);
+            var canonicalPath = javaFile.getCanonicalPath();
+            var logsDir = createObject("java", "java.io.File").init(server.coldfusion.rootdir & "/logs/").getCanonicalPath();
+            
+            // Ensure the canonical path is still within the logs directory
+            if (!canonicalPath.startsWith(logsDir)) {
+                throw(message="Security violation: Attempted to access file outside logs directory");
+            }
+            
+            if (!fileExists(canonicalPath)) {
                 throw(message="Log file not found: " & sanitizedLogFile);
             }
             
             // Stream the log file to avoid memory issues with large files
             if (arguments.fromTail) {
                 // Use Java RandomAccessFile for efficient tail reading
-                var file = createObject("java", "java.io.RandomAccessFile").init(logPath, "r");
+                var file = createObject("java", "java.io.RandomAccessFile").init(canonicalPath, "r");
                 var fileLength = file.length();
                 var linesFound = 0;
                 var tempLines = [];
@@ -319,7 +332,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                 
             } else {
                 // Read from beginning using line-by-line streaming
-                var fileObj = fileOpen(logPath, "read");
+                var fileObj = fileOpen(canonicalPath, "read");
                 var linesRead = 0;
                 var matchedLines = 0;
                 
@@ -486,7 +499,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
         switch(arguments.category) {
             case "runtime":
                 settings = {
-                    requestTimeout: server.coldfusion.requesttimeout ?: 60,
+                    requestTimeout: val(server.coldfusion.requesttimeout ?: 60),
                     sessionTimeout: 20,
                     applicationTimeout: 2
                 };
@@ -494,8 +507,24 @@ component displayname="ServerManagementTool" hint="Server management tools for C
                 
             case "debugging":
                 settings = {
-                    debuggingEnabled: server.coldfusion.debugging ?: false,
-                    robustExceptions: server.coldfusion.robustexceptions ?: false
+                    debuggingEnabled: (server.coldfusion.debugging ?: false) ? true : false,
+                    robustExceptions: (server.coldfusion.robustexceptions ?: false) ? true : false
+                };
+                break;
+                
+            case "caching":
+                settings = {
+                    cacheQueries: true,
+                    cacheTemplates: true,
+                    cacheSize: 100
+                };
+                break;
+                
+            case "mail":
+                settings = {
+                    mailServer: "localhost",
+                    mailPort: 25,
+                    mailTimeout: 60
                 };
                 break;
         }
@@ -508,11 +537,44 @@ component displayname="ServerManagementTool" hint="Server management tools for C
     }
 
     private struct function setConfigSetting(required string category, required string setting, required string value) {
+        // Get current settings to determine expected type
+        var currentSettings = getConfigSettings(arguments.category, arguments.setting);
+        var typedValue = arguments.value;
+        var expectedType = "string";
+        
+        // Determine expected type from current value
+        if (structKeyExists(currentSettings, arguments.setting)) {
+            var currentValue = currentSettings[arguments.setting];
+            
+            if (isBoolean(currentValue)) {
+                expectedType = "boolean";
+                // Convert string to boolean
+                if (listFindNoCase("true,yes,on,1", arguments.value)) {
+                    typedValue = true;
+                } else if (listFindNoCase("false,no,off,0", arguments.value)) {
+                    typedValue = false;
+                } else {
+                    throw(message="Invalid boolean value: '" & arguments.value & "'. Expected: true/false, yes/no, on/off, 1/0");
+                }
+            } else if (isNumeric(currentValue)) {
+                expectedType = "numeric";
+                // Validate and convert to numeric
+                if (isNumeric(arguments.value)) {
+                    typedValue = val(arguments.value);
+                } else {
+                    throw(message="Invalid numeric value: '" & arguments.value & "'");
+                }
+            }
+            // For strings, keep the original value
+        }
+        
         // Note: This is a placeholder - actual implementation would use CF Admin API
         return {
             category: arguments.category,
             setting: arguments.setting,
-            newValue: arguments.value,
+            originalValue: arguments.value,
+            typedValue: typedValue,
+            expectedType: expectedType,
             message: "Configuration updated (restart may be required)"
         };
     }
@@ -558,14 +620,22 @@ component displayname="ServerManagementTool" hint="Server management tools for C
      * @return Sanitized filename or empty string if invalid
      */
     private string function sanitizeLogFileName(required string logFile) {
+        // First check for any path traversal attempts
+        if (find("..", arguments.logFile) || 
+            find("~", arguments.logFile) || 
+            find("/", arguments.logFile) || 
+            find("\", arguments.logFile)) {
+            return ""; // Reject any path separators or traversal attempts
+        }
+        
         // Extract only the filename from the path (remove any directory traversal)
-var filename = listLast( arguments.logFile, "/\\" );
+        var filename = arguments.logFile;
         
         // Validate filename against safe pattern
         // Allow only alphanumeric characters, dots, underscores, hyphens
         var safePattern = "^[a-zA-Z0-9._-]+$";
         
-        if (reFind(safePattern, filename) EQ 1 AND len(filename) EQ len(reMatch(safePattern,filename)[1])) {
+        if (reFind(safePattern, filename) && len(filename) <= 255) {
             return filename;
         } else {
             return "";

@@ -272,19 +272,31 @@ try {
      writeLog(text="Failed to register REPL tools: " & e.message, type="error");
  }
         
-        // Register server management tools
-        try {
-            var serverTool = new mcpcfc.clitools.ServerManagementTool();
-            var serverTools = serverTool.getToolDefinitions();
-            for (var tool in serverTools) {
-                application.toolRegistry.registerTool(tool.name, {
-                    "description": tool.description,
-                    "inputSchema": tool.inputSchema
-                });
+// Register server management tools
+         try {
+             var serverTool = new mcpcfc.clitools.ServerManagementTool();
+             var serverTools = serverTool.getToolDefinitions();
+            
+            // Validate tool definitions structure
+            if (!isArray(serverTools)) {
+                throw(message="getToolDefinitions() must return an array", type="ValidationError");
             }
-        } catch (any e) {
-            writeLog(text="Failed to register server management tools: " & e.message, type="error");
-        }
+            
+             for (var tool in serverTools) {
+                // Validate required tool properties
+                if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+                    writeLog(text="Skipping invalid server tool definition: missing required properties", type="warning");
+                    continue;
+                }
+                
+                 application.toolRegistry.registerTool(tool.name, {
+                     "description": tool.description,
+                     "inputSchema": tool.inputSchema
+                 });
+             }
+         } catch (any e) {
+             writeLog(text="Failed to register server management tools: " & e.message, type="error");
+         }
 
         // Register package management tools  
         try {

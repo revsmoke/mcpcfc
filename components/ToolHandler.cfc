@@ -164,11 +164,17 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
         }
         
         // Execute query
-        var queryResult = queryExecute(
-            arguments.args.query,
-            {},
-            {"datasource": arguments.args.datasource}
-        );        
+// Parameter-ise and only allow a restricted set of clauses.
+// Example: whitelist columns & table, or accept a placeholder query
+// and supply parameters via args.params (array/struct), e.g.:
+if (reFindNoCase("[;]", arguments.args.query)) {
+    throw(type="SecurityError", message="Multiple statements are not allowed");
+}
+var queryResult = queryExecute(
+    arguments.args.query,
+    arguments.args.params ?: {},           // named / positional params
+    {datasource: arguments.args.datasource}
+);
         // Convert query to array of structs
         var results = [];
         for (var row in queryResult) {

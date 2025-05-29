@@ -736,12 +736,12 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
         ];
         
         // Check dangerous patterns using regex with word boundaries
-        for (var pattern in dangerousRegexPatterns) {
-            if (reFindNoCase(pattern, codeToCheck) > 0) {
-                // TODO: Log security block with pattern matched
-                return false;
-            }
-        }
+for (var pattern in dangerousRegexPatterns) {
+     if (reFindNoCase(pattern, codeToCheck) > 0) {
+        writeLog(text="Security block: pattern '" & pattern & "' matched in code", type="warning", application=true);
+         return false;
+     }
+ }
         
         // Additional regex patterns for reflective and class-loading operations
         var reflectionPatterns = [

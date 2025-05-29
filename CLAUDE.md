@@ -549,6 +549,20 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
   - Updated ToolCreator to generate tools that extend BaseTool
   - Improved code maintainability and consistency across all tools
 
+- **Fixed Thread Safety Issue in JSONRPCProcessor**:
+  - Removed instance variable `variables.sessionId` that was causing race conditions
+  - Now passes sessionId as a parameter through the method chain
+  - Prevents concurrent requests from overwriting each other's session IDs
+  - Ensures proper session tracking for logging and debugging
+  - Critical fix for production environments with concurrent users
+
+- **Enhanced Security in ServerManagementTool**:
+  - **Symlink Traversal Protection**: Added canonical path verification to prevent symlink attacks
+  - **Path Sanitization**: Blocks any path separators (/, \), parent directory references (..), and home directory (~)
+  - **Type Safety**: Configuration values are properly typed based on their expected types (boolean, numeric, string)
+  - **Type Validation**: Invalid type conversions are rejected with clear error messages
+  - Prevents attackers from accessing files outside the logs directory through various techniques
+
 ## 🚀 CF2023 CLI Enhancement Production Readiness
 
 ### Ready for Production ✅
@@ -620,6 +634,9 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
 6. Escape `#` characters in CFML by doubling them (`##`)
 7. Don't use `var` declarations outside of functions
 8. Use `reFindNoCase()` for pattern matching with regex
+9. **NEVER store request-specific data in component instance variables** - always pass as parameters to avoid thread safety issues
+10. **Always verify canonical paths** when dealing with file operations to prevent symlink traversal attacks
+11. **Validate and coerce data types** when accepting configuration values to ensure type safety
 
 ### Common Issues & Quick Fixes 🔧
 1. **Dashboard shows error**: Check for Unicode characters, var declarations, unescaped `#`

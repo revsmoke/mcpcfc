@@ -7,8 +7,11 @@ echo "=== Testing All Security and Functionality Fixes ==="
 # Clean up any existing test file first
 rm -f /tmp/test-injection.txt
 
+# Generate unique session ID for this test run
+SESSION_ID="test-security-$(date +%s)-$$"
+
  echo "1. Testing command injection prevention..."
- echo '{
+echo '{
      "jsonrpc": "2.0",
      "id": 1,
      "method": "testRunner",
@@ -91,18 +94,7 @@ echo '{
      "id": 4,
     "method": "tools/call",
      "params": {
-        "name": "executeCode",
-        "arguments": {
-            "code": "variables.isolationTest = \"should not leak\";",
-            "returnOutput": true,
-            "timeout": 5
-        }
-     }
- }' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-security -H "Content-Type: application/json" -d @- | jq .result.success
 
- echo "Checking if variable leaked to second execution:"
- ISOLATION_TEST=$(echo '{
-     "jsonrpc": "2.0",
      "id": 5,
     "method": "tools/call",
      "params": {

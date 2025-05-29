@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Tool Execution Dashboard</title>
-    <meta http-equiv="refresh" content="30">
-    <style>
+ <html>
+ <head>
+     <title>Tool Execution Dashboard</title>
+    <cfscript>
+    // Make refresh configurable with reasonable limits
+    refreshInterval = structKeyExists(url, "refresh") && isNumeric(url.refresh) 
+                     ? max(10, min(300, val(url.refresh))) : 30;
+    </cfscript>
+    <meta http-equiv="refresh" content="<cfoutput>#refreshInterval#</cfoutput>">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+     <style>
         body { 
             font-family: Arial, sans-serif; 
             margin: 0;
@@ -107,13 +115,24 @@
     </div>
 
 <cfscript>
-try {
-    // Get parameters with defaults
-    hoursBack = structKeyExists(url, "hours") ? val(url.hours) : 24;
-    if (hoursBack <= 0) hoursBack = 24;
+ try {
+    // Add basic access control
+    if (!structKeyExists(session, "isAuthenticated") || !session.isAuthenticated) {
+        writeOutput('<div class="error-box">');
+        writeOutput('<h3>Access Denied</h3>');
+        writeOutput('<p>Please log in to view the dashboard.</p>');
+        writeOutput('</div>');
+        return;
+    }
     
-    // Get overall statistics
-    stats = queryExecute("
+     // Get parameters with defaults
+    hoursBack = 24; // Default
+    if (structKeyExists(url, "hours") && isNumeric(url.hours)) {
+        hoursBack = max(1, min(168, val(url.hours))); // Limit to 1-168 hours (1 week max)
+    }
+     
+     // Get overall statistics
+     stats = queryExecute("
         SELECT 
             COUNT(*) as total_executions,
             COUNT(DISTINCT tool_name) as unique_tools,
@@ -193,21 +212,21 @@ try {
     writeOutput('</tr></thead>');
     writeOutput('<tbody>');
     
-    for (exec in recentExecutions) {
-        writeOutput('<tr>');
-        writeOutput('<td>' & dateTimeFormat(exec.executed_at, "mm/dd HH:nn:ss") & '</td>');
-        writeOutput('<td><strong>' & exec.tool_name & '</strong></td>');
-        writeOutput('<td>');
-        if (exec.success) {
-            writeOutput('<span class="success-badge">Success</span>');
-        } else {
-            writeOutput('<span class="failure-badge">Failed</span>');
-        }
-        writeOutput('</td>');
-        writeOutput('<td>' & numberFormat(exec.execution_time) & 'ms</td>');
-        writeOutput('<td style="font-size: 0.85em; color: ##7f8c8d;">' & encodeForHtml(left(exec.session_id,20)) & '...</td>');
-        writeOutput('</tr>');
-    }
+for (exec in recentExecutions) {
+     writeOutput('<tr>');
+     writeOutput('<td>' & dateTimeFormat(exec.executed_at, "mm/dd HH:nn:ss") & '</td>');
+    writeOutput('<td><strong>' & encodeForHTML(exec.tool_name) & '</strong></td>');
+     writeOutput('<td>');
+     if (exec.success) {
+         writeOutput('<span class="success-badge">Success</span>');
+     } else {
+         writeOutput('<span class="failure-badge">Failed</span>');
+     }
+     writeOutput('</td>');
+     writeOutput('<td>' & numberFormat(exec.execution_time) & 'ms</td>');
+    writeOutput('<td style="font-size: 0.85em; color: ##7f8c8d;">' & encodeForHTML(left(exec.session_id,20)) & '...</td>');
+     writeOutput('</tr>');
+ }
     
     writeOutput('</tbody>');
     writeOutput('</table>');
@@ -218,12 +237,15 @@ try {
     writeOutput('</div>');
     
 } catch (any e) {
-    writeOutput('<div class="error-box">');
-    writeOutput('<h3 style="color: ##c00; margin-top: 0;">Error Loading Dashboard</h3>');
-    writeOutput('<p>' & e.message & '</p>');
-    writeDump(e);
-    writeOutput('</div>');
-}
+     writeOutput('<div class="error-box">');
+     writeOutput('<h3 style="color: ##c00; margin-top: 0;">Error Loading Dashboard</h3>');
+    writeOutput('<p>' & encodeForHTML(e.message) & '</p>');
+    // Log detailed error securely
+    writeLog(file="application", type="error", 
+             text="Dashboard error: #e.message# | Detail: #e.detail# | Type: #e.type#");
+    writeOutput('<p>Error details have been logged. Please contact system administrator.</p>');
+     writeOutput('</div>');
+ }
 </cfscript>
 
 </body>

@@ -808,24 +808,30 @@ if (findNoCase("..", arguments.directory) ||
     /**
      * Execute a command with arguments array to prevent injection
      */
-    private struct function executeCommandWithArgs(required string command, required array arguments) {
-        var result = {
-            success: true,
-            output: "",
-            error: ""
-        };
-        
-try {
-    var executeResult = "";
-    var executeError = "";
+private struct function executeCommandWithArgs(required string command, required array arguments) {
+     var result = {
+         success: true,
+         output: "",
+         error: ""
+     };
+     
+    // Escape arguments for shell safety (consistent with PackageManagerTool)
+    var escapedArgs = [];
+    for (var arg in arguments.arguments) {
+        arrayAppend(escapedArgs, shellEscape(arg));
+    }
     
-    cfexecute(
-        name = arguments.command,
-        arguments = arguments.arguments,
-        variable = "executeResult",
-        errorVariable = "executeError",
-        timeout = 120
-    );
+     try {
+         var executeResult = "";
+         var executeError = "";
+         
+         cfexecute(
+             name = arguments.command,
+            arguments = arrayToList(escapedArgs, " "),
+             variable = "executeResult",
+             errorVariable = "executeError",
+             timeout = 120
+         );
     
     result.output = executeResult;
     

@@ -12,8 +12,11 @@ component displayname="BaseTool" hint="Base class for all MCP tools" {
      * @param required Array of required parameter names
      * @throws InvalidParams when a required parameter is missing or empty
      */
-    private void function validateRequiredParams(required struct args, required array required) {
-        for (var param in arguments.required) {
+private void function validateRequiredParams(
+    required struct args,
+    required array requiredParams
+) {
+    for (var param in arguments.requiredParams) {
             if (!structKeyExists(arguments.args, param)) {
                 throw(type="InvalidParams", message="Missing required parameter: #param#");
             }
@@ -126,9 +129,14 @@ component displayname="BaseTool" hint="Base class for all MCP tools" {
             }
         }
         
-        // Remove any path traversal attempts
-        var safeFilename = reReplace(arguments.filename, "\.\.[\\/]", "", "all");
-        safeFilename = getFileFromPath(safeFilename);
+// Strip all traversal sequences such as ../, ..\, ....//, %2e%2e%2f, etc.
+var safeFilename = rereplacenocase(
+    urldecode(arguments.filename),
+    "(?:\.\.[\\/])+",
+    "",
+    "all"
+);
+ safeFilename = getFileFromPath(safeFilename);
         
         return tempDir & safeFilename;
     }

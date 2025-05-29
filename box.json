@@ -39,38 +39,15 @@
     ],
     "contributors":[],
     "dependencies":{},
-    "devDependencies":{
-        "testbox":"^6.3.2+16"
-    },
-    "installPaths":{
-        "testbox":"testbox/"
-    },
+    "devDependencies":{},
+    "installPaths":{},
     "scripts":{},
     "ignore":[
         "**/.*",
         "/test/",
         "/tests/"
     ],
-    "testbox":{
-        "runner":[
-            {
-                "default":""
-            }
-        ],
-        "labels":"",
-        "excludes":"",
-        "reporter":"",
-        "bundles":"",
-        "recurse":true,
-        "directory":"tests.specs",
-        "testBundles":"",
-        "testSuites":"",
-        "testSpecs":"",
-        "verbose":true,
-        "watchDelay":500,
-        "watchPaths":"**.cfc",
-        "options":{}
-    },
+
     "reinitWatchDirectory":"",
     "reinitWatchDelay":500,
     "reinitWatchPaths":"",

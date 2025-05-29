@@ -871,6 +871,9 @@ try {
         
         for (var path in arguments.paths) {
             if (directoryExists(path)) {
+                // Create local copy of extensions for closure to ensure reliable scope capture
+                var extensionsToFilter = arguments.extensions;
+                
                 // Get all files recursively
                 var files = directoryList(
                     path, 
@@ -878,7 +881,8 @@ try {
                     "path", 
                     function(filePath) {
                         var ext = listLast(arguments.filePath, ".");
-                        return arrayFindNoCase(extensions, ext) > 0;
+                        // Use the local copy to avoid closure scope issues
+                        return arrayFindNoCase(extensionsToFilter, ext) > 0;
                     }
                 );
                 
@@ -886,9 +890,9 @@ try {
                 for (var file in files) {
                     var fileInfo = getFileInfo(file);
                     states[file] = {
-                        size: fileInfo.size,
-                        lastModified: fileInfo.lastModified,
-                        exists: true
+                        size = fileInfo.size,
+                        lastModified = fileInfo.lastModified,
+                        exists = true
                     };
                 }
             }

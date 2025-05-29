@@ -178,12 +178,12 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                     // SECURITY WARNING: evaluate() executes arbitrary CFML code
                     // This should only be used in trusted environments with trusted code
                     if (!isCodeSafe(attributes.codeToExecute)) {
-                        threadResult.success = false;
-                        threadResult.error = "Code contains potentially unsafe operations";
-                        threadResult.returnValue = "";
-                        threadResult.output = "";
-                        thread.result = threadResult;
-                        continue;
+        threadResult.success      = false;
+        threadResult.error        = "Code contains potentially unsafe operations";
+        threadResult.returnValue  = "";
+        threadResult.output       = "";
+        thread.result             = threadResult;
+        return; // exit cfthread body safely
                     }
                     
                     if (attributes.shouldReturnOutput) {
@@ -500,7 +500,7 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
                 type: getMetadata(varToInspect).name ?: "unknown",
                 value: inspectValue(varToInspect, arguments.depth),
                 isSimple: isSimpleValue(varToInspect),
-                isObject: isObject(varToInspect),
+                isObject : isInstanceOf(varToInspect,"java.lang.Object"),
                 isStruct: isStruct(varToInspect),
                 isArray: isArray(varToInspect),
                 isQuery: isQuery(varToInspect)

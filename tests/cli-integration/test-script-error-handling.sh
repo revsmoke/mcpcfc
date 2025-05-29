@@ -26,33 +26,20 @@ for script in "${SCRIPTS_TO_CHECK[@]}"; do
 # Test 2: Check for tool dependency checks
 echo ""
 echo "2. Checking for tool dependency checks..."
-
 for script in "${SCRIPTS_TO_CHECK[@]}"; do
-if grep -q "command -v cfml" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
-         echo "✓ $script checks for cfml dependency"
-     else
-         echo "✗ $script missing cfml check"
-        exit 1
-     fi
+    if grep -q "command -v cfml" "$SCRIPT_DIR/$script"; then
+          echo "✓ $script checks for cfml dependency"
+      else
+          echo "✗ $script missing cfml check"
+         exit 1
+      fi
 
-     if grep -q "command -v jq" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
-         echo "✓ $script checks for jq dependency"
-     else
-         echo "✗ $script missing jq check (if needed)"
-        exit 1
+     if grep -q "command -v jq" "$SCRIPT_DIR/$script"; then
+          echo "✓ $script checks for jq dependency"
+      else
+          echo "✗ $script missing jq check (if needed)"
      fi
-        exit 1
-     fi
-        exit 1
-     fi
-        exit 1
-     fi
-        exit 1
-     fi
-        exit 1
-     fi
-        exit 1
-     fi
+ done
         exit 1
      fi
 done

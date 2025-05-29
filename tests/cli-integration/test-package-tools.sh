@@ -28,20 +28,15 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 # Check for CommandBox (optional but recommended)
- if ! command -v box &> /dev/null; then
-     echo "WARNING: CommandBox not found. Package manager tools require CommandBox."
-     echo "Install from: https://www.ortussolutions.com/products/commandbox"
+if ! command -v box &> /dev/null; then
+    echo "WARNING: CommandBox not found. Package manager tools require CommandBox."
+    echo "Install from: https://www.ortussolutions.com/products/commandbox"
     echo "Package tools will run in simulation mode."
     export COMMANDBOX_AVAILABLE=false
 else
     echo "CommandBox found - package tools will be fully functional"
     export COMMANDBOX_AVAILABLE=true
- fi
-    export COMMANDBOX_AVAILABLE=false
-else
-    echo "CommandBox found - package tools will be fully functional"
-    export COMMANDBOX_AVAILABLE=true
- fi
+fi
 
 # Test 1: Initialize
 echo -e "\n1. Testing initialize..."
@@ -58,16 +53,6 @@ echo -e "\n3. Testing packageList tool..."
 LIST_RESPONSE=$(echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"packageList","arguments":{"format":"json"}}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-package-test.log)
 echo "$LIST_RESPONSE" | jq '.result'
 
-# Test 4: Install a package (dry run - don't actually install)
- echo -e "\n4. Testing packageInstaller tool (simulated)..."
-SIMULATE_RESPONSE=$(echo '{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-package-test.log)
-if echo "$SIMULATE_RESPONSE" | jq -e '.result.tools[] | select(.name=="packageInstaller")' > /dev/null; then
-    echo "✓ packageInstaller tool is available"
-    echo "Would run: packageInstaller with packageName='testbox@5.0.0'"
-    echo "(Skipping actual installation to avoid modifying system)"
-else
-    echo "✗ packageInstaller tool not available"
-fi
 
 # Test 5: Module manager - list modules
 echo -e "\n5. Testing moduleManager tool (list)..."

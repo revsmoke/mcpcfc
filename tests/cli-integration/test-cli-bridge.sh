@@ -41,11 +41,5 @@ echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hello","ar
 echo -e "\n4. Testing notification..."
 echo '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-test.log
 
-echo -e "\n\nTest log available at: $LOG_FILE"
-echo "To view: cat '$LOG_FILE'"
-# Test 4: Test notification (should not return response)
-echo -e "\n4. Testing notification..."
-echo '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-test.log
-
 echo -e "\n\nTest log available at: /tmp/cf-mcp-test.log"
 echo "To view: cat /tmp/cf-mcp-test.log"

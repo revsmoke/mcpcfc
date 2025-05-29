@@ -17,7 +17,5 @@ if [ -z "${BRIDGE:-}" ]; then
     echo "Error: BRIDGE environment variable is undefined." >&2
     echo "Usage: BRIDGE=<bridge-script> cf-mcp-cf2023-cli.sh" >&2
     exit 1
-fi
- exec cfml "$BRIDGE"
-# Launch the CF CLI bridge
+@@ -21,3 +21,1
 exec cfml "$BRIDGE"

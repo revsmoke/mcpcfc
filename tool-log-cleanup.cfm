@@ -1,7 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Tool Execution Log Cleanup</title>
+<cfscript>
+    // Check if user is authenticated as admin
+    if (!structKeyExists(session, "isAuthenticated") OR !session.isAdmin) {
+        location(url="login.cfm", addtoken=false);
+        abort;
+    }
+</cfscript>
+
+ <!DOCTYPE html>
+ <html>
+ <head>
+     <title>Tool Execution Log Cleanup</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .success { color: green; font-weight: bold; }

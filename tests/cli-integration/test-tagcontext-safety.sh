@@ -1,11 +1,28 @@
 #!/bin/bash
 
+# Ensure script fails fast on errors
+set -euo pipefail
+
+# Ensure script fails fast on errors
+set -euo pipefail
+
 # Test script to verify tagContext safety improvements
 
 echo "Testing tagContext safety in error handling..."
 # Test 1: Generate an error that should have tagContext
  echo "Test 1: Normal error with tagContext..."
-response=$(echo '{
+# Check for required dependencies
+if ! command -v curl &> /dev/null; then
+    echo "ERROR: curl not found. curl is required for HTTP requests."
+    exit 1
+fi
+
+if ! command -v jq &> /dev/null; then
+    echo "ERROR: jq not found. jq is required for JSON processing."
+    exit 1
+fi
+
+ response=$(timeout 30 echo '{
      "jsonrpc": "2.0",
      "id": 1,
      "method": "executeCode",
@@ -14,7 +31,7 @@ response=$(echo '{
          "returnOutput": true,
          "timeout": 5
      }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @-)
+}' | curl -s --max-time 30 --fail -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @-)
 
 # Verify response has proper error structure
 if echo "$response" | jq -e '.error.data.stackTrace[]?' > /dev/null; then

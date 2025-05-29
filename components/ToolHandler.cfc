@@ -75,6 +75,8 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                 case "testRunner":
                 case "generateDocs":
                 case "watchFiles":
+                case "stopWatcher":
+                case "getWatcherStatus":
                     // Route development workflow tools to DevWorkflowTool component
                     var devTool = new mcpcfc.clitools.DevWorkflowTool();
                     

@@ -565,7 +565,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
         // Allow only alphanumeric characters, dots, underscores, hyphens
         var safePattern = "^[a-zA-Z0-9._-]+$";
         
-        if (reFind(safePattern, filename)) {
+        if (reFind(safePattern, filename) EQ 1 AND len(filename) EQ len(reMatch(safePattern,filename)[1])) {
             return filename;
         } else {
             return "";

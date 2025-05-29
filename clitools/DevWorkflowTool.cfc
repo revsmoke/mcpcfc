@@ -184,6 +184,28 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
                         }
                     }
                 }
+            },
+            {
+                name: "stopWatcher",
+                description: "Stop a running file watcher",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        watcherId: {
+                            type: "string",
+                            description: "The ID of the watcher to stop"
+                        }
+                    },
+                    required: ["watcherId"]
+                }
+            },
+            {
+                name: "getWatcherStatus",
+                description: "Get status of all active file watchers",
+                inputSchema: {
+                    type: "object",
+                    properties: {}
+                }
             }
         ];
     }
@@ -345,8 +367,8 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
                             severity: issue.severity,
                             message: issue.message,
                             file: issue.file,
-                            line: issue.line ?: 0,
-                            column: issue.column ?: 0,
+                            line: structKeyExists(issue, "line") ? issue.line : 0,
+                            column: structKeyExists(issue, "column") ? issue.column : 0,
                             rule: issue.rule
                         });
                         
@@ -413,9 +435,21 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
         
         try {
            // Validate directory path
-           if (findNoCase("..", arguments.directory) || findNoCase("\\", arguments.directory)) {
-               throw(message="Invalid directory path - directory traversal not allowed");
-           }
+// Normalize and validate path
+var normalizedPath = expandPath(arguments.directory);
+var basePath = expandPath("./");
+
+if (!normalizedPath.startsWith(basePath)) {
+    throw(message="Invalid directory path - must be within application directory");
+}
+
+// Additional checks for path traversal attempts
+if (findNoCase("..", arguments.directory) || 
+    findNoCase("~", arguments.directory) || 
+    arguments.directory.startsWith("/") ||
+    arguments.directory.matches(".*[<>:\"|\\?\\*].*")) {
+    throw(message="Invalid directory path - contains disallowed characters");
+}
            
            if (!directoryExists(expandPath(arguments.directory))) {
                throw(message="Test directory not found: " & arguments.directory);
@@ -447,12 +481,12 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
                 var testResults = deserializeJSON(exec.output);
                 
                 // Process results
-                result.totalSpecs = testResults.totalSpecs ?: 0;
-                result.totalPass = testResults.totalPass ?: 0;
-                result.totalFail = testResults.totalFail ?: 0;
-                result.totalError = testResults.totalError ?: 0;
-                result.totalSkipped = testResults.totalSkipped ?: 0;
-                result.duration = testResults.totalDuration ?: 0;
+                result.totalSpecs = structKeyExists(testResults, "totalSpecs") ? testResults.totalSpecs : 0;
+                result.totalPass = structKeyExists(testResults, "totalPass") ? testResults.totalPass : 0;
+                result.totalFail = structKeyExists(testResults, "totalFail") ? testResults.totalFail : 0;
+                result.totalError = structKeyExists(testResults, "totalError") ? testResults.totalError : 0;
+                result.totalSkipped = structKeyExists(testResults, "totalSkipped") ? testResults.totalSkipped : 0;
+                result.duration = structKeyExists(testResults, "totalDuration") ? testResults.totalDuration : 0;
                 
                 // Extract individual test results
                 if (structKeyExists(testResults, "bundleStats")) {
@@ -556,8 +590,7 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
     }
 
     /**
-     * Watch files for changes
-     * Note: This is a simplified version - actual implementation would need continuous monitoring
+     * Watch files for changes and trigger actions
      */
     public struct function watchFiles(
         array paths = ["./"],
@@ -568,48 +601,185 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
         var result = {
             success: true,
             watching: false,
+            watcherId: "",
             paths: arguments.paths,
             extensions: arguments.extensions,
+            action: arguments.action,
             message: "",
             error: ""
         };
         
         try {
-            // Build command arguments array
-            var cmdArgs = ["watch"];
+            // Generate unique watcher ID
+            var watcherId = "watcher_" & createUUID();
             
-            // Add paths
-            arrayAppend(cmdArgs, "--paths=" & arrayToList(arguments.paths));
-            
-            // Add extensions
-            arrayAppend(cmdArgs, "--extensions=" & arrayToList(arguments.extensions));
-            
-            // Add command to run on change
-            switch(arguments.action) {
-                case "test":
-                    arrayAppend(cmdArgs, "testbox run");
-                    break;
-                case "lint":
-                    arrayAppend(cmdArgs, "cflint");
-                    break;
-                case "reload":
-                    arrayAppend(cmdArgs, "server restart");
-                    break;
-                default:
-                    throw(message="Unsupported action: '" & arguments.action & "'. Valid actions are: test, lint, reload");
+            // Normalize paths
+            var normalizedPaths = [];
+            for (var path in arguments.paths) {
+                arrayAppend(normalizedPaths, expandPath(path));
             }
             
-            arrayAppend(cmdArgs, "--delay=" & arguments.debounce);
+            // Initialize watcher in application scope
+            if (!structKeyExists(application, "fileWatchers")) {
+                application.fileWatchers = {};
+            }
             
-            // Note: In a real implementation, this would start a background process
-            // For now, we'll just return the command that would be run
-            result.message = "Watch command configured: box " & arrayToList(cmdArgs, " ");
+            // Create watcher configuration
+            var watcherConfig = {
+                id: watcherId,
+                paths: normalizedPaths,
+                extensions: arguments.extensions,
+                action: arguments.action,
+                debounce: arguments.debounce,
+                active: true,
+                lastCheck: now(),
+                fileStates: {},
+                lastTrigger: 0,
+                changesDetected: 0
+            };
+            
+            // Get initial file states
+            watcherConfig.fileStates = getFileStates(normalizedPaths, arguments.extensions);
+            
+            // Store watcher config
+            application.fileWatchers[watcherId] = watcherConfig;
+            
+            // Start the watcher thread
+            thread name="#watcherId#" action="run" {
+                try {
+                    // Get watcher config from application scope
+                    var config = application.fileWatchers[thread.name];
+                    
+                    while (structKeyExists(application.fileWatchers, thread.name) && 
+                           application.fileWatchers[thread.name].active) {
+                        
+                        // Check for file changes
+                        var currentStates = getFileStates(config.paths, config.extensions);
+                        var changes = detectChanges(config.fileStates, currentStates);
+                        
+                        if (arrayLen(changes) > 0) {
+                            var currentTime = getTickCount();
+                            
+                            // Check debounce
+                            if (currentTime - config.lastTrigger >= config.debounce) {
+                                // Log changes
+                                application.fileWatchers[thread.name].changesDetected++;
+                                application.fileWatchers[thread.name].lastTrigger = currentTime;
+                                
+                                // Trigger action
+                                triggerWatchAction(config.action, changes);
+                                
+                                // Update file states
+                                application.fileWatchers[thread.name].fileStates = currentStates;
+                            }
+                        }
+                        
+                        // Update last check time
+                        application.fileWatchers[thread.name].lastCheck = now();
+                        
+                        // Sleep for a short interval
+                        sleep(500); // Check every 500ms
+                    }
+                    
+                } catch (any e) {
+                    // Log error
+                    if (structKeyExists(application.fileWatchers, thread.name)) {
+                        application.fileWatchers[thread.name].error = e.message;
+                        application.fileWatchers[thread.name].active = false;
+                    }
+                }
+            }
+            
             result.watching = true;
+            result.watcherId = watcherId;
+            result.message = "File watcher started successfully. Monitoring " & 
+                           arrayLen(normalizedPaths) & " path(s) for *." & 
+                           arrayToList(arguments.extensions, ", *.") & " files.";
             
         } catch (any e) {
             result.success = false;
             result.error = e.message;
             result.errorDetail = e.detail;
+        }
+        
+        return {
+            "content": [{
+                "type": "text",
+                "text": serializeJSON(result)
+            }],
+            "isError": !result.success
+        };
+    }
+    
+    /**
+     * Stop watching files
+     */
+    public struct function stopWatcher(required string watcherId) {
+        var result = {
+            success: true,
+            message: "",
+            error: ""
+        };
+        
+        try {
+            if (structKeyExists(application, "fileWatchers") && 
+                structKeyExists(application.fileWatchers, arguments.watcherId)) {
+                
+                // Mark as inactive
+                application.fileWatchers[arguments.watcherId].active = false;
+                
+                // Remove from application scope
+                structDelete(application.fileWatchers, arguments.watcherId);
+                
+                result.message = "File watcher stopped successfully.";
+            } else {
+                throw(message="Watcher not found: " & arguments.watcherId);
+            }
+            
+        } catch (any e) {
+            result.success = false;
+            result.error = e.message;
+        }
+        
+        return {
+            "content": [{
+                "type": "text",
+                "text": serializeJSON(result)
+            }],
+            "isError": !result.success
+        };
+    }
+    
+    /**
+     * Get status of all active watchers
+     */
+    public struct function getWatcherStatus() {
+        var result = {
+            success: true,
+            watchers: [],
+            error: ""
+        };
+        
+        try {
+            if (structKeyExists(application, "fileWatchers")) {
+                for (var watcherId in application.fileWatchers) {
+                    var watcher = application.fileWatchers[watcherId];
+                    arrayAppend(result.watchers, {
+                        id: watcher.id,
+                        active: watcher.active,
+                        paths: watcher.paths,
+                        extensions: watcher.extensions,
+                        action: watcher.action,
+                        lastCheck: dateTimeFormat(watcher.lastCheck, "yyyy-mm-dd HH:nn:ss"),
+                        changesDetected: watcher.changesDetected,
+                        error: structKeyExists(watcher, "error") ? watcher.error : ""
+                    });
+                }
+            }
+            
+        } catch (any e) {
+            result.success = false;
+            result.error = e.message;
         }
         
         return {
@@ -633,48 +803,24 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
             error: ""
         };
         
-        try {
-            // Since CommandBox tools are not installed, we'll simulate the output
-            var fullCommand = arguments.command & " " & arrayToList(arguments.arguments, " ");
-            
-            if (findNoCase("cfformat", fullCommand)) {
-                result.output = "component {" & chr(10) & 
-                               "    function test() {" & chr(10) & 
-                               "        var x = 1;" & chr(10) & 
-                               "        return x;" & chr(10) & 
-                               "    }" & chr(10) & 
-                               "}";
-            } else if (findNoCase("cflint", fullCommand)) {
-                result.output = '{"issues":[],"summary":{"errors":0,"warnings":0,"info":0}}';
-            } else if (findNoCase("testbox", fullCommand)) {
-                result.output = '{"totalSpecs":0,"totalPass":0,"totalFail":0,"totalError":0,"totalSkipped":0,"totalDuration":0}';
-            } else if (findNoCase("docbox", fullCommand)) {
-                result.output = "Documentation generated successfully";
-            } else if (findNoCase("watch", fullCommand)) {
-                result.output = "File watcher configured";
-            } else {
-                // For real implementation with CommandBox installed:
-                /*
-                var executeResult = "";
-                var executeError = "";
-                
-                cfexecute(
-                    name = arguments.command,
-                    arguments = arguments.arguments,
-                    variable = "executeResult",
-                    errorVariable = "executeError",
-                    timeout = 120
-                );
-                
-                result.output = executeResult;
-                
-                if (len(executeError)) {
-                    result.success = false;
-                    result.error = executeError;
-                }
-                */
-                result.output = "CommandBox not installed - simulated output";
-            }
+try {
+    var executeResult = "";
+    var executeError = "";
+    
+    cfexecute(
+        name = arguments.command,
+        arguments = arguments.arguments,
+        variable = "executeResult",
+        errorVariable = "executeError",
+        timeout = 120
+    );
+    
+    result.output = executeResult;
+    
+    if (len(executeError)) {
+        result.success = false;
+        result.error = executeError;
+    }
             
         } catch (any e) {
             result.success = false;
@@ -703,6 +849,182 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
         }
         
         return changes;
+    }
+    
+    /**
+     * Get the current state of all files in the watched paths
+     */
+    private struct function getFileStates(required array paths, required array extensions) {
+        var states = {};
+        
+        for (var path in arguments.paths) {
+            if (directoryExists(path)) {
+                // Get all files recursively
+                var files = directoryList(
+                    path, 
+                    true, 
+                    "path", 
+                    function(filePath) {
+                        var ext = listLast(arguments.filePath, ".");
+                        return arrayFindNoCase(extensions, ext) > 0;
+                    }
+                );
+                
+                // Get state for each file
+                for (var file in files) {
+                    var fileInfo = getFileInfo(file);
+                    states[file] = {
+                        size: fileInfo.size,
+                        lastModified: fileInfo.lastModified,
+                        exists: true
+                    };
+                }
+            }
+        }
+        
+        return states;
+    }
+    
+    /**
+     * Detect changes between two file state snapshots
+     */
+    private array function detectChanges(required struct oldStates, required struct newStates) {
+        var changes = [];
+        
+        // Check for modified or deleted files
+        for (var file in arguments.oldStates) {
+            if (structKeyExists(arguments.newStates, file)) {
+                // File still exists - check if modified
+                if (arguments.oldStates[file].lastModified != arguments.newStates[file].lastModified ||
+                    arguments.oldStates[file].size != arguments.newStates[file].size) {
+                    arrayAppend(changes, {
+                        type: "modified",
+                        file: file,
+                        oldModified: arguments.oldStates[file].lastModified,
+                        newModified: arguments.newStates[file].lastModified
+                    });
+                }
+            } else {
+                // File was deleted
+                arrayAppend(changes, {
+                    type: "deleted",
+                    file: file
+                });
+            }
+        }
+        
+        // Check for new files
+        for (var file in arguments.newStates) {
+            if (!structKeyExists(arguments.oldStates, file)) {
+                arrayAppend(changes, {
+                    type: "added",
+                    file: file
+                });
+            }
+        }
+        
+        return changes;
+    }
+    
+    /**
+     * Trigger the appropriate action when file changes are detected
+     */
+    private void function triggerWatchAction(required string action, required array changes) {
+        try {
+            // Log the changes
+            var changeLog = "File changes detected:\n";
+            for (var change in arguments.changes) {
+                changeLog &= "  - " & change.type & ": " & change.file & "\n";
+            }
+            
+            // Log to application log
+            writeLog(
+                text = changeLog & "Triggering action: " & arguments.action,
+                type = "information",
+                application = true
+            );
+            
+            // Execute the action
+            switch(arguments.action) {
+                case "test":
+                    // Run tests
+                    thread name="watchAction_test_#createUUID()#" action="run" {
+                        try {
+                            var testResult = executeCommandWithArgs("box", ["testbox", "run"]);
+                            writeLog(
+                                text = "Test execution completed: " & (testResult.success ? "SUCCESS" : "FAILED"),
+                                type = testResult.success ? "information" : "error",
+                                application = true
+                            );
+                        } catch (any e) {
+                            writeLog(
+                                text = "Test execution error: " & e.message,
+                                type = "error",
+                                application = true
+                            );
+                        }
+                    }
+                    break;
+                    
+                case "lint":
+                    // Run linter on changed files
+                    thread name="watchAction_lint_#createUUID()#" action="run" {
+                        try {
+                            for (var change in changes) {
+                                if (change.type != "deleted") {
+                                    var lintResult = executeCommandWithArgs("box", ["cflint", change.file]);
+                                    writeLog(
+                                        text = "Lint " & change.file & ": " & (lintResult.success ? "PASSED" : "ISSUES FOUND"),
+                                        type = lintResult.success ? "information" : "warning",
+                                        application = true
+                                    );
+                                }
+                            }
+                        } catch (any e) {
+                            writeLog(
+                                text = "Lint execution error: " & e.message,
+                                type = "error",
+                                application = true
+                            );
+                        }
+                    }
+                    break;
+                    
+                case "reload":
+                    // Reload the application
+                    thread name="watchAction_reload_#createUUID()#" action="run" {
+                        try {
+                            applicationStop();
+                            writeLog(
+                                text = "Application reloaded due to file changes",
+                                type = "information",
+                                application = true
+                            );
+                        } catch (any e) {
+                            writeLog(
+                                text = "Reload error: " & e.message,
+                                type = "error",
+                                application = true
+                            );
+                        }
+                    }
+                    break;
+                    
+                default:
+                    writeLog(
+                        text = "Unknown watch action: " & arguments.action,
+                        type = "warning",
+                        application = true
+                    );
+            }
+            
+        } catch (any e) {
+            writeLog(
+                text = "Error triggering watch action: " & e.message,
+                type = "error",
+                application = true
+            );
+        }
     }
 
 }

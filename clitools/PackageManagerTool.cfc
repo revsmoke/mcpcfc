@@ -541,12 +541,11 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
             
             // Convert array of arguments to space-separated string
             // TODO: add proper shell escaping for security
-            var argsString = arrayToList(arguments.cmdArgs, " ");
-            
-            cfexecute(
-                name = arguments.executable,
-                arguments = argsString,
-                variable = "executeResult",
+ cfexecute( name        = arguments.executable,
+            argumentsArray = arguments.cmdArgs,
+             variable   = "executeResult",
+             errorVariable = "executeError",
+             timeout    = 60 );
                 errorVariable = "executeError",
                 timeout = 60
             );

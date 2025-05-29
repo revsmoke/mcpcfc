@@ -5,10 +5,10 @@
 echo "🔄 Restarting Claude Desktop to load new MCP tools..."
 
 # Get the current URL/thread if Claude is running
-CLAUDE_URL=$(osascript -e 'tell application "Claude" to if it is running then return URL of current tab of front window')
+CLAUDE_URL=$(osascript -e 'tell application "Claude" to if it is running then return URL of current tab of front window' 2>/dev/null || echo "")
 
 # Kill Claude Desktop
-osascript -e 'tell application "Claude" to quit'
+osascript -e 'tell application "Claude" to quit' 2>/dev/null || true
 
 # Wait for it to fully close
 sleep 2

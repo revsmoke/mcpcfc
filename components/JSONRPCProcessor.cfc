@@ -1,5 +1,8 @@
 component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
     
+    // Instance variable to store sessionId for tool logging
+    variables.sessionId = "";
+    
     /**
      * Processes a JSON-RPC request and returns a response.
      * 
@@ -8,6 +11,8 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
      * @return {struct} The JSON-RPC response object.
      */
     public struct function processRequest(required struct request, required string sessionId) {  //cflint ignore:ARG_HINT_MISSING_SCRIPT,FUNCTION_TOO_COMPLEX
+        // Store sessionId for use in tool execution
+        variables.sessionId = arguments.sessionId;
         // Use ordered struct to maintain JSON-RPC field order
         var response = [:];
         response["jsonrpc"] = "2.0";
@@ -135,6 +140,11 @@ component displayname="JSONRPCProcessor" hint="JSON-RPC message processor" {
         
         var toolName = arguments.params.name;
         var toolArgs = structKeyExists(arguments.params, "arguments") ? arguments.params.arguments : {};
+        
+        // Store sessionId in request scope for logging
+        if (len(variables.sessionId) > 0) {
+            request.sessionId = variables.sessionId;
+        }
         
         // Execute tool
         var toolHandler = new mcpcfc.components.ToolHandler();

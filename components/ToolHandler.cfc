@@ -7,27 +7,36 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
      * @return {struct} The result of the tool execution
      */
     public struct function executeTool(required string toolName, required struct args) { //cflint ignore:ARG_HINT_MISSING_SCRIPT
+        var startTime = getTickCount();
+        var result = {};
+        var executionTime = 0;
+        var sessionId = structKeyExists(request, "sessionId") ? request.sessionId : "";
+        
         try {
             switch(arguments.toolName) {
                 case "hello":
-                    return executeHello(arguments.args);
+                    result = executeHello(arguments.args);
+                    break;
                     
                 case "queryDatabase":
-                    return executeQueryDatabase(arguments.args);
+                    result = executeQueryDatabase(arguments.args);
+                    break;
                     
                 case "generatePDF":
                 case "extractPDFText":
                 case "mergePDFs":
                     // Route PDF tools to PDFTool component
                     var pdfTool = new mcpcfc.tools.PDFTool();
-                    return pdfTool.executeTool(arguments.toolName, arguments.args);
+                    result = pdfTool.executeTool(arguments.toolName, arguments.args);
+                    break;
                     
                 case "sendEmail":
                 case "sendHTMLEmail":
                 case "validateEmailAddress":
                     // Route email tools to EmailTool component
                     var emailTool = new mcpcfc.tools.EmailTool();
-                    return emailTool.executeTool(arguments.toolName, arguments.args);
+                    result = emailTool.executeTool(arguments.toolName, arguments.args);
+                    break;
                     
                 case "executeCode":
                 case "evaluateExpression":
@@ -35,8 +44,9 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                 case "testSnippet":
                     // Route REPL tools to REPLTool component
                     var replTool = new mcpcfc.clitools.REPLTool();
-                    var result = invoke(replTool, arguments.toolName, arguments.args);
-                    return result;
+                    result = invoke(replTool, arguments.toolName, arguments.args);
+                    result = convertToMCPResponse(result);
+                    break;
                     
                 case "serverStatus":
                 case "configManager":
@@ -45,8 +55,9 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                 case "moduleManager":
                     // Route server management tools to ServerManagementTool component
                     var serverTool = new mcpcfc.clitools.ServerManagementTool();
-                    var result = invoke(serverTool, arguments.toolName, arguments.args);
-                    return result;
+                    result = invoke(serverTool, arguments.toolName, arguments.args);
+                    result = convertToMCPResponse(result);
+                    break;
                     
                 case "packageInstaller":
                 case "packageList":
@@ -55,8 +66,9 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                 case "packageRemove":
                     // Route package management tools to PackageManagerTool component
                     var packageTool = new mcpcfc.clitools.PackageManagerTool();
-                    var result = invoke(packageTool, arguments.toolName, arguments.args);
-                    return result;
+                    result = invoke(packageTool, arguments.toolName, arguments.args);
+                    result = convertToMCPResponse(result);
+                    break;
                     
                 case "codeFormatter":
                 case "codeLinter":
@@ -67,23 +79,54 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                     var devTool = new mcpcfc.clitools.DevWorkflowTool();
                     
                     // Use invoke to call the method dynamically
-                    var result = invoke(devTool, arguments.toolName, arguments.args);
+                    result = invoke(devTool, arguments.toolName, arguments.args);
                     
                     // Return result (already in MCP format from DevWorkflowTool)
-                    return result;
+                    break;
                     
                 default:
                     throw(type="ToolNotFound", message="Unknown tool: #arguments.toolName#");
             }
             
+            // Calculate execution time
+            executionTime = getTickCount() - startTime;
+            
+            // Log successful execution
+            logToolExecution(
+                toolName: arguments.toolName,
+                inputParams: arguments.args,
+                outputResult: result,
+                executionTime: executionTime,
+                sessionId: sessionId,
+                success: true
+            );
+            
+            return result;
+            
         } catch (any e) {
-            return {
+            // Calculate execution time even for errors
+            executionTime = getTickCount() - startTime;
+            
+            result = {
                 "content": [{
                     "type": "text",
                     "text": "Error executing tool: #e.message#"
                 }],
                 "isError": true
             };
+            
+            // Log failed execution
+            logToolExecution(
+                toolName: arguments.toolName,
+                inputParams: arguments.args,
+                outputResult: result,
+                executionTime: executionTime,
+                sessionId: sessionId,
+                success: false,
+                errorMessage: e.message
+            );
+            
+            return result;
         }
     }
     
@@ -153,6 +196,109 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
             if (!structKeyExists(arguments.args, param) || len(trim(arguments.args[param])) == 0) {
                 throw(type="InvalidParams", message="Missing required parameter: #param#");
             }
+        }
+    }
+    
+    /**
+     * Converts a tool's native response format to MCP response format
+     * 
+     * @param result {struct} The tool's response
+     * @return {struct} The MCP-formatted response
+     */
+    private struct function convertToMCPResponse(required struct result) {
+        // If it already has the correct format, return as-is
+        if (structKeyExists(arguments.result, "content") && isArray(arguments.result.content)) {
+            return arguments.result;
+        }
+        
+        // Convert to MCP format
+        var text = "";
+        
+        // If there's an error, format the error message
+        if (structKeyExists(arguments.result, "error") && len(arguments.result.error)) {
+            text = "Error: " & arguments.result.error;
+            if (structKeyExists(arguments.result, "errorDetail") && len(arguments.result.errorDetail)) {
+                text &= chr(10) & "Details: " & arguments.result.errorDetail;
+            }
+        } else {
+            // Convert the result to a formatted text representation
+            text = serializeJson(arguments.result);
+        }
+        
+        return {
+            "content": [{
+                "type": "text",
+                "text": text
+            }],
+            "isError": structKeyExists(arguments.result, "error") && len(arguments.result.error)
+        };
+    }
+    
+    /**
+     * Logs tool execution to the database
+     * 
+     * @param toolName {string} The name of the tool
+     * @param inputParams {struct} The input parameters
+     * @param outputResult {struct} The output result
+     * @param executionTime {numeric} The execution time in milliseconds
+     * @param sessionId {string} The session ID
+     * @param success {boolean} Whether the execution was successful
+     * @param errorMessage {string} Error message if execution failed
+     */
+    private void function logToolExecution(
+        required string toolName,
+        required struct inputParams,
+        required struct outputResult,
+        required numeric executionTime,
+        string sessionId = "",
+        boolean success = true,
+        string errorMessage = ""
+    ) {
+        try {
+            // Serialize input and output for storage
+            var inputJson = serializeJson(arguments.inputParams);
+            var outputJson = serializeJson(arguments.outputResult);
+            
+            // Insert log entry
+            queryExecute(
+                "INSERT INTO tool_executions (
+                    tool_name,
+                    input_params,
+                    output_result,
+                    execution_time,
+                    session_id,
+                    success,
+                    error_message,
+                    executed_at
+                ) VALUES (
+                    :toolName,
+                    :inputParams,
+                    :outputResult,
+                    :executionTime,
+                    :sessionId,
+                    :success,
+                    :errorMessage,
+                    NOW()
+                )",
+                {
+                    toolName: arguments.toolName,
+                    inputParams: inputJson,
+                    outputResult: outputJson,
+                    executionTime: arguments.executionTime,
+                    sessionId: arguments.sessionId,
+                    success: arguments.success ? 1 : 0,
+                    errorMessage: arguments.errorMessage
+                },
+                {datasource: "mcpcfc_ds"}
+            );
+            
+        } catch (any e) {
+            // Log the error but don't throw - we don't want logging failures to break tool execution
+            writeLog(
+                text="Failed to log tool execution: #e.message# - Tool: #arguments.toolName#",
+                type="error",
+                application=true
+            );
         }
     }
 }

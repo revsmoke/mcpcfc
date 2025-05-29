@@ -19,6 +19,48 @@ component output="false" hint="Application component for MCP Server" {
         // Register default tools
         registerTools();
     }
+    
+    /**
+     * Application end handler - cleanup resources
+     */
+    public void function onApplicationEnd() {
+        // Clean up any active file watcher threads
+        if (structKeyExists(application, "fileWatchers")) {
+            for (var watcherId in application.fileWatchers) {
+                try {
+                    // Mark as inactive
+                    application.fileWatchers[watcherId].active = false;
+                    
+                    // Terminate the thread
+                    cfthread(action="terminate", name=watcherId);
+                    
+                    writeLog(
+                        text="Terminated file watcher thread on application shutdown: " & watcherId,
+                        type="information",
+                        application=true
+                    );
+                } catch (any e) {
+                    // Thread might have already stopped
+                    writeLog(
+                        text="Could not terminate file watcher thread: " & watcherId & " - " & e.message,
+                        type="warning",
+                        application=true
+                    );
+                }
+            }
+            
+            // Clear the watchers struct
+            structClear(application.fileWatchers);
+        }
+        
+        // Log application shutdown
+        writeLog(
+            text="MCP Server application shutting down",
+            type="information",
+            application=true
+        );
+    }
+    
     /**
      * Register default tools
      */

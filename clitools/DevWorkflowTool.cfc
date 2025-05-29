@@ -13,198 +13,198 @@ component displayname="DevWorkflowTool" hint="Development workflow tools for CF2
     public array function getToolDefinitions() {
         return [
             {
-                name: "codeFormatter",
-                description: "Format CFML code using cfformat",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        code: {
-                            type: "string",
-                            description: "CFML code to format (for string input)"
+                name = "codeFormatter",
+                description = "Format CFML code using cfformat",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        code = {
+                            type = "string",
+                            description = "CFML code to format (for string input)"
                         },
-                        filePath: {
-                            type: "string",
-                            description: "Path to file to format (alternative to code)"
+                        filePath = {
+                            type = "string",
+                            description = "Path to file to format (alternative to code)"
                         },
-                        settings: {
-                            type: "object",
-                            description: "Formatting settings",
-                            properties: {
-                                indentSize: {
-                                    type: "number",
-                                    default: 4
+                        settings = {
+                            type = "object",
+                            description = "Formatting settings",
+                            properties = {
+                                indentSize = {
+                                    type = "number",
+                                    default = 4
                                 },
-                                insertSpaces: {
-                                    type: "boolean",
-                                    default: true
+                                insertSpaces = {
+                                    type = "boolean",
+                                    default = true
                                 },
-                                maxLineLength: {
-                                    type: "number",
-                                    default: 120
+                                maxLineLength = {
+                                    type = "number",
+                                    default = 120
                                 }
                             }
                         },
-                        overwrite: {
-                            type: "boolean",
-                            description: "Overwrite the file (for filePath mode)",
-                            default: false
+                        overwrite = {
+                            type = "boolean",
+                            description = "Overwrite the file (for filePath mode)",
+                            default = false
                         }
                     }
                 }
             },
             {
-                name: "codeLinter",
-                description: "Analyze CFML code for issues using cflint",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        filePath: {
-                            type: "string",
-                            description: "File or directory to lint"
+                name = "codeLinter",
+                description = "Analyze CFML code for issues using cflint",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        filePath = {
+                            type = "string",
+                            description = "File or directory to lint"
                         },
-                        code: {
-                            type: "string",
-                            description: "Code string to lint (alternative to filePath)"
+                        code = {
+                            type = "string",
+                            description = "Code string to lint (alternative to filePath)"
                         },
-                        rules: {
-                            type: "string",
-                            description: "Linting rules preset",
-                            enum: ["default", "strict", "minimal"],
-                            default: "default"
+                        rules = {
+                            type = "string",
+                            description = "Linting rules preset",
+                            enum = ["default", "strict", "minimal"],
+                            default = "default"
                         },
-                        format: {
-                            type: "string",
-                            description: "Output format",
-                            enum: ["json", "text", "html"],
-                            default: "json"
+                        format = {
+                            type = "string",
+                            description = "Output format",
+                            enum = ["json", "text", "html"],
+                            default = "json"
                         },
-                        includeWarnings: {
-                            type: "boolean",
-                            description: "Include warnings in output",
-                            default: true
+                        includeWarnings = {
+                            type = "boolean",
+                            description = "Include warnings in output",
+                            default = true
                         }
                     }
                 }
             },
             {
-                name: "testRunner",
-                description: "Run TestBox tests and return results",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        directory: {
-                            type: "string",
-                            description: "Directory containing tests",
-                            default: "./tests"
+                name = "testRunner",
+                description = "Run TestBox tests and return results",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        directory = {
+                            type = "string",
+                            description = "Directory containing tests",
+                            default = "./tests"
                         },
-                        bundles: {
-                            type: "string",
-                            description: "Specific test bundles to run (comma-separated)"
+                        bundles = {
+                            type = "string",
+                            description = "Specific test bundles to run (comma-separated)"
                         },
-                        labels: {
-                            type: "string",
-                            description: "Run tests with specific labels"
+                        labels = {
+                            type = "string",
+                            description = "Run tests with specific labels"
                         },
-                        reporter: {
-                            type: "string",
-                            description: "Test reporter format",
-                            enum: ["json", "simple", "junit", "tap"],
-                            default: "json"
+                        reporter = {
+                            type = "string",
+                            description = "Test reporter format",
+                            enum = ["json", "simple", "junit", "tap"],
+                            default = "json"
                         },
-                        coverage: {
-                            type: "boolean",
-                            description: "Generate code coverage report",
-                            default: false
+                        coverage = {
+                            type = "boolean",
+                            description = "Generate code coverage report",
+                            default = false
                         }
                     }
                 }
             },
             {
-                name: "generateDocs",
-                description: "Generate documentation from CFML components",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        sourcePath: {
-                            type: "string",
-                            description: "Path to source code",
-                            default: "./components"
+                name = "generateDocs",
+                description = "Generate documentation from CFML components",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        sourcePath = {
+                            type = "string",
+                            description = "Path to source code",
+                            default = "./components"
                         },
-                        outputPath: {
-                            type: "string",
-                            description: "Output directory for documentation",
-                            default: "./docs"
+                        outputPath = {
+                            type = "string",
+                            description = "Output directory for documentation",
+                            default = "./docs"
                         },
-                        format: {
-                            type: "string",
-                            description: "Documentation format",
-                            enum: ["html", "markdown", "json"],
-                            default: "html"
+                        format = {
+                            type = "string",
+                            description = "Documentation format",
+                            enum = ["html", "markdown", "json"],
+                            default = "html"
                         },
-                        includePrivate: {
-                            type: "boolean",
-                            description: "Include private methods",
-                            default: false
+                        includePrivate = {
+                            type = "boolean",
+                            description = "Include private methods",
+                            default = false
                         }
                     }
                 }
             },
             {
-                name: "watchFiles",
-                description: "Watch files for changes and run actions",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        paths: {
-                            type: "array",
-                            description: "Paths to watch",
-                            items: {
-                                type: "string"
+                name = "watchFiles",
+                description = "Watch files for changes and run actions",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        paths = {
+                            type = "array",
+                            description = "Paths to watch",
+                            items = {
+                                type = "string"
                             },
-                            default: ["./"]
+                            default = ["./"]
                         },
-                        extensions: {
-                            type: "array",
-                            description: "File extensions to watch",
-                            items: {
-                                type: "string"
+                        extensions = {
+                            type = "array",
+                            description = "File extensions to watch",
+                            items = {
+                                type = "string"
                             },
-                            default: ["cfc", "cfm"]
+                            default = ["cfc", "cfm"]
                         },
-                        action: {
-                            type: "string",
-                            description: "Action to perform on change",
-                            enum: ["test", "lint", "reload"],
-                            default: "test"
+                        action = {
+                            type = "string",
+                            description = "Action to perform on change",
+                            enum = ["test", "lint", "reload"],
+                            default = "test"
                         },
-                        debounce: {
-                            type: "number",
-                            description: "Debounce time in milliseconds",
-                            default: 1000
+                        debounce = {
+                            type = "number",
+                            description = "Debounce time in milliseconds",
+                            default = 1000
                         }
                     }
                 }
             },
             {
-                name: "stopWatcher",
-                description: "Stop a running file watcher",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        watcherId: {
-                            type: "string",
-                            description: "The ID of the watcher to stop"
+                name = "stopWatcher",
+                description = "Stop a running file watcher",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        watcherId = {
+                            type = "string",
+                            description = "The ID of the watcher to stop"
                         }
                     },
-                    required: ["watcherId"]
+                    required = ["watcherId"]
                 }
             },
             {
-                name: "getWatcherStatus",
-                description: "Get status of all active file watchers",
-                inputSchema: {
-                    type: "object",
-                    properties: {}
+                name = "getWatcherStatus",
+                description = "Get status of all active file watchers",
+                inputSchema = {
+                    type = "object",
+                    properties = {}
                 }
             }
         ];
@@ -610,8 +610,11 @@ if (findNoCase("..", arguments.directory) ||
         };
         
         try {
-            // Generate unique watcher ID
-            var watcherId = "watcher_" & createUUID();
+            // Generate unique and descriptive watcher ID
+            var timestamp = dateFormat(now(), "yyyymmdd") & timeFormat(now(), "HHmmss");
+            var watcherPath = listFirst(arrayToList(arguments.paths), ",");
+            var watcherAction = arguments.action;
+            var watcherId = "fileWatcher_" & watcherAction & "_" & timestamp & "_" & left(hash(watcherPath), 8);
             
             // Normalize paths
             var normalizedPaths = [];
@@ -725,13 +728,22 @@ if (findNoCase("..", arguments.directory) ||
             if (structKeyExists(application, "fileWatchers") && 
                 structKeyExists(application.fileWatchers, arguments.watcherId)) {
                 
-                // Mark as inactive
+                // Mark as inactive first to signal thread to stop
                 application.fileWatchers[arguments.watcherId].active = false;
+                
+                // Explicitly terminate the thread to ensure immediate cleanup
+                try {
+                    cfthread(action="terminate", name=arguments.watcherId);
+                    result.message = "File watcher thread terminated and ";
+                } catch (any threadError) {
+                    // Thread might have already stopped
+                    result.message = "File watcher thread already stopped and ";
+                }
                 
                 // Remove from application scope
                 structDelete(application.fileWatchers, arguments.watcherId);
                 
-                result.message = "File watcher stopped successfully.";
+                result.message &= "removed successfully.";
             } else {
                 throw(message="Watcher not found: " & arguments.watcherId);
             }

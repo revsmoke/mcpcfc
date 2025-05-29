@@ -6,7 +6,7 @@ component displayname="SystemTool" extends="mcpcfc.tools.BaseTool" {
     
 public struct function executeTool(required string toolName, required struct args) {
 // Validate tool name format
-if (!reMatch("^[a-zA-Z][a-zA-Z0-9]{0,50}$", arguments.toolName)) {
+if ( arrayLen( reMatch("^[a-zA-Z][a-zA-Z0-9]{0,50}$", arguments.toolName) ) EQ 0 ) {
     throw(type="InvalidToolName", message="Tool name contains invalid characters: #arguments.toolName#");
 }
 

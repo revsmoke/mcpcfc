@@ -133,7 +133,7 @@ component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" 
         try {
             // Process output path
             var outputPath = arguments.args.outputPath;
-            if (!left(outputPath, 1) == "/" && !findNoCase(":\", outputPath)) {
+            if (left(outputPath, 1) != "/" && !findNoCase(":\", outputPath)) {
                 outputPath = "/mcpcfc/temp/" & outputPath;
             }
             var outputFile = expandPath(outputPath);

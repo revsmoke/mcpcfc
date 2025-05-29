@@ -16,7 +16,8 @@ SCRIPTS_TO_CHECK=(
      "test-server-tools.sh"
 )
 for script in "${SCRIPTS_TO_CHECK[@]}"; do
-     if grep -q "set -euo pipefail" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
+     BASE_PATH="${MCPCFC_ROOT:-/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc}"
+if grep -q "set -euo pipefail" "$BASE_PATH/tests/cli-integration/$script"; then
          echo "✓ $script has proper error handling"
      else
          echo "✗ $script missing error handling"
@@ -28,22 +29,20 @@ for script in "${SCRIPTS_TO_CHECK[@]}"; do
 echo ""
 echo "2. Checking for tool dependency checks..."
 for script in "${SCRIPTS_TO_CHECK[@]}"; do
-    if grep -q "command -v cfml" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
-          echo "✓ $script checks for cfml dependency"
-      else
-          echo "✗ $script missing cfml check"
-         exit 1
-      fi
+    if grep -q "command -v cfml" "$BASE_PATH/tests/cli-integration/$script"; then
+           echo "✓ $script checks for cfml dependency"
+       else
+           echo "✗ $script missing cfml check"
+          exit 1
+       fi
 
-     if grep -q "command -v jq" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
-          echo "✓ $script checks for jq dependency"
-      else
-          echo "✗ $script missing jq check (if needed)"
-     fi
- done
-        exit 1
-     fi
-done
+     if grep -q "command -v jq" "$BASE_PATH/tests/cli-integration/$script"; then
+           echo "✓ $script checks for jq dependency"
+       else
+           echo "✗ $script missing jq check (if needed)"
+          exit 1
+      fi
+  done
 
 echo ""
 echo "3. Testing actual error handling behavior..."
@@ -68,7 +67,7 @@ else
 fi
 
 # Clean up
-rm -f /tmp/test-error-handling.sh
+rm -f "$TEMP_SCRIPT"
 
 echo ""
-echo "Error handling verification complete!"
+echo "Error handling verification complete!"echo "Error handling verification complete!"

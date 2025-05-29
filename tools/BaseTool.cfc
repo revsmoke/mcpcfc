@@ -23,6 +23,12 @@ private void function validateRequiredParams(
             
             // Handle different data types appropriately
             var paramValue = arguments.args[param];
+
+            // Treat explicit null as missing
+            if ( isNull( paramValue ) ) {
+                throw( type = "InvalidParams"
+                     , message = "Null value for parameter: #param#" );
+            }
             
             if (isArray(paramValue)) {
                 // For arrays, check if empty
@@ -131,12 +137,14 @@ private void function validateRequiredParams(
         
 // Strip all traversal sequences such as ../, ..\, ....//, %2e%2e%2f, etc.
 var safeFilename = rereplacenocase(
-    urldecode(arguments.filename),
-    "(?:\.\.[\\/])+",
+    urldecode( arguments.filename ),
+    "[^A-Za-z0-9_.-]",      // allow only safe filename chars
     "",
     "all"
 );
- safeFilename = getFileFromPath(safeFilename);
+// defensive: remove any remaining slashes/back-slashes
+safeFilename = replace( safeFilename, "/", "", "all" );
+safeFilename = replace( safeFilename, "\", "", "all" );
         
         return tempDir & safeFilename;
     }

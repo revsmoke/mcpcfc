@@ -2,7 +2,8 @@ component output="false" hint="Application component for MCP Server" {
     
     this.name = "MCPServer"; //cflint ignore:GLOBAL_VAR
     this.applicationTimeout = createTimeSpan(1, 0, 0, 0);
-    this.sessionManagement = false;
+    this.sessionManagement = true;
+    this.sessionTimeout = createTimeSpan(0, 0, 30, 0); // 30 minute session timeout
     /**
      * Application start handler
      */
@@ -298,32 +299,56 @@ try {
              writeLog(text="Failed to register server management tools: " & e.message, type="error");
          }
 
-        // Register package management tools  
-        try {
-            var packageTool = new mcpcfc.clitools.PackageManagerTool();
-            var packageTools = packageTool.getToolDefinitions();
-            for (var tool in packageTools) {
-                application.toolRegistry.registerTool(tool.name, {
-                    "description": tool.description,
-                    "inputSchema": tool.inputSchema
-                });
-            }
-        } catch (any e) {
-            writeLog(text="Failed to register package management tools: " & e.message, type="error");
+// Register package management tools  
+ try {
+     var packageTool = new mcpcfc.clitools.PackageManagerTool();
+     var packageTools = packageTool.getToolDefinitions();
+    
+    // Validate tool definitions structure
+    if (!isArray(packageTools)) {
+        throw(message="getToolDefinitions() must return an array", type="ValidationError");
+    }
+    
+     for (var tool in packageTools) {
+        // Validate required tool properties
+        if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+            writeLog(text="Skipping invalid package tool definition: missing required properties", type="warning");
+            continue;
         }
+        
+         application.toolRegistry.registerTool(tool.name, {
+             "description": tool.description,
+             "inputSchema": tool.inputSchema
+         });
+     }
+ } catch (any e) {
+     writeLog(text="Failed to register package management tools: " & e.message, type="error");
+ }
 
-        // Register development workflow tools
-        try {
-            var devTool = new mcpcfc.clitools.DevWorkflowTool();
-            var devTools = devTool.getToolDefinitions();
-            for (var tool in devTools) {
-                application.toolRegistry.registerTool(tool.name, {
-                    "description": tool.description,
-                    "inputSchema": tool.inputSchema
-                });
-            }
-        } catch (any e) {
-            writeLog(text="Failed to register development workflow tools: " & e.message, type="error");
+ // Register development workflow tools
+ try {
+     var devTool = new mcpcfc.clitools.DevWorkflowTool();
+     var devTools = devTool.getToolDefinitions();
+    
+    // Validate tool definitions structure
+    if (!isArray(devTools)) {
+        throw(message="getToolDefinitions() must return an array", type="ValidationError");
+    }
+    
+     for (var tool in devTools) {
+        // Validate required tool properties
+        if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+            writeLog(text="Skipping invalid dev tool definition: missing required properties", type="warning");
+            continue;
         }
+        
+         application.toolRegistry.registerTool(tool.name, {
+             "description": tool.description,
+             "inputSchema": tool.inputSchema
+         });
+     }
+ } catch (any e) {
+     writeLog(text="Failed to register development workflow tools: " & e.message, type="error");
+ }
     }
 }

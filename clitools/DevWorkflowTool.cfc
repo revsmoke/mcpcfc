@@ -447,7 +447,7 @@ if (!normalizedPath.startsWith(basePath)) {
 if (findNoCase("..", arguments.directory) || 
     findNoCase("~", arguments.directory) || 
     arguments.directory.startsWith("/") ||
-    arguments.directory.matches(".*[<>:\"|\\?\\*].*")) {
+    reFindNoCase("[<>:\|\\?\\*]", arguments.directory)) {
     throw(message="Invalid directory path - contains disallowed characters");
 }
            
@@ -808,17 +808,22 @@ if (findNoCase("..", arguments.directory) ||
     /**
      * Execute a command with arguments array to prevent injection
      */
-private struct function executeCommandWithArgs(required string command, required array arguments) {
+private struct function executeCommandWithArgs(required string command, required array cmdArgs) {
      var result = {
          success: true,
          output: "",
          error: ""
      };
      
-    // Escape arguments for shell safety (consistent with PackageManagerTool)
+    // Escape arguments for shell safety
     var escapedArgs = [];
-    for (var arg in arguments.arguments) {
-        arrayAppend(escapedArgs, shellEscape(arg));
+    for (var arg in arguments.cmdArgs) {
+        // Platform-specific escaping
+        if (server.os.name contains "Windows") {
+            arrayAppend(escapedArgs, '"' & replace(arg, '"', '""', "all") & '"');
+        } else {
+            arrayAppend(escapedArgs, "'" & replace(arg, "'", "'\'", "all") & "'");
+        }
     }
     
      try {

@@ -10,7 +10,7 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
         var startTime = getTickCount();
         var result = {};
         var executionTime = 0;
-        var sessionId = structKeyExists(request, "sessionId") ? request.sessionId : "";
+        var sessionId = structKeyExists(session, "sessionID") ? session.sessionID : "";
         
         try {
             switch(arguments.toolName) {
@@ -176,10 +176,7 @@ var queryResult = queryExecute(
     {datasource: arguments.args.datasource}
 );
         // Convert query to array of structs
-        var results = [];
-        for (var row in queryResult) {
-            arrayAppend(results, row);
-        }
+var results = queryResult.toArray(); // returns array of structs, one per row
         
         return {
             "content": [{

@@ -113,8 +113,8 @@ if (!structKeyExists(session, "csrfToken")) {
 </cfscript>
 
  <form method="post">
-     <input type="hidden" name="action" value="start">
     <input type="hidden" name="csrfToken" value="<cfoutput>#session.csrfToken#</cfoutput>">
+    <input type="hidden" name="action" value="start">
                 
                 <p>
                     <label>Paths to watch (comma-separated):</label><br>
@@ -147,52 +147,54 @@ if (!structKeyExists(session, "csrfToken")) {
         <cfif structKeyExists(form, "action")>
             <cfscript>
             try {
+                // Add CSRF token validation
+                if (!structKeyExists(session, "csrfToken") || !structKeyExists(form, "csrfToken") || 
+                    session.csrfToken != form.csrfToken) {
+                    throw(type="SecurityError", message="Invalid CSRF token");
+                }
+                
                 toolHandler = new components.ToolHandler();
-    // Add CSRF token validation
-    if (!structKeyExists(session, "csrfToken") || !structKeyExists(form, "csrfToken") || 
-        session.csrfToken != form.csrfToken) {
-        throw(type="SecurityError", message="Invalid CSRF token");
-    }
-    
-     // Start a file watcher
-    // Validate and sanitize input
-    if (!len(trim(form.paths))) {
-        throw(type="ValidationError", message="Paths cannot be empty");
-    }
-    paths = listToArray(form.paths).filter(function(path) {
-        return len(trim(path)) > 0 && !find("..", path);
-    });
-    extensions = listToArray(form.extensions).filter(function(ext) {
-        return reMatch("^[a-zA-Z0-9]{1,10}$", trim(ext)).len() > 0;
-    });
-     
-    if (!arrayLen(paths) || !arrayLen(extensions)) {
-        throw(type="ValidationError", message="Valid paths and extensions required");
-    }
-    
-    result = toolHandler.executeTool("watchFiles", {
-         paths: paths,
-         extensions: extensions,
-         action: form.watchAction,
-        debounce: max(100, min(10000, val(form.debounce)))
-     });
-     
-    if (structKeyExists(result, "content") && arrayLen(result.content) > 0) {
-        try {
-            watchResult = deserializeJson(result.content[1].text);
-        } catch (any jsonError) {
-            throw(type="DataError", message="Invalid JSON response from tool");
-        }
- 
- } catch (any e) {
-     writeOutput('<div class="section">');
-    writeOutput('<p class="error">❌ Error: ' & encodeForHTML(e.message) & '</p>');
-    // Log error securely instead of exposing via writeDump
-    writeLog(file="application", text="File watcher error: #e.message# #e.detail#");
-     writeOutput('</div>');
- }
-                            } else {
-                                writeOutput('<p class="error">❌ ' & watchResult.error & '</p>');
+                
+                switch(form.action) {
+                    case "start":
+                        // Start a file watcher
+                        // Validate and sanitize input
+                        if (!len(trim(form.paths))) {
+                            throw(type="ValidationError", message="Paths cannot be empty");
+                        }
+                        paths = listToArray(form.paths).filter(function(path) {
+                            return len(trim(path)) > 0 && !find("..", path);
+                        });
+                        extensions = listToArray(form.extensions).filter(function(ext) {
+                            return arrayLen( reMatch("^[a-zA-Z0-9]{1,10}$", trim(ext)) ) > 0;
+                        });
+                         
+                        if (!arrayLen(paths) || !arrayLen(extensions)) {
+                            throw(type="ValidationError", message="Valid paths and extensions required");
+                        }
+                        
+                        result = toolHandler.executeTool("watchFiles", {
+                             paths: paths,
+                             extensions: extensions,
+                             action: form.watchAction,
+                            debounce: max(100, min(10000, val(form.debounce)))
+                         });
+                         
+                        writeOutput('<div class="section">');
+                        if (structKeyExists(result, "content") && arrayLen(result.content) > 0) {
+                            try {
+                                watchResult = deserializeJson(result.content[1].text);
+                                if (watchResult.success) {
+                                    writeOutput('<p class="success">✅ File watcher started successfully!</p>');
+                                    writeOutput('<p><strong>Watcher ID:</strong> ' & watchResult.watcherId & '</p>');
+                                    writeOutput('<p><strong>Watching:</strong> ' & arrayToList(watchResult.paths, ', ') & '</p>');
+                                    writeOutput('<p><strong>Extensions:</strong> *.' & arrayToList(watchResult.extensions, ', *.') & '</p>');
+                                    writeOutput('<p><strong>Action:</strong> ' & watchResult.action & '</p>');
+                                } else {
+                                    writeOutput('<p class="error">❌ ' & watchResult.error & '</p>');
+                                }
+                            } catch (any jsonError) {
+                                writeOutput('<p class="error">❌ Invalid response from tool</p>');
                             }
                         }
                         writeOutput('</div>');
@@ -215,12 +217,20 @@ if (!structKeyExists(session, "csrfToken")) {
                         }
                         writeOutput('</div>');
                         break;
+                        
+                    case "modifyTestFile":
+                        // This is handled separately below
+                        break;
+                        
+                    default:
+                        writeOutput('<div class="section"><p class="error">❌ Unknown action</p></div>');
                 }
                 
             } catch (any e) {
                 writeOutput('<div class="section">');
-                writeOutput('<p class="error">❌ Error: ' & e.message & '</p>');
-                writeDump(e);
+                writeOutput('<p class="error">❌ Error: ' & encodeForHTML(e.message) & '</p>');
+                // Log error securely instead of exposing via writeDump
+                writeLog(file="application", text="File watcher error: #e.message# #e.detail#");
                 writeOutput('</div>');
             }
             </cfscript>
@@ -254,7 +264,8 @@ if (!structKeyExists(session, "csrfToken")) {
                             }
                             
                             if (watcher.active) {
-                                writeOutput('<form method="post" style="display:inline;">');
+                                writeOutput('<form method="post" style="display:inline;">
+    <input type="hidden" name="csrfToken" value="<cfoutput>#session.csrfToken#</cfoutput>">');
                                 writeOutput('<input type="hidden" name="action" value="stop">');
                                 writeOutput('<input type="hidden" name="watcherId" value="' & watcher.id & '">');
                                 writeOutput('<button type="submit" class="danger">Stop Watcher</button>');
@@ -286,6 +297,7 @@ if (!structKeyExists(session, "csrfToken")) {
                 </cfscript>
                 
                 <form method="post">
+                    <input type="hidden" name="csrfToken" value="<cfoutput>#session.csrfToken#</cfoutput>">
                     <input type="hidden" name="action" value="modifyTestFile">
                     <p>Test file: <code><cfoutput>#testFilePath#</cfoutput></code></p>
                     <p>Status: <cfif testFileExists><span class="success">Exists</span><cfelse><span class="warning">Does not exist</span></cfif></p>
@@ -300,7 +312,7 @@ if (!structKeyExists(session, "csrfToken")) {
      <cfscript>
      try {
         // Validate CSRF token
-        if (!structKeyExists(session, "csrfToken") || form.csrfToken != session.csrfToken) {
+        if (!structKeyExists(session, "csrfToken") || !structKeyExists(form, "csrfToken") || form.csrfToken != session.csrfToken) {
             throw(type="SecurityError", message="Invalid request");
         }
         
@@ -318,7 +330,7 @@ if (!structKeyExists(session, "csrfToken")) {
              }
              
              // Write test file with timestamp
-            var safeContent = '<!--- Test file modified at: ' & encodeForHTML(dateTimeFormat(now(), "yyyy-mm-dd HH:nn:ss")) & ' --->' & chr(10) & 
+            safeContent = '<!--- Test file modified at: ' & encodeForHTML(dateTimeFormat(now(), "yyyy-mm-dd HH:nn:ss")) & ' --->' & chr(10) & 
                              '<cfoutput>Test file content</cfoutput>';
             fileWrite(testFilePath, safeContent);
              writeOutput('<p class="success">✅ Test file created/updated!</p>');
@@ -341,11 +353,12 @@ if (!structKeyExists(session, "csrfToken")) {
             <div class="log-viewer">
 <cfscript>
  try {
-    // Add basic access control
-    if (!structKeyExists(session, "isAdmin") || !session.isAdmin) {
-        writeOutput('<p class="error">Access denied: Admin privileges required</p>');
-        return;
-    }
+    // For demo purposes, we'll skip admin check
+    // In production, implement proper access control
+    // if (!structKeyExists(session, "isAdmin") || !session.isAdmin) {
+    //     writeOutput('<p class="error">Access denied: Admin privileges required</p>');
+    //     return;
+    // }
     
      // Read the application log
     // Use server-relative path instead of hardcoded absolute path

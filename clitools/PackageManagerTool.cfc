@@ -772,7 +772,9 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
             return '"' & escaped & '"';
         } else {
             // Unix/Linux/Mac: Use single quotes and escape any single quotes
-            var escaped = replace(arguments.arg, "'", "'\'", "all");
+            // Close the outer quote, inject an escaped single quote, reopen
+            //   e.g.   abc'def  ->  'abc'\''def'
+            var escaped = replace(arguments.arg, "'", "'\\''", "all");
             return "'" & escaped & "'";
         }
     }

@@ -9,11 +9,12 @@ echo "Testing improved error handling in test scripts..."
 echo "1. Checking for 'set -euo pipefail' in main test scripts..."
 
 SCRIPTS_TO_CHECK=(
-    "test-devtools.sh"
-    "test-cli-bridge.sh" 
-    "test-package-tools.sh"
-    "test-repl-tools.sh"
-    "test-server-tools.sh"
+     "test-devtools.sh"
+     "test-cli-bridge.sh" 
+     "test-package-tools.sh"
+     "test-repl-tools.sh"
+     "test-server-tools.sh"
+)
 for script in "${SCRIPTS_TO_CHECK[@]}"; do
      if grep -q "set -euo pipefail" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
          echo "✓ $script has proper error handling"
@@ -27,14 +28,14 @@ for script in "${SCRIPTS_TO_CHECK[@]}"; do
 echo ""
 echo "2. Checking for tool dependency checks..."
 for script in "${SCRIPTS_TO_CHECK[@]}"; do
-    if grep -q "command -v cfml" "$SCRIPT_DIR/$script"; then
+    if grep -q "command -v cfml" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
           echo "✓ $script checks for cfml dependency"
       else
           echo "✗ $script missing cfml check"
          exit 1
       fi
 
-     if grep -q "command -v jq" "$SCRIPT_DIR/$script"; then
+     if grep -q "command -v jq" "/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/tests/cli-integration/$script"; then
           echo "✓ $script checks for jq dependency"
       else
           echo "✗ $script missing jq check (if needed)"

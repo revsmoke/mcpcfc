@@ -42,16 +42,14 @@ try {
         }
         
         transport.logDebug("Received: " & input);
-        
-        // First, try to parse the JSON in a separate try-catch
-        var message = "";
-        var parseError = false;
-        
-        try {
-            // Parse JSON message
-            var message = {};
-            message = deserializeJSON(input);
-            transport.logDebug("JSON parsed successfully");
+// First, try to parse the JSON in a separate try-catch
+         var parseError = false;
+         
+         try {
+             // Parse JSON message
+             var message = {};
+             message = deserializeJSON(input);
+             transport.logDebug("JSON parsed successfully");
         } catch (any parseException) {
             // JSON parsing failed - create parse error response
             parseError = true;
@@ -82,22 +80,24 @@ try {
                 if (!structIsEmpty(response)) {
                     transport.writeResponse(response);
                     transport.logDebug("Sent response for: " & (structKeyExists(message, "method") ? message.method : "unknown"));
-                } else {
-                    transport.logDebug("No response for notification: " & message.method);
-                }
-                
-} catch (any processingException) {
-                // Message processing failed - create internal error response
-                var errorResponse = structNew("ordered");
-                errorResponse["jsonrpc"] = "2.0";
-                errorResponse["id"] = ( structKeyExists(message, "id") ? message.id : javacast("null", "") );
-                errorResponse["error"] = structNew("ordered");
-                errorResponse["error"]["code"] = -32603; // Internal error
-                errorResponse["error"]["message"] = "Internal error: " & processingException.message;
-                
-                transport.writeResponse(errorResponse);
-                transport.logError("Message processing error: " & processingException.message);
-            }
+} else {
+                     transport.logDebug("No response for notification: " & message.method);
+                 }
+                 
+            } catch (any processingException) {
+                 // Message processing failed - create internal error response
+                 var errorResponse = structNew("ordered");
+                 errorResponse["jsonrpc"] = "2.0";
+                 errorResponse["id"] = ( structKeyExists(message, "id") ? message.id : javacast("null", "") );
+                 errorResponse["error"] = structNew("ordered");
+                 errorResponse["error"]["code"] = -32603; // Internal error
+                 errorResponse["error"]["message"] = "Internal error: " & processingException.message;
+                errorResponse["error"]["data"] = processingException.detail ?: "";
+                 
+                 transport.writeResponse(errorResponse);
+                 transport.logError("Message processing error: " & processingException.message);
+             }
+             }
         }
     }
     
@@ -161,14 +161,18 @@ function registerTools(toolRegistry) {
     emailTool = createObject("component", "mcpcfc.tools.EmailTool").init();
     toolRegistry.registerComponent(emailTool);
     
-    // Register REPL tools component (CF2023+ only)
-    try {
-        replTool = createObject("component", "mcpcfc.cli-tools.REPLTool").init();
-        toolRegistry.registerComponent(replTool);
-    } catch (any e) {
-        // REPL tools not available in this environment
-        transport.logDebug("REPL tools not available: " & e.message);
-    }
+// Register REPL tools component (CF2023+ only)
+     try {
+         replTool = createObject("component", "mcpcfc.cli-tools.REPLTool").init();
+         toolRegistry.registerComponent(replTool);
+     } catch (any e) {
+         // REPL tools not available in this environment
+        if (isDefined("transport")) {
+            transport.logDebug("REPL tools not available: " & e.message);
+        }
+     }
+        }
+     }
     
     // Register Server Management tools component (CF2023+ only)
     try {

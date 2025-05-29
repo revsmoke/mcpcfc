@@ -559,7 +559,7 @@ component displayname="ServerManagementTool" hint="Server management tools for C
      */
     private string function sanitizeLogFileName(required string logFile) {
         // Extract only the filename from the path (remove any directory traversal)
-        var filename = listLast(arguments.logFile, "/\");
+var filename = listLast( arguments.logFile, "/\\" );
         
         // Validate filename against safe pattern
         // Allow only alphanumeric characters, dots, underscores, hyphens

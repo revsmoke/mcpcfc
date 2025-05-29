@@ -29,10 +29,11 @@ echo "Test 1: Valid JSON input..."
 VALID_JSON='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}'
 RESPONSE1=$(echo "$VALID_JSON" | cfml cli-bridge/cf-mcp-cli-bridge.cfm 2>/dev/null)
 if echo "$RESPONSE1" | jq -e '.result' >/dev/null 2>&1; then
-    echo "✓ Valid JSON processed successfully"
-else
+     echo "✓ Valid JSON processed successfully"
+ else
     echo "✗ Valid JSON failed to process"
-fi
+    exit 1
+ fi
 
 # Test 2: Invalid JSON - Missing closing brace (should return parse error)
 echo ""

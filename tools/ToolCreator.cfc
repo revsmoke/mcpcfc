@@ -28,7 +28,15 @@ component displayname="ToolCreator" {
             };
         }
     }
-private struct function createNewTool(required struct args) {
+    private void function validateRequiredParams(required struct args, required array required) {
+        for (var param in arguments.required) {
+            if (!structKeyExists(arguments.args, param) || len(trim(arguments.args[param])) == 0) {
+                throw(type="InvalidParams", message="Missing required parameter: #param#");
+            }
+        }
+    }
+
+     private struct function createNewTool(required struct args) {
      validateRequiredParams(arguments.args, ["toolName", "description", "code"]);
      
     // Validate toolName contains only safe characters
@@ -38,7 +46,14 @@ private struct function createNewTool(required struct args) {
     
     // Basic code validation - reject obvious malicious patterns
     var codeContent = arguments.args.code;
-    var dangerousPatterns = ["<cfexecute", "<cffile", "<cfdirectory", "createObject(""java""", "fileWrite", "fileRead"];
+    var dangerousPatterns = [
+        "<cfexecute", "<cffile", "<cfdirectory", "<cfregistry", "<cfldap",
+        "createObject(""java""", "createObject('java')", 
+        "fileWrite", "fileRead", "fileDelete", "directoryCreate", "directoryDelete",
+        "invoke(", "evaluate(", "cfinclude", "cfmodule",
+        "application.stop", "server.stop", "createObject(""com""",
+        "getPageContext()", "getMetaData()"
+    ];
     for (var pattern in dangerousPatterns) {
         if (findNoCase(pattern, codeContent)) {
             throw(type="SecurityError", message="Code contains potentially dangerous operations");
@@ -85,7 +100,9 @@ private struct function createNewTool(required struct args) {
     }
     
     private struct function execute#toolName#(required struct args) {
-        #arguments.args.code#
+        // TODO: Implement proper sandboxing mechanism
+        // For now, return error to prevent code injection
+        throw(type="SecurityError", message="Dynamic code execution disabled for security");
     }
     
     private void function validateRequiredParams(required struct args, required array required) {
@@ -111,12 +128,12 @@ private struct function createNewTool(required struct args) {
     private struct function addToolRegistration(required struct args) {
         validateRequiredParams(arguments.args, ["toolName", "description", "inputSchema"]);
         
-        var registrationCode = '
-// Auto-generated tool registration
-application.toolRegistry.registerTool("#lCase(arguments.args.toolName)#", {
-    "description": "#arguments.args.description#",
+var registrationCode = '
+ // Auto-generated tool registration
+application.toolRegistry.registerTool("#encodeForJavaScript(lCase(arguments.args.toolName))#", {
+    "description": "#encodeForJavaScript(arguments.args.description)#",
     "inputSchema": #serializeJson(arguments.args.inputSchema)#
-});';
+ });';
         
         return {
             "content": [{

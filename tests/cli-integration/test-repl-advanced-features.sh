@@ -7,7 +7,16 @@ echo "Testing REPLTool advanced timeout and isolation features..."
 
 # Test 1: Variable isolation - set a variable in one execution
 echo "Test 1: Setting a variable in isolated context..."
-RESPONSE1=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"executeCode","arguments":{"code":"variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);","returnOutput":true,"timeout":5}}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>/tmp/cf-mcp-repl-test.log)
+RESPONSE1=$(echo '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "executeCode",
+    "params": {
+        "code": "variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);",
+        "returnOutput": true,
+        "timeout": 5
+    }
+}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
 
 echo "$RESPONSE1" | jq .
 
@@ -31,7 +40,23 @@ SESSION_ID="test-repl-advanced-$(date +%s)-$$"
          "timeout": 5
      }
 }' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
-echo "$RESPONSE2" | jq .
+ # Test 2: Try to access the variable from Test 1 (should fail due to isolation)
+ echo ""
+ echo "Test 2: Trying to access variable from previous context (should fail)..."
+ RESPONSE2=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "executeCode",
+     "params": {
+         "code": "try { writeOutput(\"testVar = \" & variables.testVar); } catch(any e) { writeOutput(\"testVar not found - isolation working\"); }",
+         "returnOutput": true,
+         "timeout": 5
+     }
+ }' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
+ 
+ echo "$RESPONSE2" | jq .
+
+echo "$RESPONSE1" | jq .
 
 # Test 3: Timeout test with a simple loop (should timeout)
  echo ""

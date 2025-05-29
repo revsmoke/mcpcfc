@@ -497,7 +497,9 @@ component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
             // Build inspection result
             result.variable = {
                 name: arguments.variableName,
-                type: getMetadata(varToInspect).name ?: "unknown",
+type: isSimpleValue( varToInspect )
+    ? lcase( javacast( "string", typeof( varToInspect ) ) )
+    : getMetadata( varToInspect ).name ?: "unknown",
                 value: inspectValue(varToInspect, arguments.depth),
                 isSimple: isSimpleValue(varToInspect),
                 isObject : isInstanceOf(varToInspect,"java.lang.Object"),

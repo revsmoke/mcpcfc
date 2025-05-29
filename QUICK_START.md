@@ -3,12 +3,14 @@
 ## Prerequisites
 
 ### For Basic Features (8 Original Tools)
+
 - Adobe ColdFusion 2016+ or Lucee 5+
 - A web server (IIS, Apache, or built-in)
 - Modern web browser for testing
 - MySQL database (for logging features)
 
 ### For Enhanced Features (28 Total Tools) 🆕
+
 - Adobe ColdFusion 2023+
 - CommandBox 6.0+ (for package/dev tools)
 - Modern web browser for testing
@@ -118,6 +120,7 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 ### Available Tools
 
 **Original 8 Tools:**
+
 - `hello` - Simple greeting test
 - `sendEmail` - Send plain text emails
 - `sendHTMLEmail` - Send HTML formatted emails
@@ -128,18 +131,21 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 - `mergePDFs` - Merge multiple PDFs
 
 **REPL Integration (4 tools):**
+
 - `executeCode` - Run CFML code in isolated context
 - `evaluateExpression` - Quick expression evaluation
 - `testSnippet` - Run code with test assertions
 - `inspectVariable` - Debug variable contents
 
 **Server Management (4 tools):**
+
 - `serverStatus` - Get server information
 - `configManager` - Manage server configuration
 - `logStreamer` - Read and filter logs
 - `clearCache` - Clear ColdFusion caches
 
 **Package Management (6 tools)** - Requires CommandBox:
+
 - `packageInstaller` - Install ForgeBox packages
 - `packageList` - List installed packages
 - `packageSearch` - Search ForgeBox
@@ -148,6 +154,7 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 - `moduleManager` - Manage ColdBox modules
 
 **Development Workflow (6 tools)** - Requires CommandBox:
+
 - `codeFormatter` - Format CFML code
 - `codeLinter` - Analyze code quality
 - `testRunner` - Execute TestBox tests
@@ -168,6 +175,7 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
     ```
 
 ### CommandBox Setup
+
 For package and dev tools to work:
 
 ```bash
@@ -185,7 +193,8 @@ box install testbox --saveDev
 
 ## Security Notes
 
-⚠️ **REPL Tools Security Warning**: 
+⚠️ **REPL Tools Security Warning**:
+
 - The REPL tools execute arbitrary CFML code with enhanced security filtering
 - Security measures include: pattern-based blocking, word boundary matching, reflection blocking
 - Blocked operations: file system access, network operations, system commands, database queries
@@ -196,6 +205,7 @@ box install testbox --saveDev
 ## Monitoring and Dashboards
 
 ### Tool Execution Dashboard
+
 - **Full Dashboard**: `http://localhost:8500/mcpcfc/tool-dashboard.cfm`
   - Filter by time period, tool name, or session
   - View tool performance statistics
@@ -207,6 +217,7 @@ box install testbox --saveDev
   - Auto-refreshes every 30 seconds
 
 ### Log Management
+
 - **View logs**: `http://localhost:8500/mcpcfc/tool-log-cleanup.cfm`
 - Automatic log retention management
 - Configure retention period in days

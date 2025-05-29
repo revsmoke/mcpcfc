@@ -15,7 +15,8 @@ This is the enhanced CF2023 edition of MCPCFC, leveraging Adobe ColdFusion 2023'
 
 ## Current Status
 
-### ✅ All Phases Complete!
+### ✅ All Phases Complete
+
 - [x] Phase 1: Native CFML Stdio Bridge ✅
 - [x] Phase 2: REPL Integration Tool ✅
 - [x] Phase 3: Server Management Tools ✅
@@ -101,6 +102,7 @@ The REPL tools now include comprehensive security filtering:
 ## Quick Start
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/revsmoke/mcpcfc.git
    cd mcpcfc
@@ -112,7 +114,7 @@ The REPL tools now include comprehensive security filtering:
    - Run `http://localhost:8500/mcpcfc/database-setup.cfm`
 
 3. **Configure Claude Desktop**:
-   
+
    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
    ```json
@@ -129,7 +131,8 @@ The REPL tools now include comprehensive security filtering:
 
 ## Complete Tool List
 
-### Original Tools (8)
+- **Original Tools (8)**
+
 1. `hello` - Connection test
 2. `sendEmail` - Plain text emails
 3. `sendHTMLEmail` - HTML emails
@@ -139,19 +142,22 @@ The REPL tools now include comprehensive security filtering:
 7. `extractPDFText` - PDF text extraction
 8. `mergePDFs` - PDF merging
 
-### REPL Tools (4) - With Enhanced Security
+    - **REPL Tools (4) - With Enhanced Security**
+
 9. `executeCode` - Execute CFML with isolation
 10. `evaluateExpression` - Evaluate expressions
 11. `testSnippet` - Run code with assertions
 12. `inspectVariable` - Debug variables
 
-### Server Management (4)
+    - **Server Management (4)**
+
 13. `serverStatus` - Server information
 14. `configManager` - Configuration management
 15. `logStreamer` - Log file access
 16. `clearCache` - Cache management
 
-### Package Management (6) - Requires CommandBox
+    - **Package Management (6) - Requires CommandBox**
+
 17. `packageInstaller` - Install packages
 18. `packageList` - List packages
 19. `packageSearch` - Search ForgeBox
@@ -159,7 +165,8 @@ The REPL tools now include comprehensive security filtering:
 21. `packageRemove` - Remove packages
 22. `moduleManager` - ColdBox modules
 
-### Development Workflow (6) - Requires CommandBox
+    - **Development Workflow (6) - Requires CommandBox**
+
 23. `codeFormatter` - Format CFML code
 24. `codeLinter` - Code analysis
 25. `testRunner` - Run tests
@@ -169,7 +176,7 @@ The REPL tools now include comprehensive security filtering:
 
 ## Project Structure
 
-```
+```text
 /mcpcfc/
 ├── Application.cfc              # Main application config with tool registration
 ├── components/                  # Core MCP components
@@ -198,18 +205,21 @@ The REPL tools now include comprehensive security filtering:
 ## Implementation Highlights
 
 ### Security Improvements in REPLTool.cfc
+
 - Comprehensive `isCodeSafe()` function with 80+ dangerous patterns
 - Word boundary regex matching prevents bypasses
 - Explicit reflection and class loading blocks
 - Enhanced error messages with security context
 
 ### Database Logging in ToolHandler.cfc
+
 - All executions logged with timing information
 - Success/failure tracking with error messages
 - Session-based analytics
 - Performance metrics collection
 
 ### Shell Escaping in PackageManagerTool.cfc
+
 - Proper `shellEscape()` function implementation
 - Platform-specific escaping (Windows vs Unix)
 - Protection against command injection
@@ -217,6 +227,7 @@ The REPL tools now include comprehensive security filtering:
 ## Future Roadmap
 
 ### Potential Phase 6: Advanced Features
+
 - [ ] AI-powered code suggestions
 - [ ] Distributed execution support
 - [ ] Advanced caching strategies
@@ -224,6 +235,7 @@ The REPL tools now include comprehensive security filtering:
 - [ ] WebSocket transport option
 
 ### SDK Development
+
 - [ ] Extract reusable components
 - [ ] Create ForgeBox package
 - [ ] Develop starter templates
@@ -232,6 +244,7 @@ The REPL tools now include comprehensive security filtering:
 ## Contributing
 
 We welcome contributions! Areas of interest:
+
 - Additional security patterns for REPL
 - New tool implementations
 - Dashboard enhancements

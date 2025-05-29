@@ -13,138 +13,138 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
     public array function getToolDefinitions() {
         return [
             {
-                name: "packageInstaller",
-                description: "Install packages from ForgeBox or other sources using CommandBox",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        packageName: {
-                            type: "string",
-                            description: "Package name or slug (e.g., 'coldbox', 'testbox@5.0.0')"
+                name = "packageInstaller",
+                description = "Install packages from ForgeBox or other sources using CommandBox",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        packageName = {
+                            type = "string",
+                            description = "Package name or slug (e.g., 'coldbox', 'testbox@5.0.0')"
                         },
-                        version: {
-                            type: "string",
-                            description: "Specific version to install (optional)"
+                        version = {
+                            type = "string",
+                            description = "Specific version to install (optional)"
                         },
-                        saveDev: {
-                            type: "boolean",
-                            description: "Save as development dependency",
-                            default: false
+                        saveDev = {
+                            type = "boolean",
+                            description = "Save as development dependency",
+                            default = false
                         },
-                        force: {
-                            type: "boolean",
-                            description: "Force reinstall even if already installed",
-                            default: false
+                        force = {
+                            type = "boolean",
+                            description = "Force reinstall even if already installed",
+                            default = false
                         },
-                        production: {
-                            type: "boolean",
-                            description: "Install production dependencies only",
-                            default: false
+                        production = {
+                            type = "boolean",
+                            description = "Install production dependencies only",
+                            default = false
                         }
                     },
-                    required: ["packageName"]
+                    required = ["packageName"]
                 }
             },
             {
-                name: "packageList",
-                description: "List installed packages and their versions",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        showDependencies: {
-                            type: "boolean",
-                            description: "Show package dependencies",
-                            default: false
+                name = "packageList",
+                description = "List installed packages and their versions",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        showDependencies = {
+                            type = "boolean",
+                            description = "Show package dependencies",
+                            default = false
                         },
-                        format: {
-                            type: "string",
-                            description: "Output format",
-                            enum: ["json", "text", "tree"],
-                            default: "json"
+                        format = {
+                            type = "string",
+                            description = "Output format",
+                            enum = ["json", "text", "tree"],
+                            default = "json"
                         }
                     }
                 }
             },
             {
-                name: "packageSearch",
-                description: "Search ForgeBox for packages",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        query: {
-                            type: "string",
-                            description: "Search query"
+                name = "packageSearch",
+                description = "Search ForgeBox for packages",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        query = {
+                            type = "string",
+                            description = "Search query"
                         },
-                        type: {
-                            type: "string",
-                            description: "Package type filter",
-                            enum: ["modules", "interceptors", "caching", "logging", "all"],
-                            default: "all"
+                        type = {
+                            type = "string",
+                            description = "Package type filter",
+                            enum = ["modules", "interceptors", "caching", "logging", "all"],
+                            default = "all"
                         },
-                        limit: {
-                            type: "number",
-                            description: "Maximum results to return",
-                            default: 10
+                        limit = {
+                            type = "number",
+                            description = "Maximum results to return",
+                            default = 10
                         }
                     },
-                    required: ["query"]
+                    required = ["query"]
                 }
             },
             {
-                name: "packageUpdate",
-                description: "Update installed packages to latest versions",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        packageName: {
-                            type: "string",
-                            description: "Specific package to update (optional, updates all if not specified)"
+                name = "packageUpdate",
+                description = "Update installed packages to latest versions",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        packageName = {
+                            type = "string",
+                            description = "Specific package to update (optional, updates all if not specified)"
                         },
-                        force: {
-                            type: "boolean",
-                            description: "Force update even if up to date",
-                            default: false
+                        force = {
+                            type = "boolean",
+                            description = "Force update even if up to date",
+                            default = false
                         }
                     }
                 }
             },
             {
-                name: "packageRemove",
-                description: "Remove installed packages",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        packageName: {
-                            type: "string",
-                            description: "Package name to remove"
+                name = "packageRemove",
+                description = "Remove installed packages",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        packageName = {
+                            type = "string",
+                            description = "Package name to remove"
                         },
-                        removeDependencies: {
-                            type: "boolean",
-                            description: "Also remove unused dependencies",
-                            default: true
+                        removeDependencies = {
+                            type = "boolean",
+                            description = "Also remove unused dependencies",
+                            default = true
                         }
                     },
-                    required: ["packageName"]
+                    required = ["packageName"]
                 }
             },
             {
-                name: "moduleManager",
-                description: "Load, unload, or reload ColdBox modules",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        action: {
-                            type: "string",
-                            description: "Action to perform",
-                            enum: ["load", "unload", "reload", "list"],
-                            default: "list"
+                name = "moduleManager",
+                description = "Load, unload, or reload ColdBox modules",
+                inputSchema = {
+                    type = "object",
+                    properties = {
+                        action = {
+                            type = "string",
+                            description = "Action to perform",
+                            enum = ["load", "unload", "reload", "list"],
+                            default = "list"
                         },
-                        moduleName: {
-                            type: "string",
-                            description: "Module name (required for load/unload/reload)"
+                        moduleName = {
+                            type = "string",
+                            description = "Module name (required for load/unload/reload)"
                         }
                     },
-                    required: ["action"]
+                    required = ["action"]
                 }
             }
         ];
@@ -161,12 +161,12 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         boolean production = false
     ) {
         var result = {
-            success: true,
-            packageName: arguments.packageName,
-            message: "",
-            installedVersion: "",
-            dependencies: [],
-            error: ""
+            success = true,
+            packageName = arguments.packageName,
+            message = "",
+            installedVersion = "",
+            dependencies = [],
+            error = ""
         };
         
         try {
@@ -221,9 +221,9 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         string format = "json"
     ) {
         var result = {
-            success: true,
-            packages: [],
-            error: ""
+            success = true,
+            packages = [],
+            error = ""
         };
         
         try {
@@ -529,9 +529,9 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
     }
     private struct function executeCommandWithArgs(required string executable, required array cmdArgs) {
         var result = {
-            success: true,
-            output: "",
-            error: ""
+            success = true,
+            output = "",
+            error = ""
         };
         
         try {
@@ -539,15 +539,23 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
             var executeResult = "";
             var executeError = "";
             
-            // Convert array of arguments to space-separated string
-            // TODO: add proper shell escaping for security
-cfexecute(
-    name         = arguments.executable,
-    arguments    = arrayToList(arguments.cmdArgs, " "),
-    variable     = "executeResult",
-    errorVariable= "executeError",
-    timeout      = 60
-);
+            // Build properly escaped command arguments
+            var escapedArgs = [];
+            for (var arg in arguments.cmdArgs) {
+                // Escape each argument for shell safety
+                arrayAppend(escapedArgs, shellEscape(arg));
+            }
+            
+            // Join escaped arguments with spaces
+            var commandArguments = arrayToList(escapedArgs, " ");
+            
+            cfexecute(
+                name = arguments.executable,
+                arguments = commandArguments,
+                variable = "executeResult",
+                errorVariable = "executeError",
+                timeout = 60
+            );
             
             result.output = executeResult;
             
@@ -747,6 +755,25 @@ cfexecute(
             moduleService.reload(arguments.moduleName);
         } else {
             throw(message="ColdBox not available for module operations");
+        }
+    }
+
+    /**
+     * Escape a string for safe shell execution
+     * Prevents command injection by properly escaping shell metacharacters
+     */
+    private string function shellEscape(required string arg) {
+        // For Windows and Unix compatibility
+        var isWindows = findNoCase("Windows", server.os.name) > 0;
+        
+        if (isWindows) {
+            // Windows: Escape double quotes and wrap in quotes
+            var escaped = replace(arguments.arg, '"', '""', "all");
+            return '"' & escaped & '"';
+        } else {
+            // Unix/Linux/Mac: Use single quotes and escape any single quotes
+            var escaped = replace(arguments.arg, "'", "'\'", "all");
+            return "'" & escaped & "'";
         }
     }
 

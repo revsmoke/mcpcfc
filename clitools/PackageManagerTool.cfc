@@ -237,9 +237,9 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
                 if (structKeyExists(boxJson, "installPaths")) {
                     for (var packageName in boxJson.installPaths) {
                         var packageInfo = {
-                            name: packageName,
-                            path: boxJson.installPaths[packageName],
-                            version: getInstalledVersion(packageName)
+                            name = packageName,
+                            path = boxJson.installPaths[packageName],
+                            version = getInstalledVersion(packageName)
                         };
                         
                         if (arguments.showDependencies && structKeyExists(boxJson, "dependencies")) {
@@ -276,11 +276,11 @@ component displayname="PackageManagerTool" hint="Package management tools for CF
         numeric limit = 10
     ) {
         var result = {
-            success: true,
-            query: arguments.query,
-            results: [],
-            totalFound: 0,
-            error: ""
+            success = true,
+            query = arguments.query,
+            results = [],
+            totalFound = 0,
+            error = ""
         };
         
         try {

@@ -103,8 +103,13 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
 3. **Restart Claude Desktop**
 
 4. **Verify the connection** - You should see all 28 ColdFusion tools available in Claude!
-   - 8 Original tools (PDF, Email, Database)
-   - 20 New CLI tools (REPL, Server Management, Package Management, Dev Workflow)
+    - 8 Original tools (PDF, Email, Database)
+    - 20 New CLI tools (REPL, Server Management, Package Management, Dev Workflow)
+
+   **To verify all tools are available:**
+   - In Claude, type: "What ColdFusion tools do you have available?"
+   - You should see all 28 tools listed
+   - If some CLI tools are missing, check the Prerequisites section for required dependencies
 
 ### Troubleshooting
 
@@ -284,6 +289,9 @@ For package and dev tools to work:
 # Install CommandBox (if not installed)
 brew install commandbox
 
+# Verify CommandBox version (must be 6.0+)
+box version
+
 # Initialize your project
 cd /path/to/mcpcfc
 box init
@@ -292,7 +300,12 @@ box install testbox --saveDev
 
 ## Security Notes
 
-⚠️ **REPL Tools Security Warning**: The REPL tools execute arbitrary CFML code. Use only in trusted development environments. See README-CF2023.md for security details.
+⚠️ **REPL Tools Security Warning**: 
+- The REPL tools execute arbitrary CFML code with full ColdFusion privileges
+- Potential risks: file system access, database operations, network requests, server configuration changes
+- **Use only in trusted development environments with isolated data**
+- Never expose REPL tools in production or shared environments
+- See README-CF2023.md for complete security details and best practices
 
 ## Need Help?
 

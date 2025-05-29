@@ -205,18 +205,30 @@ component output="false" hint="Application component for MCP Server" {
         // Register CLI tools (CF2023 enhancement tools)
         
         // Register REPL tools
-        try {
-            var replTool = new mcpcfc.clitools.REPLTool();
-            var replTools = replTool.getToolDefinitions();
-            for (var tool in replTools) {
-                application.toolRegistry.registerTool(tool.name, {
-                    "description": tool.description,
-                    "inputSchema": tool.inputSchema
-                });
-            }
-        } catch (any e) {
-            writeLog(text="Failed to register REPL tools: " & e.message, type="error");
+try {
+     var replTool = new mcpcfc.clitools.REPLTool();
+     var replTools = replTool.getToolDefinitions();
+    
+    // Validate tool definitions structure
+    if (!isArray(replTools)) {
+        throw(message="getToolDefinitions() must return an array", type="ValidationError");
+    }
+    
+     for (var tool in replTools) {
+        // Validate required tool properties
+        if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+            writeLog(text="Skipping invalid REPL tool definition: missing required properties", type="warning");
+            continue;
         }
+        
+         application.toolRegistry.registerTool(tool.name, {
+             "description": tool.description,
+             "inputSchema": tool.inputSchema
+         });
+     }
+ } catch (any e) {
+     writeLog(text="Failed to register REPL tools: " & e.message, type="error");
+ }
         
         // Register server management tools
         try {

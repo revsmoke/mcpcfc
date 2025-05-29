@@ -27,13 +27,21 @@ if ! command -v jq &> /dev/null; then
     echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
     exit 1
 fi
-
 # Check for CommandBox (optional but recommended)
-if ! command -v box &> /dev/null; then
-    echo "WARNING: CommandBox not found. Package manager tools require CommandBox."
-    echo "Install from: https://www.ortussolutions.com/products/commandbox"
+ if ! command -v box &> /dev/null; then
+     echo "WARNING: CommandBox not found. Package manager tools require CommandBox."
+     echo "Install from: https://www.ortussolutions.com/products/commandbox"
     echo "Package tools will run in simulation mode."
-fi
+    export COMMANDBOX_AVAILABLE=false
+else
+    echo "CommandBox found - package tools will be fully functional"
+    export COMMANDBOX_AVAILABLE=true
+ fi
+    export COMMANDBOX_AVAILABLE=false
+else
+    echo "CommandBox found - package tools will be fully functional"
+    export COMMANDBOX_AVAILABLE=true
+ fi
 
 # Test 1: Initialize
 echo -e "\n1. Testing initialize..."
@@ -51,21 +59,31 @@ LIST_RESPONSE=$(echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"n
 echo "$LIST_RESPONSE" | jq '.result'
 
 # Test 4: Install a package (dry run - don't actually install)
-echo -e "\n4. Testing packageInstaller tool (simulated)..."
-echo "Would run: packageInstaller with packageName='testbox@5.0.0'"
-echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"packageInstaller","arguments":{"packageName":"testbox@5.0.0","saveDev":true}}}'
-echo "(Skipping actual installation to avoid modifying system)"
+ echo -e "\n4. Testing packageInstaller tool (simulated)..."
+SIMULATE_RESPONSE=$(echo '{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-package-test.log)
+if echo "$SIMULATE_RESPONSE" | jq -e '.result.tools[] | select(.name=="packageInstaller")' > /dev/null; then
+    echo "✓ packageInstaller tool is available"
+    echo "Would run: packageInstaller with packageName='testbox@5.0.0'"
+    echo "(Skipping actual installation to avoid modifying system)"
+else
+    echo "✗ packageInstaller tool not available"
+fi
 
 # Test 5: Module manager - list modules
 echo -e "\n5. Testing moduleManager tool (list)..."
 MODULE_RESPONSE=$(echo '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"moduleManager","arguments":{"action":"list"}}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-package-test.log)
 echo "$MODULE_RESPONSE" | jq '.result'
 
-# Test 6: Update packages (dry run)
-echo -e "\n6. Testing packageUpdate tool (simulated)..."
-echo "Would run: packageUpdate to update all packages"
-echo '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"packageUpdate","arguments":{}}}'
-echo "(Skipping actual update to avoid modifying system)"
+# Test 4: Install a package (dry run - don't actually install)
+ echo -e "\n4. Testing packageInstaller tool (simulated)..."
+SIMULATE_RESPONSE=$(echo '{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-package-test.log)
+if echo "$SIMULATE_RESPONSE" | jq -e '.result.tools[] | select(.name=="packageInstaller")' > /dev/null; then
+    echo "✓ packageInstaller tool is available"
+    echo "Would run: packageInstaller with packageName='testbox@5.0.0'"
+    echo "(Skipping actual installation to avoid modifying system)"
+else
+    echo "✗ packageInstaller tool not available"
+fi
 
 echo -e "\n\nTest log available at: /tmp/cf-mcp-package-test.log"
 echo "To view errors: tail -f /tmp/cf-mcp-package-test.log"

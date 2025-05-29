@@ -22,9 +22,6 @@ for script in "${SCRIPTS_TO_CHECK[@]}"; do
         exit 1
      fi
  done
-        exit 1
-     fi
- done
 
 # Test 2: Check for tool dependency checks
 echo ""

@@ -4,7 +4,7 @@ set -euo pipefail
 # Test JSON parsing error handling in the original cf-mcp-cli-bridge.cfm
 echo "=== Testing JSON Parsing Error Handling in Original Bridge ==="
 
-cd /Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc
+cd "${MCPCFC_ROOT:-/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc}"
 
 # Test 1: Invalid JSON syntax
 echo "Test 1: Invalid JSON syntax"

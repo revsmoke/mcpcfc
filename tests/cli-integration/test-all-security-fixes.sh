@@ -25,19 +25,26 @@ fi
 
 echo ""
 echo "2. Testing safe exception handling..."
-echo '{
-    "jsonrpc": "2.0",
-    "id": 2,
-   "method": "tools/call",
-   "params": {
-       "name": "executeCode",
-       "arguments": {
-           "code": "throw(\"Test error for exception handling\");",
-           "returnOutput": true,
-           "timeout": 5
-       }
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-security -H "Content-Type: application/json" -d @- | jq .result.error
+EXCEPTION_TEST=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 2,
+    "method": "tools/call",
+    "params": {
+        "name": "executeCode",
+        "arguments": {
+            "code": "throw(\"Test error for exception handling\");",
+            "returnOutput": true,
+            "timeout": 5
+        }
+     }
+}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-security -H "Content-Type: application/json" -d @-)
+
+ERROR_HANDLED=$(echo "$EXCEPTION_TEST" | jq '.result.error // .error')
+if [ "$ERROR_HANDLED" != "null" ] && [ "$ERROR_HANDLED" != "" ]; then
+    echo "PASS: Exception handling working"
+else
+    echo "FAIL: Exception handling not working"
+fi
 
 echo ""
 echo "3. Testing timeout functionality..."

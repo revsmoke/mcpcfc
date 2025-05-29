@@ -27,28 +27,46 @@ fi
 
 echo ""
 echo "Test 2: Syntax error that might have different tagContext structure..."
-echo '{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "executeCode",
-    "params": {
-        "code": "if (true { writeOutput(\"missing closing paren\"); }",
-        "returnOutput": true,
-        "timeout": 5
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @- | jq .
+response2=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "executeCode",
+     "params": {
+         "code": "if (true { writeOutput(\"missing closing paren\"); }",
+         "returnOutput": true,
+         "timeout": 5
+     }
+}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @-)
 
-echo ""
-echo "Test 3: Complex error with nested function calls..."
-echo '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "evaluateExpression",
-    "params": {
-        "expression": "someFunction(anotherFunction(invalidVariable))",
-        "format": "string"
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @- | jq .
+# Validate Test 2 response
+if echo "$response2" | jq -e '.error?' > /dev/null; then
+    echo "✅ PASS: Test 2 - Syntax error properly handled"
+else
+    echo "❌ FAIL: Test 2 - Syntax error not properly handled"
+    echo "Response: $response2"
+    exit 1
+fi
+
+ echo ""
+ echo "Test 3: Complex error with nested function calls..."
+response3=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "evaluateExpression",
+     "params": {
+         "expression": "someFunction(anotherFunction(invalidVariable))",
+         "format": "string"
+     }
+}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-tagcontext -H "Content-Type: application/json" -d @-)
+
+# Validate Test 3 response
+if echo "$response3" | jq -e '.error?' > /dev/null; then
+    echo "✅ PASS: Test 3 - Complex error properly handled"
+else
+    echo "❌ FAIL: Test 3 - Complex error not properly handled" 
+    echo "Response: $response3"
+    exit 1
+fi
 
 echo ""
 echo "✅ All tagContext safety tests passed!"

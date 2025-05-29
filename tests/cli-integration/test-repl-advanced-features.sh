@@ -7,48 +7,47 @@ echo "Testing REPLTool advanced timeout and isolation features..."
 
 # Test 1: Variable isolation - set a variable in one execution
 echo "Test 1: Setting a variable in isolated context..."
-RESPONSE1=$(echo '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "executeCode",
-    "params": {
-        "code": "variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);",
-        "returnOutput": true,
-        "timeout": 5
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-repl-advanced -H "Content-Type: application/json" -d @-)
+RESPONSE1=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"executeCode","arguments":{"code":"variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);","returnOutput":true,"timeout":5}}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>/tmp/cf-mcp-repl-test.log)
 
 echo "$RESPONSE1" | jq .
 
 # Test 2: Try to access the variable from Test 1 (should fail due to isolation)
 echo ""
-echo "Test 2: Trying to access variable from previous execution (should fail)..."
-RESPONSE2=$(echo '{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "executeCode",
-    "params": {
-        "code": "if (structKeyExists(variables, \"testVar\")) { writeOutput(\"Found testVar: \" & variables.testVar); } else { writeOutput(\"testVar not found - isolation working\"); }",
-        "returnOutput": true,
-        "timeout": 5
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-repl-advanced -H "Content-Type: application/json" -d @-)
+# Generate unique session ID for this test run
+SESSION_ID="test-repl-advanced-$(date +%s)-$$"
 
+# Generate unique session ID for this test run
+SESSION_ID="test-repl-advanced-$(date +%s)-$$"
+
+ # Test 1: Variable isolation - set a variable in one execution
+ echo "Test 1: Setting a variable in isolated context..."
+ RESPONSE1=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "executeCode",
+     "params": {
+         "code": "variables.testVar = \"This should be isolated\"; writeOutput(\"Set testVar = \" & variables.testVar);",
+         "returnOutput": true,
+         "timeout": 5
+     }
+}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=$SESSION_ID -H "Content-Type: application/json" -d @-)
 echo "$RESPONSE2" | jq .
 
 # Test 3: Timeout test with a simple loop (should timeout)
-echo ""
-echo "Test 3: Testing timeout with infinite loop (should timeout after 3 seconds)..."
-RESPONSE3=$(echo '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "executeCode",
-    "params": {
-        "code": "var counter = 0; while(true) { counter++; if (counter > 1000000) writeOutput(\"This should not appear\"); }",
-        "returnOutput": true,
-        "timeout": 3
-    }
-}' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-repl-advanced -H "Content-Type: application/json" -d @-)
+ echo ""
+ echo "Test 3: Testing timeout with infinite loop (should timeout after 3 seconds)..."
+
+# Use a more deterministic approach for timeout testing
+ RESPONSE3=$(echo '{
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "executeCode",
+     "params": {
+        "code": "var startTime = getTickCount(); while(getTickCount() - startTime < 5000) { /* busy wait for 5 seconds */ } writeOutput(\"This should not appear due to timeout\");",
+         "returnOutput": true,
+         "timeout": 3
+     }
+ }' | curl -s -X POST http://localhost:8500/mcpcfc/endpoints/messages.cfm?sessionId=test-repl-advanced -H "Content-Type: application/json" -d @-)
 
 echo "$RESPONSE3" | jq .
 

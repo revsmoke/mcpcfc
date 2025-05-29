@@ -8,7 +8,14 @@ set -euo pipefail
 echo "Testing CF2023 MCP CLI Bridge..."
 echo "================================"
 
-# Check if required tools are installed
+# Ensure we're in the correct directory
+if [[ ! -f "cli-bridge/cf-mcp-cli-bridge-v2.cfm" ]]; then
+    echo "ERROR: cli-bridge/cf-mcp-cli-bridge-v2.cfm not found."
+    echo "Please run this script from the mcpcfc root directory."
+    exit 1
+fi
+
+ # Check if required tools are installed
 echo "Checking for required tools..."
 
 # Check for cfml (ColdFusion CLI)
@@ -30,6 +37,12 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | cfml cli-bri
 echo -e "\n3. Testing hello tool..."
 echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hello","arguments":{"name":"CF2023"}}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-test.log
 
+# Test 4: Test notification (should not return response)
+echo -e "\n4. Testing notification..."
+echo '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-test.log
+
+echo -e "\n\nTest log available at: $LOG_FILE"
+echo "To view: cat '$LOG_FILE'"
 # Test 4: Test notification (should not return response)
 echo -e "\n4. Testing notification..."
 echo '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}' | cfml cli-bridge/cf-mcp-cli-bridge-v2.cfm 2>>/tmp/cf-mcp-test.log

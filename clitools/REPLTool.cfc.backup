@@ -1,174 +1,10 @@
 component displayname="REPLTool" hint="REPL integration tools for CF2023 MCP" {
 
     /**
-     * Initialize the REPL tool with pre-compiled security patterns
+     * Initialize the REPL tool
      */
     public REPLTool function init() {
-        // PRE-COMPILE SECURITY PATTERNS FOR PERFORMANCE
-        variables.compiledPatterns = compileSecurityPatterns();
         return this;
-    }
-
-    /**
-     * Compile security patterns once during initialization
-     */
-    private struct function compileSecurityPatterns() {
-        var patterns = {
-            dangerous: [],
-            reflection: [],
-            keywords: []
-        };
-        
-        // Dangerous patterns with word boundaries
-        var dangerousRegexPatterns = [
-            "\bcreateobject\b",
-            "\bnew\s+java\b",
-            "\.class\s*\(",
-            "\.getclass\s*\(",
-            "\bclass\.forname\b",
-            "\bgetmetadata\s*\(",
-            "\bgetfunctioncaller\s*\(",
-            "\bcfexecute\b",
-            "\bcffile\b",
-            "\bcfdirectory\b",
-            "\bcfregistry\b",
-            "\bfileread\b",
-            "\bfilewrite\b",
-            "\bfileopen\b",
-            "\bfilecopy\b",
-            "\bfilemove\b",
-            "\bfiledelete\b",
-            "\bfileexists\b",
-            "\bdirectorylist\b",
-            "\bdirectorycreate\b",
-            "\bdirectorydelete\b",
-            "\bexpandpath\b",
-            "\bgettempdirectory\b",
-            "\bgettemplatepath\b",
-            "\bgetcurrenttemplatepath\b",
-            "\bgetbasetemplatepath\b",
-            "\bcfhttp\b",
-            "\bcfmail\b",
-            "\bcfldap\b",
-            "\bcfftp\b",
-            "\bcfsocket\b",
-            "\bhttpsend\b",
-            "\bcfquery\b",
-            "\bcfstoredproc\b",
-            "\bquerynew\b",
-            "\bqueryexecute\b",
-            "\bcftransaction\b",
-            "\bcfdbinfo\b",
-            "\bcfinclude\b",
-            "\bcfmodule\b",
-            "\bcfobject\b",
-            "\bcfinvoke\b",
-            "\bcfimport\b",
-            "\bcfscript\b",
-            "\bevaluate\s*\(",
-            "\bprecisionevaluate\s*\(",
-            "\bsystem\.",
-            "\bruntime\.",
-            "\.exec\s*\(",
-            "\bprocessbuilder\b",
-            "\bthread\.",
-            "\bclass\.",
-            "\bcflock\b",
-            "\bcfthread\b",
-            "\bsleep\s*\(",
-            "\bapplication\.",
-            "\bserver\.",
-            "\bsession\.",
-            "\brequest\.",
-            "\bcgi\.",
-            "\burl\.",
-            "\bform\.",
-            "\bcookie\.",
-            "\bclient\.",
-            "\bcfadmin\b",
-            "\bcfdump\b",
-            "\bcftrace\b",
-            "\bcflog\b",
-            "\bcfdebug\b",
-            "\bcferror\b",
-            "\bgetcomponentmetadata\b",
-            "\bgetpagecontext\b",
-            "\bgetfunctionlist\b",
-            "\bgettaglist\b",
-            "\bobjectload\b",
-            "\bobjectsave\b",
-            "\bdeserializejson\b",
-            "\bdeserializexml\b",
-            "\bcfcache\b",
-            "\bcacheget\b",
-            "\bcacheput\b",
-            "\bcachedelete\b",
-            "\bcacheclear\b"
-        ];
-        
-        // Compile dangerous patterns
-        for (var pattern in dangerousRegexPatterns) {
-            arrayAppend(patterns.dangerous, {
-                pattern: pattern,
-                compiled: true  // In CFML, patterns are compiled on first use
-            });
-        }
-        
-        // Reflection patterns
-        var reflectionPatterns = [
-            "\.class\s*\.",
-            "\.class\s*\[",
-            "\.getclass\s*\(\s*\)\s*\.",
-            "\bclassloader\b",
-            "\bgetclassloader\b",
-            "\bdefineclass\b",
-            "\bloadclass\b",
-            "\bgetprotectiondomain\b",
-            "\bgetdeclaredmethods\b",
-            "\bgetdeclaredfields\b",
-            "\bsetaccessible\b",
-            "\binvoke\b.*\bmethod\b",
-            "\bnewinstance\b",
-            "import\s+java\.lang\.reflect\.\*"  // Added as suggested
-        ];
-        
-        // Compile reflection patterns
-        for (var pattern in reflectionPatterns) {
-            arrayAppend(patterns.reflection, {
-                pattern: pattern,
-                compiled: true
-            });
-        }
-        
-        // Suspicious keywords - pre-escape for regex
-        var suspiciousKeywords = [
-            "cfusion",
-            "coldfusion",
-            "admin",
-            "password",
-            "secret",
-            "key",
-            "token",
-            "credential",
-            "private",
-            "encrypt",
-            "decrypt",
-            "hash",
-            "salt"
-        ];
-        
-        // Pre-compile keyword patterns with proper escaping
-        for (var keyword in suspiciousKeywords) {
-            // Fixed regex escaping - move closing bracket to start of character class
-            var escapedKeyword = reReplace(keyword, "([\.\*\+\?\^\$\{\}\(\)\|\[\]\\])", "\\\1", "all");
-            var keywordPattern = "\b" & escapedKeyword & "\b";
-            arrayAppend(patterns.keywords, {
-                pattern: keywordPattern,
-                compiled: true
-            });
-        }
-        
-        return patterns;
     }
 
     /**
@@ -315,16 +151,11 @@ var result = {
         }
         
         try {
-            // SECURITY: Define allowed context keys (whitelist approach)
-            var allowedContextKeys = ["input", "params", "data", "config", "options"];
-            
             // Execute code in a separate thread with timeout for isolation and timeout control
             cfthread(name=threadName, action="run", priority="normal", 
                      codeToExecute=arguments.code, 
                      shouldReturnOutput=arguments.returnOutput,
-                     executionContext=arguments.executionContext,
-                     allowedKeys=allowedContextKeys,
-                     compiledPatterns=variables.compiledPatterns) {
+                     executionContext=arguments.executionContext) {
                 try {
                     // Create isolated variables scope for this thread
                     var threadResult = {
@@ -332,84 +163,46 @@ var result = {
                         success = true,
                         error = "",
                         errorDetail = "",
-                        stackTrace = [],
-                        returnValue = ""
+                        stackTrace = []
                     };
                     
-                    // FIXED: Create safe execution context with controlled variable access
-                    var safeContext = structNew();
-                    
-                    // Only copy whitelisted keys to prevent variable overwriting
+                    // Setup execution context variables in isolated scope
+                    var isolatedScope = {};
                     if (structCount(attributes.executionContext) > 0) {
-                        for (var key in attributes.allowedKeys) {
-                            if (structKeyExists(attributes.executionContext, key)) {
-                                safeContext["ctx_" & key] = duplicate(attributes.executionContext[key]);
-                            }
+                        // Copy context variables to isolated scope
+                        for (var key in attributes.executionContext) {
+                            isolatedScope[key] = attributes.executionContext[key];
                         }
                     }
                     
                     // Execute code in isolated scope with timeout protection
                     // SECURITY WARNING: evaluate() executes arbitrary CFML code
                     // This should only be used in trusted environments with trusted code
-                    
-                    // Perform security check using passed compiled patterns
-                    var codeToCheck = lcase(trim(attributes.codeToExecute));
-                    var codeSafe = true;
-                    
-                    // Check dangerous patterns
-                    for (var patternInfo in attributes.compiledPatterns.dangerous) {
-                        if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                            codeSafe = false;
-                            break;
-                        }
-                    }
-                    
-                    // Check reflection patterns if still safe
-                    if (codeSafe) {
-                        for (var patternInfo in attributes.compiledPatterns.reflection) {
-                            if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                                codeSafe = false;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Check keywords if still safe
-                    if (codeSafe) {
-                        for (var patternInfo in attributes.compiledPatterns.keywords) {
-                            if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                                codeSafe = false;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (!codeSafe) {
-                        threadResult.success = false;
-                        threadResult.error = "Code contains potentially unsafe operations";
-                        thread.result = threadResult;
-                        return; // exit cfthread body safely
+                    if (!isCodeSafe(attributes.codeToExecute)) {
+        threadResult.success      = false;
+        threadResult.error        = "Code contains potentially unsafe operations";
+        threadResult.returnValue  = "";
+        threadResult.output       = "";
+        thread.result             = threadResult;
+        return; // exit cfthread body safely
                     }
                     
                     if (attributes.shouldReturnOutput) {
                         savecontent variable="threadResult.output" {
-                            // Create isolated execution scope with safe context variables
-                            // Make ctx_ prefixed variables available in the execution scope
-                            for (var ctxKey in safeContext) {
-                                variables[ctxKey] = safeContext[ctxKey];
+                            // Make context variables available
+                            for (var key in isolatedScope) {
+                                variables[key] = isolatedScope[key];
                             }
-                            
-                            // Execute the code and capture return value
-                            threadResult.returnValue = evaluate(attributes.codeToExecute);
+                            var _replValue = evaluate(attributes.codeToExecute);
+                        threadResult.returnValue = _replValue;
                         }
                     } else {
-                        // Execute without output capture
-                        // Make ctx_ prefixed variables available in the execution scope
-                        for (var ctxKey in safeContext) {
-                            variables[ctxKey] = safeContext[ctxKey];
+                        // Make context variables available
+                        for (var key in isolatedScope) {
+                            variables[key] = isolatedScope[key];
                         }
-                        
-                        threadResult.returnValue = evaluate(attributes.codeToExecute);
+                        var _replValue = evaluate(attributes.codeToExecute);
+                        threadResult.returnValue = _replValue;
                     }
                     
                     // Store results in thread scope for retrieval
@@ -528,7 +321,7 @@ var result = {
         
         try {
             // Security check for expression evaluation
-            if (!isCodeSafeOptimized(arguments.expression)) {
+            if (!isCodeSafe(arguments.expression)) {
                 result.success = false;
                 result.error = "Expression contains potentially unsafe operations";
                 return result;
@@ -607,7 +400,7 @@ var result = {
         
         try {
             // Security check for code execution
-            if (!isCodeSafeOptimized(arguments.code)) {
+            if (!isCodeSafe(arguments.code)) {
                 result.success = false;
                 result.error = "Code contains potentially unsafe operations";
                 return result;
@@ -628,7 +421,7 @@ var result = {
                 
                 try {
                     // Security check for assertion expression
-                    if (!isCodeSafeOptimized(assertion.expression)) {
+                    if (!isCodeSafe(assertion.expression)) {
                         assertResult.passed = false;
                         assertResult.error = "Assertion expression contains potentially unsafe operations";
                     } else {
@@ -678,14 +471,14 @@ var result = {
         
         try {
             // Security check for setup code
-            if (!isCodeSafeOptimized(arguments.setupCode)) {
+            if (!isCodeSafe(arguments.setupCode)) {
                 result.success = false;
                 result.error = "Setup code contains potentially unsafe operations";
                 return result;
             }
             
             // Security check for variable name (could contain code)
-            if (!isCodeSafeOptimized(arguments.variableName)) {
+            if (!isCodeSafe(arguments.variableName)) {
                 result.success = false;
                 result.error = "Variable name contains potentially unsafe operations";
                 return result;
@@ -969,14 +762,13 @@ for (var pattern in dangerousRegexPatterns) {
             "\bgetdeclaredfields\b", // Field reflection
             "\bsetaccessible\b", // Bypassing access controls
             "\binvoke\b.*\bmethod\b", // Reflective method invocation
-            "\bnewinstance\b", // Creating instances reflectively
-            "import\s+java\.lang\.reflect\.\*" // Import reflection classes (ADDED)
+            "\bnewinstance\b" // Creating instances reflectively
         ];
         
         // Check reflection patterns
         for (var pattern in reflectionPatterns) {
             if (reFindNoCase(pattern, codeToCheck) > 0) {
-                writeLog(text="Security block: reflection pattern '" & pattern & "' matched", type="warning", application=true);
+                // TODO: Log security block for reflection attempt
                 return false;
             }
         }
@@ -1002,63 +794,13 @@ for (var pattern in dangerousRegexPatterns) {
         for (var keyword in suspiciousKeywords) {
             var keywordPattern = "\b" & reReplace(keyword, "([.*+?^${}()|[\]\\])", "\\\1", "all") & "\b";
             if (reFindNoCase(keywordPattern, codeToCheck) > 0) {
-                writeLog(text="Security block: suspicious keyword '" & keyword & "' matched", type="warning", application=true);
+                // TODO: Log security block for suspicious keyword
                 return false;
             }
         }
         
         // TODO: Implement resource usage tracking before execution
         // TODO: Consider AST parsing for more accurate code analysis
-        
-        return true;
-    }
-
-    /**
-     * OPTIMIZED: Security check using pre-compiled patterns
-     * Uses cached patterns for better performance
-     */
-    private boolean function isCodeSafeOptimized(required string code) {
-        var codeToCheck = lcase(trim(arguments.code));
-        
-        // Check dangerous patterns using pre-compiled patterns
-        for (var patternInfo in variables.compiledPatterns.dangerous) {
-            if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                writeLog(
-                    text="Security block: pattern '" & patternInfo.pattern & "' matched in code", 
-                    type="warning", 
-                    application=true
-                );
-                return false;
-            }
-        }
-        
-        // Check reflection patterns
-        for (var patternInfo in variables.compiledPatterns.reflection) {
-            if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                writeLog(
-                    text="Security block: reflection pattern '" & patternInfo.pattern & "' matched", 
-                    type="warning", 
-                    application=true
-                );
-                return false;
-            }
-        }
-        
-        // Check suspicious keywords using pre-compiled patterns
-        for (var patternInfo in variables.compiledPatterns.keywords) {
-            if (reFindNoCase(patternInfo.pattern, codeToCheck) > 0) {
-                writeLog(
-                    text="Security block: suspicious keyword pattern '" & patternInfo.pattern & "' matched", 
-                    type="warning", 
-                    application=true
-                );
-                return false;
-            }
-        }
-        
-        // TODO: Implement rate limiting check here
-        // TODO: Add resource usage tracking
-        // TODO: Consider AST parsing for more accurate analysis
         
         return true;
     }

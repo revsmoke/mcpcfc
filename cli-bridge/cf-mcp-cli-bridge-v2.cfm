@@ -42,10 +42,10 @@ try {
         }
         
         transport.logDebug("Received: " & input);
-// First, try to parse the JSON in a separate try-catch
-         var parseError = false;
-         
-         try {
+        // First, try to parse the JSON in a separate try-catch
+        var parseError = false;
+        
+        try {
              // Parse JSON message
              var message = {};
              message = deserializeJSON(input);
@@ -80,9 +80,9 @@ try {
                 if (!structIsEmpty(response)) {
                     transport.writeResponse(response);
                     transport.logDebug("Sent response for: " & (structKeyExists(message, "method") ? message.method : "unknown"));
-} else {
-                     transport.logDebug("No response for notification: " & message.method);
-                 }
+                } else {
+                    transport.logDebug("No response for notification: " & message.method);
+                }
                  
             } catch (any processingException) {
                  // Message processing failed - create internal error response
@@ -160,20 +160,14 @@ function registerTools(toolRegistry) {
     // Register Email tools component
     emailTool = createObject("component", "mcpcfc.tools.EmailTool").init();
     toolRegistry.registerComponent(emailTool);
-    
-// Register REPL tools component (CF2023+ only)
-     try {
-         replTool = createObject("component", "mcpcfc.cli-tools.REPLTool").init();
-         toolRegistry.registerComponent(replTool);
-     } catch (any e) {
-         // REPL tools not available in this environment
-        if (isDefined("transport")) {
-            transport.logDebug("REPL tools not available: " & e.message);
-        }
+    // Register REPL tools component (CF2023+ only)
+    try {
+        replTool = createObject("component", "mcpcfc.cli-tools.REPLTool").init();
+        toolRegistry.registerComponent(replTool);
+} catch (any e) {
+        // REPL tools not available in this environment
+        transport.logDebug("REPL tools not available: " & e.message);
      }
-        }
-     }
-    
     // Register Server Management tools component (CF2023+ only)
     try {
         serverTool = createObject("component", "mcpcfc.cli-tools.ServerManagementTool").init();

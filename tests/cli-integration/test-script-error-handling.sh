@@ -67,7 +67,7 @@ else
 fi
 
 # Clean up
-rm -f "$TEMP_SCRIPT"
+rm -f /tmp/test-error-handling.sh
 
 echo ""
-echo "Error handling verification complete!"echo "Error handling verification complete!"
+echo "Error handling verification complete!"

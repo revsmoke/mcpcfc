@@ -176,7 +176,10 @@ var queryResult = queryExecute(
     {datasource: arguments.args.datasource}
 );
         // Convert query to array of structs
-var results = queryResult.toArray(); // returns array of structs, one per row
+        var results = [];
+        for (var row in queryResult) {
+            arrayAppend(results, row);
+        }
         
         return {
             "content": [{

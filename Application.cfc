@@ -25,33 +25,92 @@ component output="false" hint="Application component for MCP Server" {
      * Application end handler - cleanup resources
      */
     public void function onApplicationEnd() {
-        // Clean up any active file watcher threads
-        if (structKeyExists(application, "fileWatchers")) {
-            for (var watcherId in application.fileWatchers) {
-                try {
-                    // Mark as inactive
-                    application.fileWatchers[watcherId].active = false;
-                    
-                    // Terminate the thread
-                    cfthread(action="terminate", name=watcherId);
-                    
-                    writeLog(
-                        text="Terminated file watcher thread on application shutdown: " & watcherId,
-                        type="information",
-                        application=true
-                    );
-                } catch (any e) {
-                    // Thread might have already stopped
-                    writeLog(
-                        text="Could not terminate file watcher thread: " & watcherId & " - " & e.message,
-                        type="warning",
-                        application=true
-                    );
+        // Clean up any active file watcher threads with proper synchronization
+        cflock scope="application" type="exclusive" timeout="30" {
+            if (structKeyExists(application, "fileWatchers")) {
+                // First pass: Signal all watchers to stop gracefully
+                for (var watcherId in application.fileWatchers) {
+                    try {
+                        // Mark as inactive to signal thread to exit
+                        application.fileWatchers[watcherId].active = false;
+                        
+                        writeLog(
+                            text="Signaled file watcher thread to stop: " & watcherId,
+                            type="information",
+                            application=true
+                        );
+                    } catch (any e) {
+                        writeLog(
+                            text="Error signaling file watcher thread: " & watcherId & " - " & e.message,
+                            type="warning",
+                            application=true
+                        );
+                    }
                 }
+                
+                // Give threads time to stop gracefully (max 5 seconds)
+                var gracefulStopTimeout = 5000; // milliseconds
+                var checkInterval = 100; // milliseconds
+                var elapsed = 0;
+                var activeThreads = [];
+                
+                // Wait for threads to stop gracefully
+                while (elapsed < gracefulStopTimeout) {
+                    activeThreads = [];
+                    
+                    // Check which threads are still running
+                    for (var watcherId in application.fileWatchers) {
+                        try {
+                            // Try to join with zero timeout to check if thread is still running
+                            cfthread(action="join", name=watcherId, timeout=0);
+                        } catch (any e) {
+                            // Thread is still running
+                            arrayAppend(activeThreads, watcherId);
+                        }
+                    }
+                    
+                    // If all threads have stopped, we're done
+                    if (arrayLen(activeThreads) == 0) {
+                        break;
+                    }
+                    
+                    // Wait a bit before checking again
+                    sleep(checkInterval);
+                    elapsed += checkInterval;
+                }
+                
+                // Second pass: Force terminate any threads that didn't stop gracefully
+                if (arrayLen(activeThreads) > 0) {
+                    for (var watcherId in activeThreads) {
+                        try {
+                            // Force terminate the thread as last resort
+                            cfthread(action="terminate", name=watcherId);
+                            
+                            writeLog(
+                                text="Force terminated file watcher thread on application shutdown: " & watcherId,
+                                type="warning",
+                                application=true
+                            );
+                        } catch (any e) {
+                            // Thread might have already stopped
+                            writeLog(
+                                text="Could not terminate file watcher thread: " & watcherId & " - " & e.message,
+                                type="warning",
+                                application=true
+                            );
+                        }
+                    }
+                }
+                
+                // Clear the watchers struct
+                structClear(application.fileWatchers);
+                
+                writeLog(
+                    text="Cleaned up " & structCount(application.fileWatchers) & " file watcher threads",
+                    type="information",
+                    application=true
+                );
             }
-            
-            // Clear the watchers struct
-            structClear(application.fileWatchers);
         }
         
         // Log application shutdown

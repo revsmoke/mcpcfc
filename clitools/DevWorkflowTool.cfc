@@ -623,38 +623,55 @@ if (findNoCase("..", arguments.directory) ||
             }
             
             // Initialize watcher in application scope
-            if (!structKeyExists(application, "fileWatchers")) {
-                application.fileWatchers = {};
+            cflock scope="application" type="exclusive" timeout="10" {
+                if (!structKeyExists(application, "fileWatchers")) {
+                    application.fileWatchers = {};
+                }
+                
+                // Create watcher configuration
+                var watcherConfig = {
+                    id: watcherId,
+                    paths: normalizedPaths,
+                    extensions: arguments.extensions,
+                    action: arguments.action,
+                    debounce: arguments.debounce,
+                    active: true,
+                    lastCheck: now(),
+                    fileStates: {},
+                    lastTrigger: 0,
+                    changesDetected: 0
+                };
+                
+                // Get initial file states
+                watcherConfig.fileStates = getFileStates(normalizedPaths, arguments.extensions);
+                
+                // Store watcher config
+                application.fileWatchers[watcherId] = watcherConfig;
             }
-            
-            // Create watcher configuration
-            var watcherConfig = {
-                id: watcherId,
-                paths: normalizedPaths,
-                extensions: arguments.extensions,
-                action: arguments.action,
-                debounce: arguments.debounce,
-                active: true,
-                lastCheck: now(),
-                fileStates: {},
-                lastTrigger: 0,
-                changesDetected: 0
-            };
-            
-            // Get initial file states
-            watcherConfig.fileStates = getFileStates(normalizedPaths, arguments.extensions);
-            
-            // Store watcher config
-            application.fileWatchers[watcherId] = watcherConfig;
             
             // Start the watcher thread
             thread name="#watcherId#" action="run" {
                 try {
-                    // Get watcher config from application scope
-                    var config = application.fileWatchers[thread.name];
+                    // Get initial watcher config from application scope
+                    var config = {};
+                    cflock scope="application" type="readonly" timeout="5" {
+                        if (structKeyExists(application.fileWatchers, thread.name)) {
+                            config = duplicate(application.fileWatchers[thread.name]);
+                        }
+                    }
                     
-                    while (structKeyExists(application.fileWatchers, thread.name) && 
-                           application.fileWatchers[thread.name].active) {
+                    // Main watcher loop
+                    var shouldContinue = true;
+                    while (shouldContinue) {
+                        // Check if we should continue running
+                        cflock scope="application" type="readonly" timeout="5" {
+                            shouldContinue = structKeyExists(application.fileWatchers, thread.name) && 
+                                           application.fileWatchers[thread.name].active;
+                        }
+                        
+                        if (!shouldContinue) {
+                            break;
+                        }
                         
                         // Check for file changes
                         var currentStates = getFileStates(config.paths, config.extensions);
@@ -665,30 +682,43 @@ if (findNoCase("..", arguments.directory) ||
                             
                             // Check debounce
                             if (currentTime - config.lastTrigger >= config.debounce) {
-                                // Log changes
-                                application.fileWatchers[thread.name].changesDetected++;
-                                application.fileWatchers[thread.name].lastTrigger = currentTime;
+                                // Update shared state with proper locking
+                                cflock scope="application" type="exclusive" timeout="5" {
+                                    if (structKeyExists(application.fileWatchers, thread.name)) {
+                                        application.fileWatchers[thread.name].changesDetected++;
+                                        application.fileWatchers[thread.name].lastTrigger = currentTime;
+                                        application.fileWatchers[thread.name].fileStates = currentStates;
+                                    }
+                                }
+                                
+                                // Update local config
+                                config.changesDetected++;
+                                config.lastTrigger = currentTime;
+                                config.fileStates = currentStates;
                                 
                                 // Trigger action
                                 triggerWatchAction(config.action, changes);
-                                
-                                // Update file states
-                                application.fileWatchers[thread.name].fileStates = currentStates;
                             }
                         }
                         
                         // Update last check time
-                        application.fileWatchers[thread.name].lastCheck = now();
+                        cflock scope="application" type="exclusive" timeout="5" {
+                            if (structKeyExists(application.fileWatchers, thread.name)) {
+                                application.fileWatchers[thread.name].lastCheck = now();
+                            }
+                        }
                         
                         // Sleep for a short interval
                         sleep(500); // Check every 500ms
                     }
                     
                 } catch (any e) {
-                    // Log error
-                    if (structKeyExists(application.fileWatchers, thread.name)) {
-                        application.fileWatchers[thread.name].error = e.message;
-                        application.fileWatchers[thread.name].active = false;
+                    // Log error with proper locking
+                    cflock scope="application" type="exclusive" timeout="5" {
+                        if (structKeyExists(application.fileWatchers, thread.name)) {
+                            application.fileWatchers[thread.name].error = e.message;
+                            application.fileWatchers[thread.name].active = false;
+                        }
                     }
                 }
             }
@@ -725,27 +755,36 @@ if (findNoCase("..", arguments.directory) ||
         };
         
         try {
-            if (structKeyExists(application, "fileWatchers") && 
-                structKeyExists(application.fileWatchers, arguments.watcherId)) {
-                
-                // Mark as inactive first to signal thread to stop
-                application.fileWatchers[arguments.watcherId].active = false;
-                
-                // Explicitly terminate the thread to ensure immediate cleanup
+            cflock scope="application" type="exclusive" timeout="10" {
+                if (structKeyExists(application, "fileWatchers") && 
+                    structKeyExists(application.fileWatchers, arguments.watcherId)) {
+                    
+                    // Mark as inactive first to signal thread to stop
+                    application.fileWatchers[arguments.watcherId].active = false;
+                    
+                    // Remove from application scope
+                    structDelete(application.fileWatchers, arguments.watcherId);
+                    
+                    result.message = "File watcher signaled to stop and ";
+                } else {
+                    throw(message="Watcher not found: " & arguments.watcherId);
+                }
+            }
+            
+            // Try to terminate the thread outside of the lock to avoid deadlock
+            try {
+                // Give thread time to exit gracefully (max 2 seconds)
+                cfthread(action="join", name=arguments.watcherId, timeout=2000);
+                result.message &= "stopped gracefully.";
+            } catch (any joinError) {
+                // Thread didn't stop gracefully, force terminate
                 try {
                     cfthread(action="terminate", name=arguments.watcherId);
-                    result.message = "File watcher thread terminated and ";
+                    result.message &= "forcefully terminated.";
                 } catch (any threadError) {
                     // Thread might have already stopped
-                    result.message = "File watcher thread already stopped and ";
+                    result.message &= "already stopped.";
                 }
-                
-                // Remove from application scope
-                structDelete(application.fileWatchers, arguments.watcherId);
-                
-                result.message &= "removed successfully.";
-            } else {
-                throw(message="Watcher not found: " & arguments.watcherId);
             }
             
         } catch (any e) {
@@ -773,19 +812,21 @@ if (findNoCase("..", arguments.directory) ||
         };
         
         try {
-            if (structKeyExists(application, "fileWatchers")) {
-                for (var watcherId in application.fileWatchers) {
-                    var watcher = application.fileWatchers[watcherId];
-                    arrayAppend(result.watchers, {
-                        id: watcher.id,
-                        active: watcher.active,
-                        paths: watcher.paths,
-                        extensions: watcher.extensions,
-                        action: watcher.action,
-                        lastCheck: dateTimeFormat(watcher.lastCheck, "yyyy-mm-dd HH:nn:ss"),
-                        changesDetected: watcher.changesDetected,
-                        error: structKeyExists(watcher, "error") ? watcher.error : ""
-                    });
+            cflock scope="application" type="readonly" timeout="10" {
+                if (structKeyExists(application, "fileWatchers")) {
+                    for (var watcherId in application.fileWatchers) {
+                        var watcher = application.fileWatchers[watcherId];
+                        arrayAppend(result.watchers, {
+                            id: watcher.id,
+                            active: watcher.active,
+                            paths: duplicate(watcher.paths),
+                            extensions: duplicate(watcher.extensions),
+                            action: watcher.action,
+                            lastCheck: dateTimeFormat(watcher.lastCheck, "yyyy-mm-dd HH:nn:ss"),
+                            changesDetected: watcher.changesDetected,
+                            error: structKeyExists(watcher, "error") ? watcher.error : ""
+                        });
+                    }
                 }
             }
             

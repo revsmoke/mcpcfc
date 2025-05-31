@@ -651,6 +651,24 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
   - **Result**: Tool now has 100% success rate, compatible across all CF versions
   - File: `/components/ToolHandler.cfc` line ~163
 
+### 2025-05-29 THREAD SAFETY FIXES 🔒
+- **Fixed Race Conditions in File Watchers**:
+  - **Application.cfc**:
+    - Added `cflock` with exclusive scope around entire file watcher cleanup in `onApplicationEnd()`
+    - Implemented graceful shutdown with 5-second timeout before forceful termination
+    - Signal threads to stop by setting `active = false` before terminating
+    - Properly handle thread cleanup with try-catch blocks
+  - **DevWorkflowTool.cfc**:
+    - Added `cflock` when initializing `application.fileWatchers` structure
+    - Watcher threads now use proper read/write locks when accessing shared state
+    - `stopWatcher()` uses exclusive lock and attempts graceful shutdown first
+    - `getWatcherStatus()` uses readonly lock to prevent concurrent modification
+  - **Benefits**:
+    - Eliminates race conditions during application shutdown
+    - Prevents concurrent modification exceptions
+    - Ensures thread-safe access to shared application state
+    - Provides graceful shutdown mechanism for long-running threads
+
 ## 🚀 CF2023 CLI Enhancement Production Readiness
 
 ### Ready for Production ✅
@@ -725,6 +743,8 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
 9. **NEVER store request-specific data in component instance variables** - always pass as parameters to avoid thread safety issues
 10. **Always verify canonical paths** when dealing with file operations to prevent symlink traversal attacks
 11. **Validate and coerce data types** when accepting configuration values to ensure type safety
+12. **Use cflock when accessing shared application scope variables** to prevent race conditions
+13. **Implement graceful shutdown for threads** - set active flags and give threads time to exit before forceful termination
 
 ### Common Issues & Quick Fixes 🔧
 1. **Dashboard shows error**: Check for Unicode characters, var declarations, unescaped `#`

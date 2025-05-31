@@ -142,7 +142,7 @@ component displayname="PDFTool" hint="PDF Tool" extends="mcpcfc.tools.BaseTool" 
             var sourceFiles = [];
             for (var path in arguments.args.sourcePaths) {
                 var sourcePath = path;
-                if (left(sourcePath, 1) != "/" && !findNoCase(":\", sourcePath)) {
+                if (left(sourcePath, 1) != "/" && !findNoCase(":", sourcePath)) {
                     sourcePath = "/mcpcfc/temp/" & sourcePath;
                 }
                 var fullPath = expandPath(sourcePath);

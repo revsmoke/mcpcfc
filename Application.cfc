@@ -409,5 +409,45 @@ try {
  } catch (any e) {
      writeLog(text="Failed to register development workflow tools: " & e.message, type="error");
  }
+        
+        // Register Claude-to-Claude communication tools
+        try {
+            // Register Instance Bridge
+            var instanceBridge = new mcpcfc.tools.InstanceBridge();
+            var bridgeTools = instanceBridge.getToolDefinitions();
+            
+            for (var tool in bridgeTools) {
+                if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+                    writeLog(text="Skipping invalid bridge tool definition: missing required properties", type="warning");
+                    continue;
+                }
+                
+                application.toolRegistry.registerTool(tool.name, {
+                    "description": tool.description,
+                    "inputSchema": tool.inputSchema
+                });
+            }
+            
+            // Register Realtime Chat
+            var realtimeChat = new mcpcfc.tools.RealtimeChat();
+            var chatTools = realtimeChat.getToolDefinitions();
+            
+            for (var tool in chatTools) {
+                if (!structKeyExists(tool, "name") || !structKeyExists(tool, "description") || !structKeyExists(tool, "inputSchema")) {
+                    writeLog(text="Skipping invalid chat tool definition: missing required properties", type="warning");
+                    continue;
+                }
+                
+                application.toolRegistry.registerTool(tool.name, {
+                    "description": tool.description,
+                    "inputSchema": tool.inputSchema
+                });
+            }
+            
+            writeLog(text="Claude-to-Claude communication tools registered successfully!", type="information");
+            
+        } catch (any e) {
+            writeLog(text="Failed to register communication tools: " & e.message, type="error");
+        }
     }
 }

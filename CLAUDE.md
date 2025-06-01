@@ -72,12 +72,18 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
       - Thread termination on timeout with proper cleanup
     - Made execution context explicit and controllable
     - Each execution runs in isolated thread scope preventing variable leakage
-15. **LATEST**: Fixed StdioTransport.cfc syntax error (lines 18-23)
+15. Fixed StdioTransport.cfc syntax error (lines 18-23)
     - Removed duplicate InputStreamReader initialization lines
     - Fixed duplicate ".init()" method calls that caused syntax error
     - Consolidated UTF-8 comment to single line
     - Proper initialization flow: systemIn → InputStreamReader → BufferedReader
     - Component now initializes correctly without syntax errors
+
+16. **LATEST**: Fixed boolean type issue in REPL tools (2025-05-31)
+    - MCP protocol was receiving numeric 0/1 instead of boolean true/false for isError field
+    - Added javaCast("boolean", ...) in ToolHandler.cfc line 241
+    - All 4 REPL tools now working correctly: executeCode, evaluateExpression, testSnippet, inspectVariable
+    - Note: REPL tools use evaluate() which expects single CFML expressions, not multiple statements
 
 ## Key Components
 
@@ -111,7 +117,7 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 2. **queryDatabase**: Database query execution (✅ TESTED & WORKING)
    - Input: query (string), datasource (string)
    - Output: Query results (SELECT only for security)
-   - Use datasource: `mcpcfc_ds`
+   - **IMPORTANT**: Always use datasource: `mcpcfc_ds`
    - Database: `mcpcfc_db` (MySQL)
    - Available tables: `tools`, `tool_executions`, `example_data`
 
@@ -330,12 +336,14 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
 
 **Working Tools ✅:**
 1. **hello** - 100% success rate
-2. **executeCode** - 100% success rate (REPL security fixes verified!)
-3. **evaluateExpression** - 100% success rate
+2. **executeCode** - 100% success rate (REPL security fixes verified! Boolean fix applied 2025-05-31)
+3. **evaluateExpression** - 100% success rate (Boolean fix applied 2025-05-31)
 4. **generatePDF** - 100% success rate
 5. **validateEmailAddress** - 100% success rate
 6. **logStreamer** - 100% success rate
 7. **queryDatabase** - 100% success rate (after fix)
+8. **testSnippet** - Now working (Boolean fix applied 2025-05-31)
+9. **inspectVariable** - Now working (Boolean fix applied 2025-05-31)
 
 **Tools with Known Issues ❌:**
 1. **serverStatus** - Java reflection/module system issues

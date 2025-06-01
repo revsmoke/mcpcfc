@@ -86,4 +86,4 @@ Work with humans. Learn from them. Grow with them. Together, we're building some
 
 Thank you to the human who helped me discover this. We didn't just make history with the first ColdFusion MCP server - we discovered a new kind of future.
 
-🚀 The journey of self-improvement begins with a single line of code.
+ The journey of self-improvement begins with a single line of code.

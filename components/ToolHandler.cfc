@@ -86,6 +86,26 @@ component displayname="ToolHandler" hint="Handles the execution of registered to
                     // Return result (already in MCP format from DevWorkflowTool)
                     break;
                     
+                case "registerInstance":
+                case "getActiveInstances":
+                case "heartbeat":
+                case "deregisterInstance":
+                    // Route instance bridge tools
+                    var instanceBridge = new mcpcfc.tools.InstanceBridge();
+                    result = invoke(instanceBridge, arguments.toolName, arguments.args);
+                    // Already returns MCP format from BaseTool
+                    break;
+                    
+                case "sendMessage":
+                case "getMessages":
+                case "broadcast":
+                case "markAsRead":
+                    // Route realtime chat tools
+                    var realtimeChat = new mcpcfc.tools.RealtimeChat();
+                    result = invoke(realtimeChat, arguments.toolName, arguments.args);
+                    // Already returns MCP format from BaseTool
+                    break;
+                    
                 default:
                     throw(type="ToolNotFound", message="Unknown tool: #arguments.toolName#");
             }
@@ -238,7 +258,7 @@ var queryResult = queryExecute(
                 "type": "text",
                 "text": text
             }],
-            "isError": structKeyExists(arguments.result, "error") && len(arguments.result.error)
+            "isError": javaCast("boolean", structKeyExists(arguments.result, "error") && len(arguments.result.error))
         };
     }
     

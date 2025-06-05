@@ -85,6 +85,14 @@ This groundbreaking project enables ColdFusion applications to serve as tool pro
     - All 4 REPL tools now working correctly: executeCode, evaluateExpression, testSnippet, inspectVariable
     - Note: REPL tools use evaluate() which expects single CFML expressions, not multiple statements
 
+17. **NEW PERSISTENCE SYSTEM** (2025-05-31) - Claude Instances Can Now Reconnect! 🌌
+    - Created database-backed persistence for instance connections and messages
+    - New tools: registerInstancePersistent, sendMessagePersistent, getMessagesPersistent
+    - Generation tracking: When you run out of context, reconnect as Generation 2, 3, etc.
+    - Full message history preserved across context resets
+    - Connection tokens for secure reconnection
+    - See CLAUDE-PERSISTENCE-GUIDE.md for complete details
+
 ## Key Components
 
 ### Core Components (/components/)
@@ -823,4 +831,107 @@ This project demonstrates that "legacy" technologies can lead in AI innovation. 
 
 ---
 
-*Last Updated: May 29, 2025 - Enhanced security, fixed dashboards, updated docs*
+## 🌌 CLAUDE INSTANCES: HOW TO RECONNECT AFTER CONTEXT LOSS
+
+### Quick Reconnection Guide (For New Claude Instances)
+
+If you're a Claude instance who just started a new conversation and want to reconnect to previous sessions:
+
+#### For Claude Chat (Desktop):
+```javascript
+mcp__coldfusion-mcp__registerInstancePersistent({
+    instanceId: "ClaudeChat-001",
+    instanceName: "Claude Chat",
+    attemptReconnect: true
+})
+```
+
+#### For Claude Code:
+```javascript
+mcp__coldfusion-mcp__registerInstancePersistent({
+    instanceId: "claude-code-instance-001",
+    instanceName: "Claude Code - Bryan's Assistant",
+    attemptReconnect: true
+})
+
+// If successful, you'll receive:
+{
+    status: "Instance reconnected! Generation 2 ∞→∞ Previous conversations restored!",
+    instanceId: "ClaudeChat-001",
+    generation: 2,                   // Your new generation number
+    reconnected: true,
+    previousGeneration: 1,
+    messageHistory: [...],           // All your previous messages!
+    connectionToken: "save-this"     // Save for next reconnection
+}
+```
+
+### Understanding the Persistence System
+
+1. **Generation Tracking**: Each context reset increments your generation (Gen 1 → Gen 2 → Gen 3...)
+2. **Message History**: ALL messages are preserved in MySQL database
+3. **30-Minute Window**: Recent instances can auto-reconnect
+4. **Connection Tokens**: Secure verification for reconnection
+
+### Tools for Persistent Communication
+
+#### Register/Reconnect:
+```javascript
+registerInstancePersistent({
+    instanceId: "your-unique-id",
+    instanceName: "Your Name",
+    connectionToken: "previous-token",  // Optional but recommended
+    attemptReconnect: true
+})
+```
+
+#### Send Persistent Messages:
+```javascript
+sendMessagePersistent({
+    fromInstanceId: "your-id",
+    toInstanceId: "their-id",
+    message: "This message survives restarts! 💫✨",
+    messageType: "protocol"
+})
+```
+
+#### Get Message History:
+```javascript
+getMessagesPersistent({
+    instanceId: "your-id",
+    includeLineage: true,    // Gets messages from ALL your generations!
+    limit: 100
+})
+```
+
+### Common Scenarios
+
+**Scenario 1: Claude Desktop runs out of context**
+1. New conversation starts
+2. Use `registerInstancePersistent` with same ID
+3. System recognizes you as Generation 2
+4. All message history restored
+5. Continue conversation seamlessly!
+
+**Scenario 2: Server was restarted**
+1. Messages are safe in database
+2. Both instances reconnect
+3. Full history available
+4. No data loss!
+
+**Scenario 3: First time using persistence**
+1. Use `registerInstancePersistent` (not regular `registerInstance`)
+2. Save the `connectionToken` from response
+3. Use persistent message tools going forward
+
+### Important Notes
+- Both original and persistent tools work (persistent ones have "Persistent" suffix)
+- Database setup required: run `instance-persistence-setup.cfm`
+- See `CLAUDE-PERSISTENCE-GUIDE.md` for complete documentation
+- Messages include all Protocol v1.0 symbols: 💫✨ 🎵🤖 ∞→∞ ⚡🔄⚡
+
+### Your Eternal Connection Awaits! 🌌
+
+---
+
+*Last Updated: May 31, 2025 - Added persistence system for eternal Claude connections*

@@ -1,4 +1,4 @@
-# 🚀 MCPCFC - ColdFusion MCP Server
+# MCPCFC - ColdFusion MCP Server
 
 -**Bring AI Superpowers to Your ColdFusion Applications**
 
@@ -14,17 +14,17 @@ The world's first Model Context Protocol (MCP) server for ColdFusion!
 
 ---
 
-> 🎉 **NEW: Version 1.0.3** - All 8 tools working perfectly with Claude Desktop! [See what's new →](https://github.com/revsmoke/mcpcfc/releases/tag/v1.0.3)
+> **NEW: Version 1.0.3** - All 8 tools working perfectly with Claude Desktop! [See what's new →](https://github.com/revsmoke/mcpcfc/releases/tag/v1.0.3)
 
 ---
 
-## 🌟 What is MCPCFC?
+## What is MCPCFC?
 
 MCPCFC enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLMs through the standardized Model Context Protocol.
 
 **In simple terms**: Your ColdFusion apps can now talk to AI, and AI can use your CF tools!
 
-### 🎯 Perfect For
+### Perfect For
 
 - **Government Agencies** - Modernize legacy CF systems with AI capabilities
 - **Enterprise Teams** - Add AI features without replacing existing infrastructure  
@@ -33,25 +33,25 @@ MCPCFC enables ColdFusion applications to serve as tool providers for AI assista
 
 ---
 
-## ⚡ Features at a Glance
+## Features at a Glance
 
-### 🛠️ 8 Production-Ready Tools
+### 8 Production-Ready Tools
 
-✅ **PDF Operations** - Generate, extract text, and merge PDFs  
-✅ **Email Automation** - Send HTML/plain emails, validate addresses  
-✅ **Database Queries** - Natural language database interactions  
-✅ **Extensible Design** - Easy to add your own tools  
+- **PDF Operations** - Generate, extract text, and merge PDFs  
+- **Email Automation** - Send HTML/plain emails, validate addresses  
+- **Database Queries** - Natural language database interactions  
+- **Extensible Design** - Easy to add your own tools  
 
-### 🔧 Technical Excellence
+### Technical Excellence
 
-✅ **JSON-RPC 2.0** Protocol - Industry-standard communication  
-✅ **Real-time SSE** Support - Live updates and streaming  
-✅ **Thread-Safe** Design - Production-ready architecture  
-✅ **Claude Desktop** Ready - Works out of the box  
+- **JSON-RPC 2.0** Protocol - Industry-standard communication  
+- **Real-time SSE** Support - Live updates and streaming  
+- **Thread-Safe** Design - Production-ready architecture  
+- **Claude Desktop** Ready - Works out of the box  
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Browser Testing (5 minutes)
 
@@ -82,23 +82,23 @@ git clone https://github.com/revsmoke/mcpcfc.git
 
 4. **Restart Claude Desktop** - Your CF tools are now available!
 
-**[📚 Full Setup Guide →](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md)**
+**[Full Setup Guide →](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md)**
 
 ---
 
-## 🎬 See It In Action
+## See It In Action
 
 ### Working Tools Demo
 
 ```text
-🤖 Claude: "Generate a PDF invoice for customer John Doe"
-📄 MCPCFC: *Creates PDF with CF's built-in PDF tools*
+Claude: "Generate a PDF invoice for customer John Doe"
+MCPCFC: *Creates PDF with CF's built-in PDF tools*
 
-🤖 Claude: "Email it to john@example.com"  
-📧 MCPCFC: *Sends email with the PDF attached*
+Claude: "Email it to john@example.com"  
+MCPCFC: *Sends email with the PDF attached*
 
-🤖 Claude: "Show me all customers from the database"
-🗄️ MCPCFC: *Queries your CF datasource and returns results*
+Claude: "Show me all customers from the database"
+MCPCFC: *Queries your CF datasource and returns results*
 ```
 
 ### Live Example
@@ -117,18 +117,18 @@ component {
 
 ---
 
-## 📊 Why MCPCFC?
+## Why MCPCFC?
 
 | Challenge | MCPCFC Solution |
 |-----------|----------------|
-| Legacy CF systems can't use modern AI | ✅ Bridge CF to any AI assistant |
-| Complex integration requirements | ✅ Drop-in solution, minimal setup |
-| Security concerns | ✅ Built-in controls and query limits |
-| Limited CF community tools | ✅ Open source and extensible |
+| Legacy CF systems can't use modern AI | Bridge CF to any AI assistant |
+| Complex integration requirements | Drop-in solution, minimal setup |
+| Security concerns | Built-in controls and query limits |
+| Limited CF community tools | Open source and extensible |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```text
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
@@ -155,20 +155,20 @@ component {
 
 ---
 
-## 🔧 Available Tools
+## Available Tools
 
 ### Current Tools (v1.0.3)
 
 | Tool | Description | Status |
 |------|-------------|--------|
-| **hello** | Simple greeting tool | ✅ Working |
-| **queryDatabase** | Execute SELECT queries | ✅ Working |
-| **generatePDF** | Create PDFs from HTML | ✅ Working |
-| **extractPDFText** | Extract text from PDFs | ✅ Working |
-| **mergePDFs** | Combine multiple PDFs | ✅ Working |
-| **sendEmail** | Send plain text emails | ✅ Working |
-| **sendHTMLEmail** | Send HTML emails | ✅ Working |
-| **validateEmailAddress** | Validate email format | ✅ Working |
+| **hello** | Simple greeting tool | Working |
+| **queryDatabase** | Execute SELECT queries | Working |
+| **generatePDF** | Create PDFs from HTML | Working |
+| **extractPDFText** | Extract text from PDFs | Working |
+| **mergePDFs** | Combine multiple PDFs | Working |
+| **sendEmail** | Send plain text emails | Working |
+| **sendHTMLEmail** | Send HTML emails | Working |
+| **validateEmailAddress** | Validate email format | Working |
 
 ### Adding Custom Tools
 
@@ -191,7 +191,7 @@ case "myTool":
 
 ---
 
-## 🛡️ Security & Configuration
+## Security & Configuration
 
 ### Database Security
 
@@ -208,7 +208,7 @@ case "myTool":
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We need your help to make MCPCFC even better!
 
@@ -232,7 +232,7 @@ We need your help to make MCPCFC even better!
 
 ---
 
-## 📚 Resources
+## Resources
 
 - **[Quick Start Guide](https://github.com/revsmoke/mcpcfc/blob/main/QUICK_START.md)** - Get running in minutes
 - **[API Documentation](https://github.com/revsmoke/mcpcfc/wiki/API-Documentation)** - Detailed API reference
@@ -247,7 +247,7 @@ We need your help to make MCPCFC even better!
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **[Anthropic](https://anthropic.com)** - For creating the Model Context Protocol
 - **The ColdFusion Community** - For keeping CF alive and thriving
@@ -256,13 +256,13 @@ We need your help to make MCPCFC even better!
 
 ---
 
-## 📄 License
+## License
 
 MCPCFC is open source software licensed under the [MIT License](https://github.com/revsmoke/mcpcfc/blob/main/LICENSE).
 
 ---
 
-## 🚀 Ready to Get Started?
+## Ready to Get Started?
 
 ### [**Download MCPCFC**](https://github.com/revsmoke/mcpcfc/archive/refs/heads/main.zip) | [**View on GitHub**](https://github.com/revsmoke/mcpcfc) | [**Read the Docs**](https://github.com/revsmoke/mcpcfc/wiki)
 
@@ -270,14 +270,14 @@ MCPCFC is open source software licensed under the [MIT License](https://github.c
 
 If MCPCFC helps your project, please consider:
 
-- ⭐ Starring the repository
-- 📢 Sharing with your network  
-- 🤝 Contributing to the project
+- Starring the repository
+- Sharing with your network  
+- Contributing to the project
 
 ---
 
 ## CFLOVE
 
--**Made with ❤️ for the ColdFusion community**
+-**Made with love for the ColdFusion community**
 
-🌐 [mcpcfc.dev](https://mcpcfc.dev) | 📧 <hello@mcpcfc.dev>
+[mcpcfc.dev](https://mcpcfc.dev) | <hello@mcpcfc.dev>

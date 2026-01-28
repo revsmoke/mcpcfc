@@ -1,0 +1,173 @@
+/**
+ * MCPServer.cfc
+ * Main MCP Server Orchestrator for ColdFusion 2025
+ * Protocol Version: 2025-11-25
+ */
+component output="false" {
+
+    /**
+     * Initialize the MCP Server
+     */
+    public function init() {
+        return this;
+    }
+
+    /**
+     * Process an incoming MCP request
+     * @request The JSON-RPC request struct
+     * @sessionId The session identifier
+     * @return The JSON-RPC response struct
+     */
+    public struct function processRequest(required struct request, required string sessionId) {
+        var handler = new core.JSONRPCHandler();
+        return handler.process(arguments.request, arguments.sessionId);
+    }
+
+    /**
+     * Register all default tools with the ToolRegistry
+     */
+    public void function registerDefaultTools() {
+        application.logger.info("Starting tool registration");
+
+        var toolClasses = [
+            "tools.HelloTool",
+            "tools.PDFTool",
+            "tools.SendGridEmailTool",
+            "tools.DatabaseTool",
+            "tools.FileTool",
+            "tools.HttpClientTool"
+        ];
+
+        var registeredTools = [];
+        var failedTools = [];
+
+        for (var toolClass in toolClasses) {
+            try {
+                var tool = createObject("component", toolClass).init();
+                application.toolRegistry.register(tool);
+                arrayAppend(registeredTools, tool.getName());
+            } catch (any e) {
+                arrayAppend(failedTools, { class: toolClass, error: e.message });
+                application.logger.warn("Failed to register tool", {
+                    class: toolClass,
+                    error: e.message
+                });
+            }
+        }
+
+        application.logger.info("Tool registration complete", {
+            registered: arrayLen(registeredTools),
+            failed: arrayLen(failedTools),
+            tools: registeredTools
+        });
+
+        if (arrayLen(failedTools) > 0) {
+            application.logger.warn("Some tools failed to register", {
+                failedTools: failedTools
+            });
+        }
+    }
+
+    /**
+     * Register default resources
+     */
+    public void function registerDefaultResources() {
+        // Server info resource
+        application.resourceRegistry.register({
+            uri: "mcpcfc://server/info",
+            name: "Server Information",
+            description: "Information about the MCPCFC server",
+            mimeType: "application/json"
+        });
+
+        // Configuration resource (sanitized)
+        application.resourceRegistry.register({
+            uri: "mcpcfc://server/config",
+            name: "Server Configuration",
+            description: "Current server configuration (sensitive values hidden)",
+            mimeType: "application/json"
+        });
+
+        application.logger.info("Registered default resources");
+    }
+
+    /**
+     * Register default prompts
+     */
+    public void function registerDefaultPrompts() {
+        // SQL query helper prompt
+        application.promptRegistry.register({
+            name: "sql_query_helper",
+            description: "Helps construct safe SQL SELECT queries",
+            arguments: [
+                {
+                    name: "table",
+                    description: "The table name to query",
+                    required: true
+                },
+                {
+                    name: "columns",
+                    description: "Columns to select (comma-separated)",
+                    required: false
+                }
+            ]
+        });
+
+        // Email composer prompt
+        application.promptRegistry.register({
+            name: "email_composer",
+            description: "Helps compose professional emails",
+            arguments: [
+                {
+                    name: "purpose",
+                    description: "Purpose of the email (e.g., follow-up, introduction)",
+                    required: true
+                },
+                {
+                    name: "tone",
+                    description: "Desired tone (formal, casual, friendly)",
+                    required: false
+                }
+            ]
+        });
+
+        application.logger.info("Registered default prompts");
+    }
+
+    /**
+     * Get server status information
+     */
+    public struct function getStatus() {
+        return {
+            serverName: application.config.serverName,
+            serverVersion: application.config.serverVersion,
+            protocolVersion: application.config.protocolVersion,
+            uptime: dateDiff("s", application.startTime, now()),
+            activeSessions: application.sessionManager.getSessionCount(),
+            registeredTools: application.toolRegistry.getToolCount(),
+            registeredResources: application.resourceRegistry.getResourceCount(),
+            registeredPrompts: application.promptRegistry.getPromptCount()
+        };
+    }
+
+    /**
+     * Shutdown the server gracefully
+     */
+    public void function shutdown() {
+        application.logger.info("MCP Server shutting down");
+
+        // Clean up sessions
+        application.sessionManager.clearAll();
+
+        // Stop cleanup thread
+        if (structKeyExists(application, "cleanupThreadName")) {
+            try {
+                cfthread(action="interrupt", name=application.cleanupThreadName);
+            } catch (any e) {
+                // Thread may already be stopped
+            }
+        }
+
+        application.logger.info("MCP Server shutdown complete");
+    }
+}

@@ -1,3 +1,7 @@
+This project was created a long time ago, and uses many old ways of doing things. The reason we are working on it again is to completely updated it to work with the latest Model Context Protocol Specs and to work with the latest ColdFusion 2025 abilities and or leverage java libraries to use with ColdFusion to do make this refactor work.
+
+The locally hosted url for this project is: https://mcpcfc.local/
+
 # MCPCFC - ColdFusion MCP Server Project Documentation
 
 ## 🎉 Project Status: FANTABULOUS! 
@@ -266,3 +270,6 @@ Then restart Claude Desktop. Your ColdFusion tools will be available!
 - **Check Output**: Look for ANY extra characters in responses
 - **Validate JSON**: Ensure strict JSON-RPC compliance
 - **Read Error Logs**: ZodError messages indicate parser validation failures
+
+### Refactor
+This project was the first ColdFusion Model Context Protocol Server made a long time ago. It is now old and I want you to make a plan to completely refactor it to work with ColdFusion 2025 (no legacy support wanted), and be built on the latest (as of January 28, 2026) Model Context Protocol specifications. ColdFusion 2025 offers many new      capabilites to accomplish this MCP Component (CFC) and you can also use java libraries (ColdFusion works well with Java but resarch the ways to load and use jars local to the document and site root. This plan will be long so use  lots of agents to look at the codebase and to do the research. The locally hosted (CF2025/Apache(Homebrew)) URL is: https://mcpcfc.local/  I want to bring this project back to life.   

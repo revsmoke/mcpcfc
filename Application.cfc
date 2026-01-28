@@ -1,205 +1,267 @@
-component output="false" hint="Application component for MCP Server" {
-    
-    this.name = "MCPServer"; //cflint ignore:GLOBAL_VAR
+/**
+ * Application.cfc
+ * MCPCFC - ColdFusion 2025 MCP Server
+ * Protocol Version: 2025-11-25
+ *
+ * This application implements the Model Context Protocol for ColdFusion,
+ * leveraging CF2025's modern features and capabilities.
+ */
+component output="false" {
+
+    // Application settings
+    this.name = "MCPCFC_2025";
     this.applicationTimeout = createTimeSpan(1, 0, 0, 0);
     this.sessionManagement = false;
+
+    // CF2025: Configure Java settings for local JAR loading
+    this.javaSettings = {
+        loadPaths: [expandPath("./lib/")],
+        loadColdFusionClassPath: true,
+        reloadOnChange: false
+    };
+
+    // Custom tag paths
+    this.customTagPaths = [expandPath("./customtags/")];
+
+    // Mapping for component paths
+    this.mappings["/mcpcfc"] = expandPath("./");
+
     /**
      * Application start handler
+     * Initializes all server components and registries
      */
-    public void function onApplicationStart() {
-        // Initialize thread-safe message queue
-        application.messageQueue = createObject("java", "java.util.concurrent.LinkedBlockingQueue").init(); //cflint ignore:GLOBAL_VAR
-        
+    public boolean function onApplicationStart() {
+        // Record start time
+        application.startTime = now();
+
+        // Load external configuration
+        include "config/settings.cfm";
+        include "config/routes.cfm";
+
+        // Ensure required directories exist
+        ensureDirectories();
+
+        // Initialize logger first (other components may use it)
+        application.logger = new logging.Logger(
+            level: application.config.logLevel,
+            logDirectory: application.config.logDirectory
+        );
+
+        application.logger.info("MCPCFC Server starting", {
+            version: application.config.serverVersion,
+            protocol: application.config.protocolVersion
+        });
+
         // Initialize session manager
-        application.sessionManager = new components.SessionManager();
-        
-        // Initialize tool registry
-        application.toolRegistry = new components.ToolRegistry();
-        
-        // Register default tools
-        registerTools();
+        application.sessionManager = new session.SessionManager();
+
+        // Initialize registries
+        application.toolRegistry = new registry.ToolRegistry();
+        application.resourceRegistry = new registry.ResourceRegistry();
+        application.promptRegistry = new registry.PromptRegistry();
+
+        // Initialize MCP server
+        application.logger.info("About to create MCPServer");
+        application.mcpServer = new core.MCPServer();
+        application.logger.info("MCPServer created");
+
+        // Register default tools, resources, and prompts
+        application.logger.info("About to registerDefaultTools");
+        application.mcpServer.registerDefaultTools();
+        application.logger.info("registerDefaultTools complete");
+
+        application.logger.info("About to registerDefaultResources");
+        application.mcpServer.registerDefaultResources();
+        application.logger.info("registerDefaultResources complete");
+
+        application.logger.info("About to registerDefaultPrompts");
+        application.mcpServer.registerDefaultPrompts();
+        application.logger.info("registerDefaultPrompts complete");
+
+        // Start session cleanup task
+        startCleanupTask();
+
+        application.logger.info("MCPCFC Server started successfully", {
+            tools: application.toolRegistry.getToolCount(),
+            resources: application.resourceRegistry.getResourceCount(),
+            prompts: application.promptRegistry.getPromptCount()
+        });
+
+        return true;
     }
+
     /**
-     * Register default tools
+     * Application end handler
+     * Clean shutdown of server components
      */
-    private void function registerTools() {
-        // Register hello world tool
-        application.toolRegistry.registerTool("hello", { //cflint ignore:GLOBAL_VAR
-            "description": "A simple hello world tool",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name to greet"
-                    }
-                },
-                "required": ["name"]
+    public void function onApplicationEnd(required struct applicationScope) {
+        try {
+            if (structKeyExists(arguments.applicationScope, "logger")) {
+                arguments.applicationScope.logger.info("MCPCFC Server shutting down");
             }
-        });
-        
-        // Register database query tool
-        application.toolRegistry.registerTool("queryDatabase", {
-            "description": "Execute a database query",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "SQL query to execute"
-                    },
-                    "datasource": {
-                        "type": "string",
-                        "description": "Database datasource name"
-                    }
-                },
-                "required": ["query", "datasource"]
+
+            // Stop cleanup thread
+            if (structKeyExists(arguments.applicationScope, "cleanupThreadName")) {
+                try {
+                    cfthread(action="interrupt", name=arguments.applicationScope.cleanupThreadName);
+                } catch (any e) {
+                    // Thread may already be stopped
+                }
             }
-        });
-        
-        // Register PDF generation tool
-        application.toolRegistry.registerTool("generatePDF", {
-            "description": "Generate a PDF from HTML content",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "html": {
-                        "type": "string",
-                        "description": "HTML content to convert to PDF"
-                    },
-                    "filename": {
-                        "type": "string",
-                        "description": "Output filename for the PDF (e.g., 'report.pdf')"
-                    }
-                },
-                "required": ["html", "filename"]
+
+            // Clear sessions
+            if (structKeyExists(arguments.applicationScope, "sessionManager")) {
+                arguments.applicationScope.sessionManager.clearAll();
             }
-        });
-        
-        // Register PDF text extraction tool
-        application.toolRegistry.registerTool("extractPDFText", {
-            "description": "Extract text content from a PDF file",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "pdfPath": {
-                        "type": "string",
-                        "description": "Path to the PDF file (relative to temp directory)"
-                    }
+
+        } catch (any e) {
+            // Silently handle shutdown errors
+        }
+    }
+
+    /**
+     * Request start handler
+     */
+    public boolean function onRequestStart(required string targetPage) {
+        // Handle application restart request
+        if (structKeyExists(url, "reinit") || structKeyExists(url, "reload")) {
+            onApplicationStart();
+        }
+
+        return true;
+    }
+
+    /**
+     * Error handler
+     */
+    public void function onError(required any exception, required string eventName) {
+        var errorData = {
+            message: arguments.exception.message ?: "Unknown error",
+            detail: arguments.exception.detail ?: "",
+            type: arguments.exception.type ?: "",
+            event: arguments.eventName
+        };
+
+        // Log the error
+        if (structKeyExists(application, "logger")) {
+            application.logger.error("Application error", errorData);
+        }
+
+        // For API requests, return JSON error
+        if (findNoCase("/endpoints/", cgi.script_name)) {
+            cfheader(statuscode=500);
+            cfcontent(type="application/json", reset=true);
+            writeOutput(serializeJson({
+                jsonrpc: "2.0",
+                error: {
+                    code: -32603,
+                    message: "Internal server error"
                 },
-                "required": ["pdfPath"]
-            }
-        });
-        
-        // Register PDF merge tool
-        application.toolRegistry.registerTool("mergePDFs", {
-            "description": "Merge multiple PDF files into one",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "sourcePaths": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Array of paths to PDF files to merge"
-                    },
-                    "outputPath": {
-                        "type": "string",
-                        "description": "Output path for the merged PDF"
+                id: javacast("null", "")
+            }));
+            abort;
+        }
+
+        // For other requests, show error page
+        cfheader(statuscode=500);
+        cfcontent(type="text/html", reset=true);
+        writeOutput("
+            <!DOCTYPE html>
+            <html>
+            <head><title>MCPCFC Error</title></head>
+            <body>
+                <h1>Server Error</h1>
+                <p>An error occurred processing your request.</p>
+                <p>Error: #encodeForHTML(errorData.message)#</p>
+                <p>Detail: #encodeForHTML(errorData.detail)#</p>
+                <p>Type: #encodeForHTML(errorData.type)#</p>
+            </body>
+            </html>
+        ");
+        abort;
+    }
+
+    /**
+     * Ensure all required directories exist
+     */
+    private void function ensureDirectories() {
+        var directories = [
+            application.config.tempDirectory,
+            application.config.sandboxDirectory,
+            application.config.logDirectory,
+            application.config.libDirectory
+        ];
+
+        for (var dir in directories) {
+            if (!directoryExists(dir)) {
+                try {
+                    directoryCreate(dir);
+                } catch (any e) {
+                    // Log but don't fail startup
+                    if (structKeyExists(application, "logger")) {
+                        application.logger.warn("Could not create directory", { path: dir, error: e.message });
                     }
-                },
-                "required": ["sourcePaths", "outputPath"]
+                }
             }
-        });
-        
-        // Register email sending tool
-        application.toolRegistry.registerTool("sendEmail", {
-            "description": "Send a plain text email",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "to": {
-                        "type": "string",
-                        "description": "Recipient email address"
-                    },
-                    "subject": {
-                        "type": "string",
-                        "description": "Email subject line"
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Plain text email body"
-                    },
-                    "from": {
-                        "type": "string",
-                        "description": "Sender email address (optional, defaults to mcpcfc@example.com)"
-                    },
-                    "cc": {
-                        "type": "string",
-                        "description": "CC recipients (optional)"
-                    },
-                    "bcc": {
-                        "type": "string",
-                        "description": "BCC recipients (optional)"
+        }
+    }
+
+    /**
+     * Start the session cleanup background task
+     * CF2025: Uses cfthread with action="interrupt" pattern (action="terminate" removed)
+     */
+    private void function startCleanupTask() {
+        var threadName = "mcpcfc_session_cleanup_#createUUID()#";
+        application.cleanupThreadName = threadName;
+
+        var intervalMs = application.config.cleanupInterval;
+        var ttlMs = application.config.sessionTTL;
+
+        cfthread(
+            name: threadName,
+            action: "run",
+            intervalMs: intervalMs,
+            ttlMs: ttlMs
+        ) {
+            var running = true;
+
+            while (running) {
+                try {
+                    // Sleep for the configured interval
+                    sleep(attributes.intervalMs);
+
+                    // Check if application scope still exists
+                    if (!structKeyExists(application, "sessionManager")) {
+                        running = false;
+                        continue;
                     }
-                },
-                "required": ["to", "subject", "body"]
-            }
-        });
-        
-        // Register HTML email tool
-        application.toolRegistry.registerTool("sendHTMLEmail", {
-            "description": "Send an HTML formatted email",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "to": {
-                        "type": "string",
-                        "description": "Recipient email address"
-                    },
-                    "subject": {
-                        "type": "string",
-                        "description": "Email subject line"
-                    },
-                    "htmlBody": {
-                        "type": "string",
-                        "description": "HTML email body"
-                    },
-                    "textBody": {
-                        "type": "string",
-                        "description": "Plain text alternative (optional)"
-                    },
-                    "from": {
-                        "type": "string",
-                        "description": "Sender email address (optional, defaults to mcpcfc@example.com)"
-                    },
-                    "cc": {
-                        "type": "string",
-                        "description": "CC recipients (optional)"
-                    },
-                    "bcc": {
-                        "type": "string",
-                        "description": "BCC recipients (optional)"
+
+                    // Perform cleanup
+                    var cleaned = application.sessionManager.cleanupExpired(attributes.ttlMs);
+
+                    if (cleaned > 0 && structKeyExists(application, "logger")) {
+                        application.logger.debug("Session cleanup completed", {
+                            cleaned: cleaned,
+                            remaining: application.sessionManager.getSessionCount()
+                        });
                     }
-                },
-                "required": ["to", "subject", "htmlBody"]
-            }
-        });
-        
-        // Register email validation tool
-        application.toolRegistry.registerTool("validateEmailAddress", {
-            "description": "Validate an email address format",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "description": "Email address to validate"
+
+                } catch (java.lang.InterruptedException e) {
+                    // Thread was interrupted - exit gracefully
+                    running = false;
+                } catch (any e) {
+                    // Log error but continue
+                    if (structKeyExists(application, "logger")) {
+                        application.logger.error("Session cleanup error", { error: e.message });
                     }
-                },
-                "required": ["email"]
+                }
             }
+        }
+
+        application.logger.debug("Session cleanup task started", {
+            threadName: threadName,
+            intervalMs: intervalMs,
+            ttlMs: ttlMs
         });
     }
 }

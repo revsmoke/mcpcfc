@@ -262,8 +262,9 @@
             const html = document.getElementById('pdfHtml').value;
             const filename = document.getElementById('pdfFilename').value;
             sendRequest('tools/call', {
-                name: 'generatePDF',
+                name: 'pdf',
                 arguments: {
+                    action: 'generate',
                     html: html,
                     filename: filename
                 }
@@ -273,8 +274,9 @@
         function extractPDFText() {
             const pdfPath = document.getElementById('extractPdfPath').value;
             sendRequest('tools/call', {
-                name: 'extractPDFText',
+                name: 'pdf',
                 arguments: {
+                    action: 'extract',
                     pdfPath: pdfPath
                 }
             });
@@ -285,8 +287,9 @@
             const pdf2 = document.getElementById('mergePdf2').value;
             const output = document.getElementById('mergeOutput').value;
             sendRequest('tools/call', {
-                name: 'mergePDFs',
+                name: 'pdf',
                 arguments: {
+                    action: 'merge',
                     sourcePaths: [pdf1, pdf2],
                     outputPath: output
                 }

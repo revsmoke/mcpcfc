@@ -4,20 +4,29 @@
 
 Create the first official CFML/CFScript SDK for the Model Context Protocol, enabling ColdFusion developers to easily build MCP servers that integrate with AI applications.
 
-## Current Implementation Status
+## Current Implementation Status (v2.0)
 
-The MCP server is now **FULLY OPERATIONAL** with the following achievements:
+The MCP server is now **FULLY OPERATIONAL** with MCP Protocol 2025-11-25 compliance:
 
 - ✅ JSON-RPC 2.0 message processing
-- ✅ SSE transport for real-time communication
-- ✅ Tool registration and execution
-- ✅ Session management
+- ✅ **Unified HTTP endpoint** (`endpoints/mcp.cfm`)
+- ✅ Tool, Resource, and Prompt registries
+- ✅ Session management with cleanup
 - ✅ Browser-based test client
-- ✅ **8 production-ready tools all tested and working**
-- ✅ PDF generation, extraction, and merging
-- ✅ Email sending (plain/HTML) and validation
-- ✅ Database query execution
-- ✅ Complete error handling and validation
+- ✅ **Production-ready tools**:
+  - HelloTool - Basic greeting
+  - PDFTool - Generation, extraction, merging
+  - SendGridEmailTool - Email via SendGrid
+  - DatabaseTool - Safe query execution
+  - FileTool - File operations
+  - HttpClientTool - HTTP requests
+- ✅ Input validation and SQL safety checking
+- ✅ Comprehensive error handling and logging
+- ✅ ColdFusion 2025 optimized
+
+### Protocol Notes
+
+**SSE Transport**: Deprecated in MCP Protocol 2025-11-25. The previous SSE-based endpoints (`sse.cfm`, `messages.cfm`) have been replaced with a unified HTTP endpoint (`mcp.cfm`). Legacy endpoints are preserved in `_deprecated/` for reference.
 
 ## Core SDK Components
 
@@ -31,10 +40,10 @@ The MCP server is now **FULLY OPERATIONAL** with the following achievements:
 
 ### 2. Transport Implementations
 
-    - `SSETransport.cfc` - Server-Sent Events (current implementation)
-    - `WebSocketTransport.cfc` - WebSocket support
-    - `HTTPTransport.cfc` - Simple HTTP polling
-    - `StdioTransport.cfc` - Standard I/O for CLI tools
+    - `HTTPTransport.cfc` - HTTP endpoint (current implementation)
+    - `WebSocketTransport.cfc` - WebSocket support (planned)
+    - `StdioTransport.cfc` - Standard I/O for CLI tools (via bridge)
+    - ~~`SSETransport.cfc`~~ - Deprecated in MCP 2025-11-25
 
 ### 3. Protocol Components
 
@@ -59,12 +68,12 @@ The MCP server is now **FULLY OPERATIONAL** with the following achievements:
 
 ### 6. Common Tools Library
 
-    - `DatabaseTool.cfc` - Enhanced DB operations ✅ (Basic implementation complete)
-    - `FileTool.cfc` - File system access
-    - `HTTPTool.cfc` - External API calls
-    - `EmailTool.cfc` - Email operations ✅ (Fully implemented)
+    - `DatabaseTool.cfc` - Database operations ✅ (Fully implemented with SQL validation)
+    - `FileTool.cfc` - File system access ✅ (Fully implemented with sandboxing)
+    - `HttpClientTool.cfc` - External API calls ✅ (Fully implemented)
+    - `SendGridEmailTool.cfc` - Email via SendGrid ✅ (Fully implemented)
     - `PDFTool.cfc` - PDF generation/manipulation ✅ (Fully implemented)
-    - `ExcelTool.cfc` - Spreadsheet operations
+    - `ExcelTool.cfc` - Spreadsheet operations (planned)
 
 ## Features That Leverage ColdFusion's Strengths
 

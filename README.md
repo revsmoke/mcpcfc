@@ -1,12 +1,13 @@
 # MCPCFC - ColdFusion MCP Server
 
--**Bring AI Superpowers to Your ColdFusion Applications**
+**Bring AI Superpowers to Your ColdFusion Applications**
 
 The world's first Model Context Protocol (MCP) server for ColdFusion!
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![ColdFusion 2016+](https://img.shields.io/badge/ColdFusion-2016+-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
+[![ColdFusion 2025](https://img.shields.io/badge/ColdFusion-2025-blue.svg)](https://www.adobe.com/products/coldfusion-family.html)
 [![Lucee 5+](https://img.shields.io/badge/Lucee-5+-blue.svg)](https://www.lucee.org/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2025--11--25-green.svg)](https://modelcontextprotocol.io/)
 [![Status: Working](https://img.shields.io/badge/Status-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 [![Claude Desktop: Working](https://img.shields.io/badge/Claude%20Desktop-Working-brightgreen.svg)](https://github.com/revsmoke/mcpcfc)
 
@@ -14,7 +15,7 @@ The world's first Model Context Protocol (MCP) server for ColdFusion!
 
 ---
 
-> **NEW: Version 1.0.3** - All 8 tools working perfectly with Claude Desktop! [See what's new →](https://github.com/revsmoke/mcpcfc/releases/tag/v1.0.3)
+> **Version 2.0** - Major refactor for MCP Protocol 2025-11-25 and ColdFusion 2025! [See what's new →](CHANGELOG.md)
 
 ---
 
@@ -27,7 +28,7 @@ MCPCFC enables ColdFusion applications to serve as tool providers for AI assista
 ### Perfect For
 
 - **Government Agencies** - Modernize legacy CF systems with AI capabilities
-- **Enterprise Teams** - Add AI features without replacing existing infrastructure  
+- **Enterprise Teams** - Add AI features without replacing existing infrastructure
 - **CF Developers** - Build the next generation of intelligent applications
 - **Digital Transformation** - Bridge the gap between legacy and cutting-edge tech
 
@@ -35,25 +36,29 @@ MCPCFC enables ColdFusion applications to serve as tool providers for AI assista
 
 ## Features at a Glance
 
-### 8 Production-Ready Tools
+### Production-Ready Tools
 
-- **PDF Operations** - Generate, extract text, and merge PDFs  
-- **Email Automation** - Send HTML/plain emails, validate addresses  
-- **Database Queries** - Natural language database interactions  
-- **Extensible Design** - Easy to add your own tools  
+- **PDF Operations** - Generate, extract text, and merge PDFs
+- **Email Automation** - Send HTML/plain emails via SendGrid
+- **Database Queries** - Safe, validated database interactions
+- **File Operations** - Secure file system access
+- **HTTP Client** - Make external API calls
+- **Extensible Design** - Easy to add your own tools
 
 ### Technical Excellence
 
-- **JSON-RPC 2.0** Protocol - Industry-standard communication  
-- **Real-time SSE** Support - Live updates and streaming  
-- **Thread-Safe** Design - Production-ready architecture  
-- **Claude Desktop** Ready - Works out of the box  
+- **MCP Protocol 2025-11-25** - Latest protocol specification
+- **JSON-RPC 2.0** - Industry-standard communication
+- **Unified HTTP Endpoint** - Single `endpoints/mcp.cfm` for all communication
+- **Thread-Safe Design** - Production-ready architecture
+- **Claude Desktop Ready** - Works out of the box
+- **ColdFusion 2025** - Optimized for latest CF version
 
 ---
 
 ## Quick Start
 
-### Option 1: Browser Testing (5 minutes)
+### Option 1: Browser Testing
 
 ```bash
 # Clone the repository
@@ -64,19 +69,19 @@ git clone https://github.com/revsmoke/mcpcfc.git
 # Open the test client and start using AI tools!
 ```
 
-### Option 2: Claude Desktop Integration (10 minutes)
+### Option 2: Claude Desktop Integration
 
 1. **Install MCPCFC** in your CF webroot
-2. **Make bridge executable**: `chmod +x cf-mcp-clean-bridge.sh`
+2. **Make bridge executable**: `chmod +x bridge/cf-mcp-bridge.sh`
 3. **Add to Claude Desktop config**:
 
    ```json
    {
-   "mcpServers": {
-      "coldfusion-mcp": {
-         "command": "/path/to/mcpcfc/cf-mcp-clean-bridge.sh"
-      }
-   }
+     "mcpServers": {
+       "coldfusion-mcp": {
+         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh"
+       }
+     }
    }
    ```
 
@@ -94,8 +99,8 @@ git clone https://github.com/revsmoke/mcpcfc.git
 Claude: "Generate a PDF invoice for customer John Doe"
 MCPCFC: *Creates PDF with CF's built-in PDF tools*
 
-Claude: "Email it to john@example.com"  
-MCPCFC: *Sends email with the PDF attached*
+Claude: "Email it to john@example.com"
+MCPCFC: *Sends email via SendGrid integration*
 
 Claude: "Show me all customers from the database"
 MCPCFC: *Queries your CF datasource and returns results*
@@ -105,9 +110,16 @@ MCPCFC: *Queries your CF datasource and returns results*
 
 ```cfscript
 // Your existing CF code
-component {
-    function generateReport(customerId) {
+component extends="tools.AbstractTool" {
+    function init() {
+        variables.name = "generateReport";
+        variables.description = "Generate a report for a customer";
+        return this;
+    }
+
+    function execute(required struct args) {
         // Your business logic here
+        return {"content": [{"type": "text", "text": "Report generated!"}]};
     }
 }
 
@@ -123,7 +135,7 @@ component {
 |-----------|----------------|
 | Legacy CF systems can't use modern AI | Bridge CF to any AI assistant |
 | Complex integration requirements | Drop-in solution, minimal setup |
-| Security concerns | Built-in controls and query limits |
+| Security concerns | Built-in validation and query limits |
 | Limited CF community tools | Open source and extensible |
 
 ---
@@ -137,7 +149,7 @@ component {
 └─────────────┘     └──────────────┘     └─────────────┘
        ↓                    ↓                     ↓
    AI Assistant      JSON-RPC 2.0          PDF, Email,
-                    + SSE Transport          Database
+                   HTTP Transport           Database
 ```
 
 ### Directory Structure
@@ -145,48 +157,97 @@ component {
 ```text
 /mcpcfc/
 ├── Application.cfc           # Application configuration
-├── /components/             # Core MCP components
-├── /endpoints/              # HTTP/SSE endpoints
-├── /tools/                  # Tool implementations
-├── /client-examples/        # Test clients
-├── cf-mcp-clean-bridge.sh   # Claude Desktop bridge
-└── README.md               # You are here!
+├── config/
+│   ├── settings.cfm         # Server settings
+│   └── routes.cfm           # Route configuration
+├── core/
+│   ├── MCPServer.cfc        # Main MCP server
+│   ├── JSONRPCHandler.cfc   # Protocol handler
+│   ├── CapabilityManager.cfc # Capability negotiation
+│   └── TransportManager.cfc  # Transport layer
+├── registry/
+│   ├── ToolRegistry.cfc     # Tool registration
+│   ├── ResourceRegistry.cfc # Resource registration
+│   └── PromptRegistry.cfc   # Prompt registration
+├── session/
+│   ├── SessionManager.cfc   # Session management
+│   └── SessionCleanup.cfc   # Session cleanup
+├── tools/
+│   ├── AbstractTool.cfc     # Base tool class
+│   ├── HelloTool.cfc        # Example tool
+│   ├── PDFTool.cfc          # PDF operations
+│   ├── SendGridEmailTool.cfc # Email via SendGrid
+│   ├── DatabaseTool.cfc     # Database queries
+│   ├── FileTool.cfc         # File operations
+│   └── HttpClientTool.cfc   # HTTP requests
+├── validators/
+│   ├── InputValidator.cfc   # Input validation
+│   └── SQLValidator.cfc     # SQL safety validation
+├── logging/
+│   └── Logger.cfc           # Logging utilities
+├── endpoints/
+│   └── mcp.cfm              # Unified MCP endpoint
+├── bridge/
+│   └── cf-mcp-bridge.sh     # Claude Desktop bridge
+├── client-examples/         # Test clients
+└── README.md                # You are here!
 ```
 
 ---
 
 ## Available Tools
 
-### Current Tools (v1.0.3)
+### Current Tools (v2.0)
 
 | Tool | Description | Status |
 |------|-------------|--------|
 | **hello** | Simple greeting tool | Working |
-| **queryDatabase** | Execute SELECT queries | Working |
+| **queryDatabase** | Execute validated SELECT queries | Working |
 | **generatePDF** | Create PDFs from HTML | Working |
 | **extractPDFText** | Extract text from PDFs | Working |
 | **mergePDFs** | Combine multiple PDFs | Working |
-| **sendEmail** | Send plain text emails | Working |
-| **sendHTMLEmail** | Send HTML emails | Working |
-| **validateEmailAddress** | Validate email format | Working |
+| **sendEmail** | Send emails via SendGrid | Working |
+| **readFile** | Read file contents | Working |
+| **writeFile** | Write file contents | Working |
+| **httpRequest** | Make HTTP requests | Working |
 
 ### Adding Custom Tools
 
-```cfscript
-// 1. Register in Application.cfc
-application.toolRegistry.registerTool("myTool", {
-    "description": "My custom tool",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "param1": {"type": "string"}
-        }
-    }
-});
+1. **Create a new tool class** extending `AbstractTool`:
 
-// 2. Implement in ToolHandler.cfc
-case "myTool":
-    return executeMyTool(arguments.args);
+```cfscript
+// tools/MyCustomTool.cfc
+component extends="tools.AbstractTool" {
+
+    public function init() {
+        variables.name = "myCustomTool";
+        variables.description = "Does something useful";
+        variables.inputSchema = {
+            "type": "object",
+            "properties": {
+                "input": {"type": "string", "description": "Input value"}
+            },
+            "required": ["input"]
+        };
+        return this;
+    }
+
+    public struct function execute(required struct args) {
+        // Your implementation
+        return {
+            "content": [{
+                "type": "text",
+                "text": "Result: " & arguments.args.input
+            }]
+        };
+    }
+}
+```
+
+2. **Register in Application.cfc**:
+
+```cfscript
+application.toolRegistry.registerTool(new tools.MyCustomTool());
 ```
 
 ---
@@ -196,13 +257,19 @@ case "myTool":
 ### Database Security
 
 - Only SELECT queries allowed by default
-- Parameterized queries prevent SQL injection
+- SQL validation prevents injection attacks
 - Configure datasources in your tool implementations
+
+### Input Validation
+
+- All inputs validated before processing
+- Type checking and sanitization built-in
+- Configurable validation rules
 
 ### Recommended Settings
 
-- Add authentication layer
-- Implement rate limiting  
+- Add authentication layer for production
+- Implement rate limiting
 - Use environment variables for sensitive data
 - Enable audit logging
 
@@ -243,7 +310,7 @@ We need your help to make MCPCFC even better!
 
 - **[GitHub Discussions](https://github.com/revsmoke/mcpcfc/discussions)** - Ask questions, share ideas
 - **[Issues](https://github.com/revsmoke/mcpcfc/issues)** - Report bugs or request features
-- **Email**: <hello@mcpcfc.dev>
+- **Email**: hello@mcpcfc.dev
 
 ---
 
@@ -271,13 +338,13 @@ MCPCFC is open source software licensed under the [MIT License](https://github.c
 If MCPCFC helps your project, please consider:
 
 - Starring the repository
-- Sharing with your network  
+- Sharing with your network
 - Contributing to the project
 
 ---
 
 ## CFLOVE
 
--**Made with love for the ColdFusion community**
+**Made with love for the ColdFusion community**
 
-[mcpcfc.dev](https://mcpcfc.dev) | <hello@mcpcfc.dev>
+[mcpcfc.dev](https://mcpcfc.dev) | hello@mcpcfc.dev

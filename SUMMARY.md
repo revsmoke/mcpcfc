@@ -4,21 +4,25 @@
 
 We've created the **world's first Model Context Protocol (MCP) server implementation in ColdFusion**! This groundbreaking implementation enables ColdFusion applications to serve as tool providers for AI assistants like Claude, ChatGPT, and other LLM applications.
 
+## Version 2.0 - Major Refactor
+
+Version 2.0 brings full compliance with **MCP Protocol 2025-11-25** and optimizations for **ColdFusion 2025**.
+
 ## Key Achievements
 
-1. **Full MCP Protocol Support**
+1. **Full MCP Protocol 2025-11-25 Support**
    - JSON-RPC 2.0 compliant
-   - Server-Sent Events (SSE) transport
+   - Unified HTTP endpoint (`endpoints/mcp.cfm`)
    - Proper session management
-   - Tool discovery and execution
+   - Tool, Resource, and Prompt registries
 
 2. **Production-Ready Architecture**
    - Thread-safe components using Java concurrent utilities
-   - Modular design for easy extension
-   - Security-first approach
-   - Comprehensive error handling
+   - Modular design with clear separation of concerns
+   - Security-first approach with input validation
+   - Comprehensive error handling and logging
 
-3. **ColdFusion-Native Features**
+3. **ColdFusion 2025 Native Features**
    - Leverages CFCs for clean object-oriented design
    - Uses native query execution for database access
    - Integrates with CF's built-in security functions
@@ -29,22 +33,43 @@ We've created the **world's first Model Context Protocol (MCP) server implementa
 ```
 /mcpcfc/
 ├── Application.cfc              # Main application config
-├── components/                  # Core MCP components
-│   ├── JSONRPCProcessor.cfc    # Protocol handler
-│   ├── SessionManager.cfc      # Session management
-│   ├── ToolHandler.cfc         # Tool execution
-│   └── ToolRegistry.cfc        # Tool registration
-├── endpoints/                   # HTTP/SSE endpoints
-│   ├── sse.cfm                 # SSE transport
-│   └── messages.cfm            # HTTP message handler
-├── tools/                      # Custom tool implementations
-│   └── EmailTool.cfc          # Example email tool
-├── client-examples/            # Test clients
-│   └── test-client.html       # Browser-based test UI
-├── examples/                   # Usage examples
-├── README.md                   # Documentation
-├── ANNOUNCEMENT.md            # Community announcement
-└── SDK-ROADMAP.md             # Future SDK plans
+├── config/
+│   ├── settings.cfm            # Server settings
+│   └── routes.cfm              # Route configuration
+├── core/                        # Core MCP components
+│   ├── MCPServer.cfc           # Main server component
+│   ├── JSONRPCHandler.cfc      # Protocol handler
+│   ├── CapabilityManager.cfc   # Capability negotiation
+│   └── TransportManager.cfc    # Transport layer
+├── registry/                    # Registration systems
+│   ├── ToolRegistry.cfc        # Tool registration
+│   ├── ResourceRegistry.cfc    # Resource registration
+│   └── PromptRegistry.cfc      # Prompt registration
+├── session/                     # Session management
+│   ├── SessionManager.cfc      # Session handling
+│   └── SessionCleanup.cfc      # Cleanup routines
+├── tools/                       # Tool implementations
+│   ├── AbstractTool.cfc        # Base tool class
+│   ├── HelloTool.cfc           # Example greeting tool
+│   ├── PDFTool.cfc             # PDF operations
+│   ├── SendGridEmailTool.cfc   # Email via SendGrid
+│   ├── DatabaseTool.cfc        # Database queries
+│   ├── FileTool.cfc            # File operations
+│   └── HttpClientTool.cfc      # HTTP client
+├── validators/                  # Input validation
+│   ├── InputValidator.cfc      # General validation
+│   └── SQLValidator.cfc        # SQL safety checks
+├── logging/                     # Logging utilities
+│   └── Logger.cfc              # Logging component
+├── endpoints/                   # HTTP endpoints
+│   └── mcp.cfm                 # Unified MCP endpoint
+├── bridge/                      # Protocol bridges
+│   └── cf-mcp-bridge.sh        # Claude Desktop bridge
+├── client-examples/             # Test clients
+│   └── test-client.cfm         # Browser-based test UI
+├── README.md                    # Documentation
+├── QUICK_START.md              # Quick start guide
+└── CHANGELOG.md                # Version history
 ```
 
 ## Why This Matters
@@ -63,6 +88,17 @@ We've created the **world's first Model Context Protocol (MCP) server implementa
 - Foundation for a full CF MCP SDK
 - Potential for official Adobe support
 - Bridge between legacy and AI systems
+
+## Protocol Compliance
+
+- **Protocol Version**: 2025-11-25
+- **Transport**: HTTP (unified endpoint)
+- **Message Format**: JSON-RPC 2.0
+- **Supported Methods**:
+  - `initialize` / `initialized`
+  - `tools/list` / `tools/call`
+  - `resources/list` / `resources/read`
+  - `prompts/list` / `prompts/get`
 
 ## Get Involved
 

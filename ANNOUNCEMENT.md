@@ -34,20 +34,23 @@ This proves that ColdFusion remains relevant and can participate in cutting-edge
 
 ## Features
 
-- ✅ Server-Sent Events (SSE) transport
+- ✅ MCP Protocol 2025-11-25 compliance
+- ✅ Unified HTTP endpoint
 - ✅ JSON-RPC 2.0 protocol compliance
 - ✅ Thread-safe session management
-- ✅ Extensible tool registry
-- ✅ Database integration examples
-- ✅ Security-first design
+- ✅ Extensible tool, resource, and prompt registries
+- ✅ Database integration with SQL validation
+- ✅ Security-first design with input validation
 
 ## Get Started
 
-The implementation is available now at:
-`/Applications/ColdFusion2023/cfusion/wwwroot/mcpcfc/`
+Clone the repository or download from GitHub:
+```bash
+git clone https://github.com/revsmoke/mcpcfc.git
+```
 
 Test it with the included client:
-`http://localhost:8500/mcpcfc/client-examples/test-client.html`
+`http://localhost:8500/mcpcfc/client-examples/test-client.cfm`
 
 ## Join the Movement
 

@@ -48,8 +48,7 @@
         
         <h2>Endpoints</h2>
         <ul>
-            <li>SSE Endpoint: <code>/mcpcfc/endpoints/sse.cfm</code></li>
-            <li>Message Endpoint: <code>/mcpcfc/endpoints/messages.cfm</code></li>
+            <li>MCP Endpoint: <code>/mcpcfc/endpoints/mcp.cfm</code> (unified HTTP endpoint)</li>
         </ul>
         
         <h2>Status</h2>

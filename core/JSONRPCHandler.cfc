@@ -30,6 +30,15 @@ component output="false" {
             var method = arguments.request.method;
             var params = arguments.request.params ?: {};
 
+            // Check session initialization for methods that require it
+            var routeConfig = application.routes.methods[method] ?: {};
+            if ((routeConfig.requiresSession ?: false)) {
+                var session = application.sessionManager.getSession(arguments.sessionId);
+                if (isNull(session) || !session.initialized) {
+                    throw(type="InvalidRequest", message="Server not initialized. Call 'initialize' first.");
+                }
+            }
+
             // Check if this is a notification
             if (arrayFindNoCase(application.routes.notifications, method)) {
                 // Notifications don't return responses
@@ -40,7 +49,7 @@ component output="false" {
             // Route to appropriate handler
             switch(method) {
                 case "initialize":
-                    response["result"] = handleInitialize(params);
+                    response["result"] = handleInitialize(params, arguments.sessionId);
                     break;
 
                 case "tools/list":
@@ -105,7 +114,7 @@ component output="false" {
     /**
      * Handle initialize request
      */
-    public struct function handleInitialize(struct params = {}) {
+    public struct function handleInitialize(struct params = {}, required string sessionId) {
         var capMgr = new core.CapabilityManager();
 
         var result = structNew("ordered");
@@ -114,6 +123,8 @@ component output="false" {
         result["serverInfo"] = structNew("ordered");
         result.serverInfo["name"] = application.config.serverName;
         result.serverInfo["version"] = application.config.serverVersion;
+
+        application.sessionManager.markInitialized(arguments.sessionId);
 
         application.logger.info("Client initialized", {
             clientInfo: arguments.params.clientInfo ?: {}
@@ -203,7 +214,8 @@ component output="false" {
             throw(type="InvalidParams", message="Missing required parameter: name");
         }
 
-        return application.promptRegistry.get(arguments.params.name, arguments.params.arguments ?: {});
+        var promptArgs = structKeyExists(arguments.params, "arguments") ? arguments.params["arguments"] : {};
+        return application.promptRegistry.get(arguments.params.name, promptArgs);
     }
 
     /**

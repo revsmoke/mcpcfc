@@ -115,21 +115,21 @@ component output="false" {
      * @arguments Struct of argument values
      * @return Struct with description and messages array
      */
-    public struct function get(required string name, struct arguments = {}) {
+    public struct function get(required string name, struct promptArgs = {}) {
         var readLock = variables.lock.readLock();
         readLock.lock();
 
         try {
-            if (!structKeyExists(variables.prompts, arguments.name)) {
-                throw(type="PromptNotFound", message="Prompt not found: #arguments.name#");
+            if (!structKeyExists(variables.prompts, name)) {
+                throw(type="PromptNotFound", message="Prompt not found: #name#");
             }
 
-            var prompt = variables.prompts[arguments.name];
+            var prompt = variables.prompts[name];
 
             // Validate required arguments
             if (structKeyExists(prompt, "arguments")) {
                 for (var argDef in prompt.arguments) {
-                    if ((argDef.required ?: false) && !structKeyExists(arguments.arguments, argDef.name)) {
+                    if ((argDef.required ?: false) && !structKeyExists(promptArgs, argDef.name)) {
                         throw(type="InvalidParams", message="Missing required argument: #argDef.name#");
                     }
                 }
@@ -142,7 +142,7 @@ component output="false" {
                 result["description"] = prompt.description;
             }
 
-            result["messages"] = generatePromptMessages(arguments.name, arguments.arguments);
+            result["messages"] = generatePromptMessages(name, promptArgs);
 
             return result;
 

@@ -199,7 +199,7 @@
                 return;
             }
 
-            const url = `/mcpcfc/endpoints/mcp.cfm?sessionId=${sessionId}`;
+            const url = `/endpoints/mcp.cfm?sessionId=${sessionId}`;
             const request = {
                 jsonrpc: '2.0',
                 id: crypto.randomUUID(),

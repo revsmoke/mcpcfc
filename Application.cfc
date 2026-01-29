@@ -15,7 +15,7 @@ component output="false" {
 
     // CF2025: Configure Java settings for local JAR loading
     this.javaSettings = {
-        loadPaths: [expandPath("./lib/")],
+        loadPaths: [expandPath("/lib")],
         loadColdFusionClassPath: true,
         reloadOnChange: false
     };

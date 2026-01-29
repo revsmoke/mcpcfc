@@ -14,6 +14,9 @@
     
     <cfscript>
     try {
+        //CREATE DATABASE `mcpcfc_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+        queryExecute("CREATE DATABASE IF NOT EXISTS mcpcfc_db", {}, {datasource: "mcpcfc_ds"});
+        writeOutput('<p class="success">✅ Created mcpcfc_db database</p>');
         // Create tools table
         queryExecute("
             CREATE TABLE IF NOT EXISTS tools (

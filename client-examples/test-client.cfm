@@ -133,13 +133,13 @@
     </div>
 
     <script>
-        let eventSource = null;
         let sessionId = null;
 
         function log(message, data = null) {
             const logDiv = document.getElementById('log');
             const entry = document.createElement('div');
-            entry.className = 'log-entry';            const timestamp = new Date().toLocaleTimeString();
+            entry.className = 'log-entry';
+            const timestamp = new Date().toLocaleTimeString();
             entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
             if (data) {
                 entry.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
@@ -148,92 +148,91 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        function updateStatus(connected) {
+        function updateStatus(active) {
             const status = document.getElementById('status');
-            if (connected) {
+            if (active) {
                 status.className = 'connected';
-                status.textContent = `Connected (Session: ${sessionId})`;
+                status.textContent = `Session Active (${sessionId})`;
             } else {
                 status.className = 'disconnected';
-                status.textContent = 'Disconnected';
+                status.textContent = 'No Session';
             }
         }
 
-        function connect() {
-            if (eventSource) {
-                eventSource.close();
-            }
-            
+        async function connect() {
             sessionId = crypto.randomUUID();
-            const url = `/mcpcfc/endpoints/sse.cfm?sessionId=${sessionId}`;
-            
-            log(`Connecting to ${url}...`);
-            eventSource = new EventSource(url);
-            
-            eventSource.addEventListener('connection', (event) => {
-                const data = JSON.parse(event.data);
-                log('Connection established', data);
-                updateStatus(true);
-            });
-            
-            eventSource.addEventListener('mcp', (event) => {
-                const data = JSON.parse(event.data);
-                log('MCP Response', data);
-            });
-            
-            eventSource.addEventListener('heartbeat', (event) => {
-                log('Heartbeat: ' + event.data);
-            });
-            
-            eventSource.addEventListener('error', (event) => {
-                log('SSE Error', event);
+            log(`Starting session ${sessionId}...`);
+            log('Sending initialize request...');
+
+            try {
+                const data = await sendRequest('initialize', {
+                    protocolVersion: '2025-11-25',
+                    capabilities: {},
+                    clientInfo: { name: 'mcpcfc-test-client', version: '2.0.0' }
+                });
+                if (data && !data.error) {
+                    updateStatus(true);
+                    log('Session initialized', data);
+                } else {
+                    log('Initialize failed', data);
+                    sessionId = null;
+                    updateStatus(false);
+                }
+            } catch (error) {
+                log('Connection error: ' + error.message);
+                sessionId = null;
                 updateStatus(false);
-            });
+            }
         }
+
         function disconnect() {
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-                log('Disconnected');
+            if (sessionId) {
+                log(`Session ${sessionId} ended`);
+                sessionId = null;
                 updateStatus(false);
             }
         }
 
         async function sendRequest(method, params = {}) {
             if (!sessionId) {
-                log('Error: Not connected');
+                log('Error: No active session. Click Connect first.');
                 return;
             }
-            
-            const url = `/mcpcfc/endpoints/messages.cfm?sessionId=${sessionId}`;
+
+            const url = `/mcpcfc/endpoints/mcp.cfm?sessionId=${sessionId}`;
             const request = {
                 jsonrpc: '2.0',
                 id: crypto.randomUUID(),
                 method: method,
                 params: params
             };
-            
+
             log(`Sending ${method} request`, request);
-            
+
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
                     },
                     body: JSON.stringify(request)
                 });
-                
+
                 const data = await response.json();
                 log(`${method} response`, data);
                 return data;
             } catch (error) {
-                log(`Error sending ${method}`, error);
+                log(`Error sending ${method}: ${error.message}`);
             }
         }
 
         function initialize() {
-            sendRequest('initialize');
+            sendRequest('initialize', {
+                protocolVersion: '2025-11-25',
+                capabilities: {},
+                clientInfo: { name: 'mcpcfc-test-client', version: '2.0.0' }
+            });
         }
 
         function listTools() {
@@ -338,9 +337,9 @@
             document.getElementById('log').innerHTML = '';
         }
 
-        // Auto-connect on load
+        // Ready on load
         window.addEventListener('load', () => {
-            log('Test client ready. Click "Connect" to start.');
+            log('Test client ready (HTTP mode). Click "Connect" to start a session.');
         });
     </script>
 </body>

@@ -1,5 +1,23 @@
 # MCPCFC v2.0 Purge Plan
 
+## Completed — 2026-01-28
+
+Purge executed. The following were removed:
+
+- `_deprecated/` — entire directory (components, endpoints, bridge scripts, EmailTool.cfc, README.md)
+- `components/` — vestigial root directory (contained only `sendgrid-mail-send.md`)
+- `view-pdf.cfm` — testing utility
+- `cleanup-obsolete-tests.sh` — cleanup script
+- `playwright-test.js`, `playwright.config.js`, `package.json`, `package-lock.json` — Playwright test infrastructure
+- `CLAUDE.previous.md` — superseded backup
+- `cleanup-log-20250527-165842.txt` — historical log
+
+Additionally, `client-examples/test-client.cfm` was rewritten to use the unified HTTP endpoint (`/mcpcfc/endpoints/mcp.cfm`) instead of the removed SSE+messages architecture.
+
+Files kept as planned: `restart-app.cfm`, `database-setup.cfm`.
+
+---
+
 This document inventories obsolete files that can be removed following the v2.0 refactor for MCP Protocol 2025-11-25 and ColdFusion 2025 compatibility.
 
 ## Summary

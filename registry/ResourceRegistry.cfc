@@ -13,6 +13,9 @@ component output="false" {
      * Initialize the registry
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("ResourceRegistry init");
+        }
         return this;
     }
 
@@ -50,6 +53,9 @@ component output="false" {
             }
 
             variables.resources[uri] = def;
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource registered", { uri: uri });
+            }
 
         } finally {
             writeLock.unlock();
@@ -84,6 +90,9 @@ component output="false" {
             }
 
             variables.resourceTemplates[uriTemplate] = def;
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource template registered", { uriTemplate: uriTemplate });
+            }
 
         } finally {
             writeLock.unlock();
@@ -102,7 +111,13 @@ component output="false" {
         try {
             if (structKeyExists(variables.resources, arguments.uri)) {
                 structDelete(variables.resources, arguments.uri);
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Resource unregistered", { uri: arguments.uri });
+                }
                 return true;
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource unregister failed (not found)", { uri: arguments.uri });
             }
             return false;
         } finally {
@@ -130,6 +145,9 @@ component output="false" {
                 return compareNoCase(a.uri, b.uri);
             });
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resources listed", { count: arrayLen(resourceList) });
+            }
             return resourceList;
         } finally {
             readLock.unlock();
@@ -151,6 +169,9 @@ component output="false" {
                 arrayAppend(templateList, variables.resourceTemplates[uriTemplate]);
             }
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource templates listed", { count: arrayLen(templateList) });
+            }
             return templateList;
         } finally {
             readLock.unlock();
@@ -168,6 +189,9 @@ component output="false" {
 
         try {
             if (!structKeyExists(variables.resources, arguments.uri)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Resource not found", { uri: arguments.uri });
+                }
                 throw(type="ResourceNotFound", message="Resource not found: #arguments.uri#");
             }
 
@@ -218,7 +242,14 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structKeyExists(variables.resources, arguments.uri);
+            var exists = structKeyExists(variables.resources, arguments.uri);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource exists check", {
+                    uri: arguments.uri,
+                    exists: exists
+                });
+            }
+            return exists;
         } finally {
             readLock.unlock();
         }
@@ -233,7 +264,11 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structCount(variables.resources);
+            var count = structCount(variables.resources);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Resource count", { count: count });
+            }
+            return count;
         } finally {
             readLock.unlock();
         }
@@ -247,8 +282,12 @@ component output="false" {
         writeLock.lock();
 
         try {
+            var count = structCount(variables.resources);
             variables.resources = {};
             variables.resourceTemplates = {};
+            if (structKeyExists(application, "logger")) {
+                application.logger.info("Cleared resources", { count: count });
+            }
         } finally {
             writeLock.unlock();
         }

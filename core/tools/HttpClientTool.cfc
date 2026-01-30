@@ -84,14 +84,17 @@ component extends="AbstractTool" output="false" {
 
         var url = trim(arguments.toolArgs.url);
         var method = uCase(getParam(arguments.toolArgs, "method", "GET"));
+        logExecution("HTTP request received", { url: url, method: method });
 
         // Validate URL scheme
         if (!reFindNoCase("^https?://", url)) {
+            logExecution("HTTP request rejected (invalid scheme)", { url: url });
             return errorResult("Only HTTP and HTTPS URLs are allowed");
         }
 
         // Block requests to internal/private IPs
         if (isPrivateUrl(url)) {
+            logExecution("HTTP request blocked (private IP)", { url: url });
             return errorResult("Requests to internal/private IP addresses are not allowed");
         }
 
@@ -104,6 +107,10 @@ component extends="AbstractTool" output="false" {
 
         // Follow redirects
         var followRedirects = getParam(arguments.toolArgs, "followRedirects", true);
+        logExecution("HTTP request configured", {
+            timeoutSeconds: timeout,
+            followRedirects: followRedirects
+        });
 
         try {
             cfhttp(
@@ -186,6 +193,7 @@ component extends="AbstractTool" output="false" {
             response["body"] = "[Binary content: #binaryLen# bytes]";
             response["isBinary"] = true;
             response["contentLength"] = binaryLen;
+            logExecution("HTTP response is binary", { length: binaryLen });
         } else {
             var body = arguments.httpResult.fileContent ?: "";
             var maxBodySize = 50000;  // Limit response body size
@@ -194,6 +202,10 @@ component extends="AbstractTool" output="false" {
                 response["body"] = left(body, maxBodySize);
                 response["truncated"] = true;
                 response["fullLength"] = len(body);
+                logExecution("HTTP response truncated", {
+                    fullLength: len(body),
+                    maxBodySize: maxBodySize
+                });
             } else {
                 response["body"] = body;
             }

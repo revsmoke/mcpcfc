@@ -67,9 +67,16 @@ component extends="AbstractTool" output="false" {
     public struct function execute(required struct toolArgs) {
         validateRequired(arguments.toolArgs, ["to", "subject", "body"]);
 
+        logExecution("Email send requested", {
+            to: arguments.toolArgs.to,
+            subjectLength: len(arguments.toolArgs.subject),
+            bodyLength: len(arguments.toolArgs.body)
+        });
+
         // Get API key from config
         var apiKey = application.config.sendGridApiKey ?: "";
         if (!len(apiKey)) {
+            logExecution("SendGrid API key missing");
             return errorResult("SendGrid API key not configured. Set SENDGRID_API_KEY environment variable.");
         }
 
@@ -77,6 +84,7 @@ component extends="AbstractTool" output="false" {
         var validator = new validators.InputValidator();
 
         if (!validator.isValidEmail(arguments.toolArgs.to)) {
+            logExecution("Invalid recipient email", { to: arguments.toolArgs.to });
             return errorResult("Invalid recipient email address: #arguments.toolArgs.to#");
         }
 
@@ -85,11 +93,16 @@ component extends="AbstractTool" output="false" {
         var fromName = getParam(arguments.toolArgs, "fromName", application.config.defaultFromName);
 
         if (!validator.isValidEmail(fromEmail)) {
+            logExecution("Invalid sender email", { from: fromEmail });
             return errorResult("Invalid sender email address: #fromEmail#");
         }
 
         // Build SendGrid API payload
         var payload = buildPayload(arguments.toolArgs, fromEmail, fromName);
+        logExecution("SendGrid payload built", {
+            to: arguments.toolArgs.to,
+            hasHtml: structKeyExists(arguments.toolArgs, "htmlBody") && len(arguments.toolArgs.htmlBody)
+        });
 
         try {
             var result = sendViaSendGrid(payload, apiKey);

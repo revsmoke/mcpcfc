@@ -12,6 +12,9 @@ component output="false" {
      * Initialize the registry
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("PromptRegistry init");
+        }
         return this;
     }
 
@@ -57,6 +60,9 @@ component output="false" {
             }
 
             variables.prompts[name] = def;
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompt registered", { name: name });
+            }
 
         } finally {
             writeLock.unlock();
@@ -75,7 +81,13 @@ component output="false" {
         try {
             if (structKeyExists(variables.prompts, arguments.name)) {
                 structDelete(variables.prompts, arguments.name);
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Prompt unregistered", { name: arguments.name });
+                }
                 return true;
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompt unregister failed (not found)", { name: arguments.name });
             }
             return false;
         } finally {
@@ -103,6 +115,9 @@ component output="false" {
                 return compareNoCase(a.name, b.name);
             });
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompts listed", { count: arrayLen(promptList) });
+            }
             return promptList;
         } finally {
             readLock.unlock();
@@ -121,6 +136,9 @@ component output="false" {
 
         try {
             if (!structKeyExists(variables.prompts, name)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Prompt not found", { name: name });
+                }
                 throw(type="PromptNotFound", message="Prompt not found: #name#");
             }
 
@@ -130,6 +148,12 @@ component output="false" {
             if (structKeyExists(prompt, "arguments")) {
                 for (var argDef in prompt.arguments) {
                     if ((argDef.required ?: false) && !structKeyExists(promptArgs, argDef.name)) {
+                        if (structKeyExists(application, "logger")) {
+                            application.logger.warn("Prompt missing required argument", {
+                                name: name,
+                                argument: argDef.name
+                            });
+                        }
                         throw(type="InvalidParams", message="Missing required argument: #argDef.name#");
                     }
                 }
@@ -144,6 +168,9 @@ component output="false" {
 
             result["messages"] = generatePromptMessages(name, promptArgs);
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompt rendered", { name: name });
+            }
             return result;
 
         } finally {
@@ -155,6 +182,11 @@ component output="false" {
      * Generate prompt messages based on prompt name and arguments
      */
     private array function generatePromptMessages(required string promptName, struct args = {}) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Generating prompt messages", {
+                name: arguments.promptName
+            });
+        }
         var messages = [];
 
         switch(arguments.promptName) {
@@ -210,7 +242,14 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structKeyExists(variables.prompts, arguments.name);
+            var exists = structKeyExists(variables.prompts, arguments.name);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompt exists check", {
+                    name: arguments.name,
+                    exists: exists
+                });
+            }
+            return exists;
         } finally {
             readLock.unlock();
         }
@@ -225,7 +264,11 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structCount(variables.prompts);
+            var count = structCount(variables.prompts);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Prompt count", { count: count });
+            }
+            return count;
         } finally {
             readLock.unlock();
         }
@@ -239,7 +282,11 @@ component output="false" {
         writeLock.lock();
 
         try {
+            var count = structCount(variables.prompts);
             variables.prompts = {};
+            if (structKeyExists(application, "logger")) {
+                application.logger.info("Cleared prompts", { count: count });
+            }
         } finally {
             writeLock.unlock();
         }

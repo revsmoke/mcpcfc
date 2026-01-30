@@ -14,6 +14,9 @@ component output="false" {
      */
     public struct function parseRequest(required string requestBody) {
         if (!len(trim(arguments.requestBody))) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.warn("Empty request body");
+            }
             throw(type="InvalidRequest", message="Empty request body");
         }
 
@@ -22,18 +25,35 @@ component output="false" {
 
             // Validate basic JSON-RPC structure
             if (!isStruct(request)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Invalid JSON-RPC payload", { reason: "not_struct" });
+                }
                 throw(type="InvalidRequest", message="Request must be a JSON object");
             }
 
             if (!structKeyExists(request, "jsonrpc") || request.jsonrpc != "2.0") {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Invalid jsonrpc version", {
+                        jsonrpc: request.jsonrpc ?: ""
+                    });
+                }
                 throw(type="InvalidRequest", message="Invalid or missing jsonrpc version");
             }
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Parsed JSON-RPC request", {
+                    method: request.method ?: "",
+                    hasId: structKeyExists(request, "id")
+                });
+            }
             return request;
 
         } catch (any e) {
             if (e.type == "InvalidRequest") {
                 rethrow;
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.error("Failed to parse JSON", { error: e.message });
             }
             throw(type="ParseError", message="Invalid JSON: #e.message#");
         }
@@ -45,6 +65,11 @@ component output="false" {
      * @return The JSON string
      */
     public string function formatResponse(required struct response) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Formatting response", {
+                hasError: structKeyExists(arguments.response, "error")
+            });
+        }
         return serializeJson(arguments.response);
     }
 
@@ -80,6 +105,9 @@ component output="false" {
      * @return Struct of headers to set
      */
     public struct function getResponseHeaders() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Providing response headers");
+        }
         return {
             "Content-Type": "application/json",
             "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -121,6 +149,12 @@ component output="false" {
             headers["Access-Control-Max-Age"] = "86400";
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("CORS headers evaluated", {
+                origin: origin,
+                allowed: len(origin) > 0
+            });
+        }
         return headers;
     }
 
@@ -129,6 +163,11 @@ component output="false" {
      * @return Boolean
      */
     public boolean function isPreflightRequest() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Checking preflight request", {
+                method: cgi.request_method ?: ""
+            });
+        }
         return cgi.request_method == "OPTIONS";
     }
 
@@ -137,6 +176,11 @@ component output="false" {
      * @return Boolean indicating if method is allowed
      */
     public boolean function isMethodAllowed() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Validating request method", {
+                method: cgi.request_method ?: ""
+            });
+        }
         return cgi.request_method == "POST" || cgi.request_method == "OPTIONS";
     }
 
@@ -147,17 +191,27 @@ component output="false" {
     public string function extractSessionId() {
         // Check URL parameter first
         if (structKeyExists(url, "sessionId") && len(url.sessionId)) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session ID from URL", { sessionId: url.sessionId });
+            }
             return url.sessionId;
         }
 
         // Check header
         var headers = getHttpRequestData().headers;
         if (structKeyExists(headers, "X-Session-ID") && len(headers["X-Session-ID"])) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session ID from header", { sessionId: headers["X-Session-ID"] });
+            }
             return headers["X-Session-ID"];
         }
 
         // Generate new session ID
-        return createUUID();
+        var newSessionId = createUUID();
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Generated new session ID", { sessionId: newSessionId });
+        }
+        return newSessionId;
     }
 
     /**
@@ -166,6 +220,9 @@ component output="false" {
      */
     public boolean function isValidContentType() {
         var contentType = cgi.content_type ?: "";
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Validating content type", { contentType: contentType });
+        }
         return findNoCase("application/json", contentType) > 0;
     }
 }

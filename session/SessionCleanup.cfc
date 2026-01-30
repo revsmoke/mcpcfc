@@ -9,6 +9,9 @@ component output="false" {
      * Initialize the cleanup handler
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("SessionCleanup init");
+        }
         return this;
     }
 
@@ -35,6 +38,9 @@ component output="false" {
                     // Check if we should continue
                     if (!structKeyExists(application, "sessionManager")) {
                         running = false;
+                        if (structKeyExists(application, "logger")) {
+                            application.logger.warn("Session manager missing, stopping cleanup thread");
+                        }
                         continue;
                     }
 
@@ -101,6 +107,8 @@ component output="false" {
             }
 
             structDelete(application, "cleanupThreadName");
+        } else if (structKeyExists(application, "logger")) {
+            application.logger.debug("Cleanup thread stop requested with no active thread");
         }
     }
 
@@ -110,13 +118,27 @@ component output="false" {
      */
     public boolean function isCleanupThreadRunning() {
         if (!structKeyExists(application, "cleanupThreadName")) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Cleanup thread not configured");
+            }
             return false;
         }
 
         try {
             var threadStatus = cfthread[application.cleanupThreadName].status ?: "";
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Cleanup thread status", {
+                    threadName: application.cleanupThreadName,
+                    status: threadStatus
+                });
+            }
             return threadStatus == "RUNNING";
         } catch (any e) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.warn("Failed to read cleanup thread status", {
+                    error: e.message
+                });
+            }
             return false;
         }
     }
@@ -128,7 +150,15 @@ component output="false" {
      */
     public numeric function runCleanupNow(required numeric ttlMs) {
         if (structKeyExists(application, "sessionManager")) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Running cleanup cycle on demand", {
+                    ttlMs: arguments.ttlMs
+                });
+            }
             return application.sessionManager.cleanupExpired(arguments.ttlMs);
+        }
+        if (structKeyExists(application, "logger")) {
+            application.logger.warn("Cleanup requested without session manager");
         }
         return 0;
     }
@@ -138,12 +168,16 @@ component output="false" {
      * @return Struct with cleanup stats
      */
     public struct function getStats() {
-        return {
+        var stats = {
             threadRunning: isCleanupThreadRunning(),
             threadName: application.cleanupThreadName ?: "",
             currentSessionCount: structKeyExists(application, "sessionManager")
                 ? application.sessionManager.getSessionCount()
                 : 0
         };
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Cleanup stats requested", stats);
+        }
+        return stats;
     }
 }

@@ -50,6 +50,10 @@ component extends="AbstractTool" output="false" {
 
         var action = lCase(arguments.toolArgs.action);
         var sandboxDir = application.config.sandboxDirectory;
+        logExecution("File operation requested", {
+            action: action,
+            path: arguments.toolArgs.path ?: ""
+        });
 
         // Ensure sandbox directory exists
         if (!directoryExists(sandboxDir)) {
@@ -96,6 +100,7 @@ component extends="AbstractTool" output="false" {
         }
 
         if (!directoryExists(targetDir)) {
+            logExecution("List directory failed", { path: arguments.subPath });
             return errorResult("Directory not found: #arguments.subPath#");
         }
 
@@ -130,6 +135,7 @@ component extends="AbstractTool" output="false" {
             });
 
         } catch (any e) {
+            logExecution("List directory failed", { error: e.message, path: arguments.subPath });
             return errorResult("Failed to list directory: #e.message#");
         }
     }
@@ -141,12 +147,17 @@ component extends="AbstractTool" output="false" {
         var fullPath = resolveSafePath(arguments.sandboxDir, arguments.path);
 
         if (!fileExists(fullPath)) {
+            logExecution("Read file failed", { path: arguments.path });
             return errorResult("File not found: #arguments.path#");
         }
 
         // Check file size
         var fileInfo = getFileInfo(fullPath);
         if (fileInfo.size > application.config.maxFileSize) {
+            logExecution("Read file blocked (too large)", {
+                path: arguments.path,
+                size: fileInfo.size
+            });
             return errorResult("File too large. Maximum size: #application.config.maxFileSize# bytes");
         }
 
@@ -158,6 +169,7 @@ component extends="AbstractTool" output="false" {
             return textResult(content);
 
         } catch (any e) {
+            logExecution("Read file failed", { error: e.message, path: arguments.path });
             return errorResult("Failed to read file: #e.message#");
         }
     }
@@ -168,6 +180,10 @@ component extends="AbstractTool" output="false" {
     private struct function writeFile(required string sandboxDir, required string path, required string content, string encoding = "UTF-8") {
         // Check content size
         if (len(arguments.content) > application.config.maxFileSize) {
+            logExecution("Write blocked (content too large)", {
+                path: arguments.path,
+                size: len(arguments.content)
+            });
             return errorResult("Content too large. Maximum size: #application.config.maxFileSize# bytes");
         }
 
@@ -187,6 +203,7 @@ component extends="AbstractTool" output="false" {
             return textResult("File written successfully: #arguments.path# (#len(arguments.content)# bytes)");
 
         } catch (any e) {
+            logExecution("Write file failed", { error: e.message, path: arguments.path });
             return errorResult("Failed to write file: #e.message#");
         }
     }
@@ -198,6 +215,7 @@ component extends="AbstractTool" output="false" {
         var fullPath = resolveSafePath(arguments.sandboxDir, arguments.path);
 
         if (!fileExists(fullPath)) {
+            logExecution("Delete file failed", { path: arguments.path });
             return errorResult("File not found: #arguments.path#");
         }
 
@@ -209,6 +227,7 @@ component extends="AbstractTool" output="false" {
             return textResult("File deleted successfully: #arguments.path#");
 
         } catch (any e) {
+            logExecution("Delete file failed", { error: e.message, path: arguments.path });
             return errorResult("Failed to delete file: #e.message#");
         }
     }
@@ -234,6 +253,7 @@ component extends="AbstractTool" output="false" {
         var fullPath = resolveSafePath(arguments.sandboxDir, arguments.path);
 
         if (!fileExists(fullPath)) {
+            logExecution("File info failed", { path: arguments.path });
             return errorResult("File not found: #arguments.path#");
         }
 
@@ -251,6 +271,7 @@ component extends="AbstractTool" output="false" {
             });
 
         } catch (any e) {
+            logExecution("File info failed", { error: e.message, path: arguments.path });
             return errorResult("Failed to get file info: #e.message#");
         }
     }
@@ -275,6 +296,7 @@ component extends="AbstractTool" output="false" {
         var canonicalPath = canonicalizePath(fullPath);
 
         if (findNoCase(canonicalSandbox, canonicalPath) != 1) {
+            logExecution("Path traversal blocked", { path: arguments.relativePath });
             throw(type="SecurityError", message="Path traversal attempt blocked: #arguments.relativePath#");
         }
 

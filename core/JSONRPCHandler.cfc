@@ -11,6 +11,13 @@ component output="false" {
      * @return The JSON-RPC response struct
      */
     public struct function process(required struct request, required string sessionId) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("JSON-RPC request received", {
+                sessionId: arguments.sessionId,
+                method: arguments.request.method ?: "",
+                hasId: structKeyExists(arguments.request, "id")
+            });
+        }
         var response = structNew("ordered");
         response["jsonrpc"] = "2.0";
 
@@ -24,6 +31,11 @@ component output="false" {
         try {
             // Validate request structure
             if (!structKeyExists(arguments.request, "method")) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Missing method in request", {
+                        sessionId: arguments.sessionId
+                    });
+                }
                 throw(type="InvalidRequest", message="Missing 'method' field");
             }
 
@@ -33,8 +45,20 @@ component output="false" {
             // Check session initialization for methods that require it
             var routeConfig = application.routes.methods[method] ?: {};
             if ((routeConfig.requiresSession ?: false)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session required for method", {
+                        method: method,
+                        sessionId: arguments.sessionId
+                    });
+                }
                 var session = application.sessionManager.getSession(arguments.sessionId);
                 if (isNull(session) || !session.initialized) {
+                    if (structKeyExists(application, "logger")) {
+                        application.logger.warn("Session not initialized", {
+                            method: method,
+                            sessionId: arguments.sessionId
+                        });
+                    }
                     throw(type="InvalidRequest", message="Server not initialized. Call 'initialize' first.");
                 }
             }
@@ -85,6 +109,9 @@ component output="false" {
                     break;
 
                 default:
+                    if (structKeyExists(application, "logger")) {
+                        application.logger.warn("Method not found", { method: method });
+                    }
                     throw(type="MethodNotFound", message="Method not found: #method#");
             }
 
@@ -108,6 +135,12 @@ component output="false" {
             return {};
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("JSON-RPC response ready", {
+                sessionId: arguments.sessionId,
+                hasError: structKeyExists(response, "error")
+            });
+        }
         return response;
     }
 
@@ -115,6 +148,11 @@ component output="false" {
      * Handle initialize request
      */
     public struct function handleInitialize(struct params = {}, required string sessionId) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling initialize", {
+                sessionId: arguments.sessionId
+            });
+        }
         var capMgr = new core.CapabilityManager();
 
         // Negotiate protocol version with client
@@ -143,6 +181,9 @@ component output="false" {
      * Handle tools/list request
      */
     private struct function handleToolsList(struct params = {}) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling tools/list");
+        }
         var tools = application.toolRegistry.listTools();
 
         // Handle pagination cursor if provided
@@ -168,6 +209,13 @@ component output="false" {
         }
 
         var toolArgs = arguments.params.arguments ?: {};
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Preparing tool execution", {
+                tool: toolName,
+                sessionId: arguments.sessionId,
+                argKeys: structKeyArray(toolArgs)
+            });
+        }
 
         application.logger.debug("Executing tool", {
             tool: toolName,
@@ -191,6 +239,9 @@ component output="false" {
      * Handle resources/list request
      */
     private struct function handleResourcesList(struct params = {}) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling resources/list");
+        }
         return { resources: application.resourceRegistry.list() };
     }
 
@@ -202,6 +253,11 @@ component output="false" {
             throw(type="InvalidParams", message="Missing required parameter: uri");
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling resources/read", {
+                uri: arguments.params.uri
+            });
+        }
         return application.resourceRegistry.read(arguments.params.uri);
     }
 
@@ -209,6 +265,9 @@ component output="false" {
      * Handle prompts/list request
      */
     private struct function handlePromptsList(struct params = {}) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling prompts/list");
+        }
         return { prompts: application.promptRegistry.list() };
     }
 
@@ -221,6 +280,11 @@ component output="false" {
         }
 
         var promptArgs = structKeyExists(arguments.params, "arguments") ? arguments.params["arguments"] : {};
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling prompts/get", {
+                name: arguments.params.name
+            });
+        }
         return application.promptRegistry.get(arguments.params.name, promptArgs);
     }
 
@@ -228,6 +292,9 @@ component output="false" {
      * Handle ping request
      */
     public struct function handlePing() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling ping");
+        }
         return {};
     }
 
@@ -235,6 +302,11 @@ component output="false" {
      * Handle completion/complete request
      */
     public struct function handleCompletion(required struct params) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling completion", {
+                hasRef: structKeyExists(arguments.params, "ref")
+            });
+        }
         // Argument completion for tool parameters
         var completions = [];
 
@@ -263,6 +335,12 @@ component output="false" {
      * Handle notification messages (no response)
      */
     private void function handleNotification(required string method, struct params = {}, string sessionId = "") {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Handling notification", {
+                method: arguments.method,
+                sessionId: arguments.sessionId
+            });
+        }
         switch(arguments.method) {
             case "notifications/initialized":
                 application.logger.info("Client completed initialization", {

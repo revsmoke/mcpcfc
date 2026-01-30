@@ -58,17 +58,20 @@ component extends="AbstractTool" output="false" {
         validateRequired(arguments.toolArgs, ["query"]);
 
         var sqlQuery = trim(arguments.toolArgs.query);
+        logExecution("Database query received", { queryPreview: left(sqlQuery, 100) });
 
         // Validate the query is safe
         var sqlValidator = new validators.SQLValidator();
         var validation = sqlValidator.validateSelectQuery(sqlQuery);
 
         if (!validation.valid) {
+            logExecution("Database query rejected", { reason: validation.message });
             return errorResult(validation.message);
         }
 
         // Get datasource
         var ds = getParam(arguments.toolArgs, "datasource", application.config.defaultDatasource);
+        logExecution("Executing database query", { datasource: ds });
 
         try {
             // Execute the query with max rows limit

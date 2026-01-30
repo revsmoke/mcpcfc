@@ -9,6 +9,9 @@ component output="false" {
      * Initialize the MCP Server
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("MCPServer init");
+        }
         return this;
     }
 
@@ -19,8 +22,21 @@ component output="false" {
      * @return The JSON-RPC response struct
      */
     public struct function processRequest(required struct request, required string sessionId) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Processing request", {
+                sessionId: arguments.sessionId,
+                method: arguments.request.method ?: ""
+            });
+        }
         var handler = new core.JSONRPCHandler();
-        return handler.process(arguments.request, arguments.sessionId);
+        var response = handler.process(arguments.request, arguments.sessionId);
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Request processed", {
+                sessionId: arguments.sessionId,
+                hasError: structKeyExists(response, "error")
+            });
+        }
+        return response;
     }
 
     /**
@@ -43,6 +59,7 @@ component output="false" {
 
         for (var toolClass in toolClasses) {
             try {
+                application.logger.debug("Registering tool", { class: toolClass });
                 var tool = createObject("component", toolClass).init();
                 application.toolRegistry.register(tool);
                 arrayAppend(registeredTools, tool.getName());
@@ -72,6 +89,9 @@ component output="false" {
      * Register default resources
      */
     public void function registerDefaultResources() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Registering default resources");
+        }
         // Server info resource
         application.resourceRegistry.register({
             uri: "mcpcfc://server/info",
@@ -95,6 +115,9 @@ component output="false" {
      * Register default prompts
      */
     public void function registerDefaultPrompts() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Registering default prompts");
+        }
         // SQL query helper prompt
         application.promptRegistry.register({
             name: "sql_query_helper",
@@ -138,7 +161,7 @@ component output="false" {
      * Get server status information
      */
     public struct function getStatus() {
-        return {
+        var status = {
             serverName: application.config.serverName,
             serverVersion: application.config.serverVersion,
             protocolVersion: application.config.protocolVersion,
@@ -148,6 +171,10 @@ component output="false" {
             registeredResources: application.resourceRegistry.getResourceCount(),
             registeredPrompts: application.promptRegistry.getPromptCount()
         };
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Status requested", status);
+        }
+        return status;
     }
 
     /**
@@ -165,6 +192,9 @@ component output="false" {
                 cfthread(action="interrupt", name=application.cleanupThreadName);
             } catch (any e) {
                 // Thread may already be stopped
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Cleanup thread interrupt failed", { error: e.message });
+                }
             }
         }
 

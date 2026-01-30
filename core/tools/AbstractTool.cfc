@@ -16,6 +16,9 @@ component output="false" accessors="true" {
      * Subclasses should override this and call super.init()
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool init", { tool: getName() ?: "" });
+        }
         return this;
     }
 
@@ -34,6 +37,9 @@ component output="false" accessors="true" {
      * @return Struct conforming to MCP tool schema
      */
     public struct function getDefinition() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Building tool definition", { tool: getName() ?: "" });
+        }
         var def = structNew("ordered");
         def["name"] = getName();
 
@@ -65,6 +71,9 @@ component output="false" accessors="true" {
      * @return Struct with content array
      */
     public struct function textResult(required string text) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool text result", { tool: getName() ?: "" });
+        }
         return {
             content: [{
                 type: "text",
@@ -79,6 +88,12 @@ component output="false" accessors="true" {
      * @return Struct with content array and isError flag
      */
     public struct function errorResult(required string message) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool error result", {
+                tool: getName() ?: "",
+                message: arguments.message
+            });
+        }
         return {
             content: [{
                 type: "text",
@@ -94,6 +109,9 @@ component output="false" accessors="true" {
      * @return Struct with content array
      */
     public struct function jsonResult(required any data) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool json result", { tool: getName() ?: "" });
+        }
         return {
             content: [{
                 type: "text",
@@ -109,6 +127,9 @@ component output="false" accessors="true" {
      * @return Struct with content array
      */
     public struct function imageResult(required string data, required string mimeType) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool image result", { tool: getName() ?: "" });
+        }
         return {
             content: [{
                 type: "image",
@@ -126,6 +147,12 @@ component output="false" accessors="true" {
      * @return Struct with content array
      */
     public struct function resourceResult(required string uri, required string text, string mimeType = "text/plain") {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Tool resource result", {
+                tool: getName() ?: "",
+                uri: arguments.uri
+            });
+        }
         return {
             content: [{
                 type: "resource",
@@ -147,11 +174,23 @@ component output="false" accessors="true" {
     public void function validateRequired(required struct args, required array params) {
         for (var param in arguments.params) {
             if (!structKeyExists(arguments.args, param)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Missing required parameter", {
+                        tool: getName() ?: "",
+                        param: param
+                    });
+                }
                 throw(type="InvalidParams", message="Missing required parameter: #param#");
             }
 
             // Also check for empty strings
             if (isSimpleValue(arguments.args[param]) && !len(trim(arguments.args[param]))) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("Empty required parameter", {
+                        tool: getName() ?: "",
+                        param: param
+                    });
+                }
                 throw(type="InvalidParams", message="Parameter '#param#' cannot be empty");
             }
         }
@@ -171,6 +210,13 @@ component output="false" accessors="true" {
                 switch(expectedType) {
                     case "string":
                         if (!isSimpleValue(value)) {
+                            if (structKeyExists(application, "logger")) {
+                                application.logger.warn("Parameter type mismatch", {
+                                    tool: getName() ?: "",
+                                    param: param,
+                                    expected: expectedType
+                                });
+                            }
                             throw(type="InvalidParams", message="Parameter '#param#' must be a string");
                         }
                         break;
@@ -178,18 +224,39 @@ component output="false" accessors="true" {
                     case "numeric":
                     case "number":
                         if (!isNumeric(value)) {
+                            if (structKeyExists(application, "logger")) {
+                                application.logger.warn("Parameter type mismatch", {
+                                    tool: getName() ?: "",
+                                    param: param,
+                                    expected: expectedType
+                                });
+                            }
                             throw(type="InvalidParams", message="Parameter '#param#' must be numeric");
                         }
                         break;
 
                     case "boolean":
                         if (!isBoolean(value)) {
+                            if (structKeyExists(application, "logger")) {
+                                application.logger.warn("Parameter type mismatch", {
+                                    tool: getName() ?: "",
+                                    param: param,
+                                    expected: expectedType
+                                });
+                            }
                             throw(type="InvalidParams", message="Parameter '#param#' must be boolean");
                         }
                         break;
 
                     case "array":
                         if (!isArray(value)) {
+                            if (structKeyExists(application, "logger")) {
+                                application.logger.warn("Parameter type mismatch", {
+                                    tool: getName() ?: "",
+                                    param: param,
+                                    expected: expectedType
+                                });
+                            }
                             throw(type="InvalidParams", message="Parameter '#param#' must be an array");
                         }
                         break;
@@ -197,6 +264,13 @@ component output="false" accessors="true" {
                     case "struct":
                     case "object":
                         if (!isStruct(value)) {
+                            if (structKeyExists(application, "logger")) {
+                                application.logger.warn("Parameter type mismatch", {
+                                    tool: getName() ?: "",
+                                    param: param,
+                                    expected: expectedType
+                                });
+                            }
                             throw(type="InvalidParams", message="Parameter '#param#' must be an object");
                         }
                         break;

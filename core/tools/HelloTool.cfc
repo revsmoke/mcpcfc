@@ -45,6 +45,9 @@ component extends="AbstractTool" output="false" {
         validateRequired(arguments.toolArgs, ["name"]);
 
         var name = trim(arguments.toolArgs.name);
+        logExecution("Greeting requested", {
+            nameLength: len(name)
+        });
 
         // Sanitize the name (basic XSS prevention)
         name = encodeForHTML(name);

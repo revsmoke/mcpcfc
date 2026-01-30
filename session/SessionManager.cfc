@@ -12,6 +12,9 @@ component output="false" {
      * Initialize the session manager
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("SessionManager init");
+        }
         return this;
     }
 
@@ -57,7 +60,13 @@ component output="false" {
 
         try {
             if (structKeyExists(variables.sessions, arguments.sessionId)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session retrieved", { sessionId: arguments.sessionId });
+                }
                 return variables.sessions[arguments.sessionId];
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session not found", { sessionId: arguments.sessionId });
             }
             return javacast("null", "");
         } finally {
@@ -75,7 +84,14 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structKeyExists(variables.sessions, arguments.sessionId);
+            var exists = structKeyExists(variables.sessions, arguments.sessionId);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session exists check", {
+                    sessionId: arguments.sessionId,
+                    exists: exists
+                });
+            }
+            return exists;
         } finally {
             readLock.unlock();
         }
@@ -92,6 +108,13 @@ component output="false" {
         try {
             if (structKeyExists(variables.sessions, arguments.sessionId)) {
                 variables.sessions[arguments.sessionId].lastActivity = now();
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session activity updated", { sessionId: arguments.sessionId });
+                }
+            } else if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session activity update skipped (not found)", {
+                    sessionId: arguments.sessionId
+                });
             }
         } finally {
             writeLock.unlock();
@@ -109,6 +132,11 @@ component output="false" {
         try {
             if (structKeyExists(variables.sessions, arguments.sessionId)) {
                 variables.sessions[arguments.sessionId].initialized = true;
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session marked initialized", {
+                        sessionId: arguments.sessionId
+                    });
+                }
             }
         } finally {
             writeLock.unlock();
@@ -127,6 +155,12 @@ component output="false" {
         try {
             if (structKeyExists(variables.sessions, arguments.sessionId)) {
                 variables.sessions[arguments.sessionId].capabilities = arguments.capabilities;
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session capabilities set", {
+                        sessionId: arguments.sessionId,
+                        keys: structKeyArray(arguments.capabilities)
+                    });
+                }
             }
         } finally {
             writeLock.unlock();
@@ -146,6 +180,12 @@ component output="false" {
         try {
             if (structKeyExists(variables.sessions, arguments.sessionId)) {
                 variables.sessions[arguments.sessionId].metadata[arguments.key] = arguments.value;
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Session metadata set", {
+                        sessionId: arguments.sessionId,
+                        key: arguments.key
+                    });
+                }
             }
         } finally {
             writeLock.unlock();
@@ -303,6 +343,9 @@ component output="false" {
                 }
             }
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session stats computed", stats);
+            }
             return stats;
         } finally {
             readLock.unlock();

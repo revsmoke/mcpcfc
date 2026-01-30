@@ -39,10 +39,20 @@ component output="false" {
      * @return Struct with valid (boolean) and message (string)
      */
     public struct function validateSelectQuery(required string query) {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Validating SQL query", {
+                queryPreview: left(arguments.query, 100)
+            });
+        }
         var normalizedQuery = normalizeQuery(arguments.query);
 
         // Check if it starts with SELECT
         if (!reFindNoCase("^\s*SELECT\s", normalizedQuery)) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.warn("SQL validation failed (not SELECT)", {
+                    queryPreview: left(arguments.query, 100)
+                });
+            }
             return {
                 valid: false,
                 message: "Only SELECT queries are allowed"
@@ -53,6 +63,11 @@ component output="false" {
         for (var keyword in variables.dangerousKeywords) {
             // Look for keyword as a whole word
             if (reFindNoCase("\b#keyword#\b", normalizedQuery)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("SQL validation failed (dangerous keyword)", {
+                        keyword: keyword
+                    });
+                }
                 return {
                     valid: false,
                     message: "Dangerous keyword detected: #keyword#. Only SELECT queries are allowed."
@@ -62,6 +77,9 @@ component output="false" {
 
         // Check for multiple statements (semicolon not in string)
         if (containsMultipleStatements(normalizedQuery)) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.warn("SQL validation failed (multiple statements)");
+            }
             return {
                 valid: false,
                 message: "Multiple SQL statements are not allowed"
@@ -71,6 +89,11 @@ component output="false" {
         // Check for injection patterns
         for (var pattern in variables.injectionPatterns) {
             if (reFindNoCase(pattern, normalizedQuery)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.warn("SQL validation failed (injection pattern)", {
+                        pattern: pattern
+                    });
+                }
                 return {
                     valid: false,
                     message: "Potentially dangerous SQL pattern detected"
@@ -80,12 +103,18 @@ component output="false" {
 
         // Check for subqueries with dangerous operations
         if (containsDangerousSubquery(normalizedQuery)) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.warn("SQL validation failed (dangerous subquery)");
+            }
             return {
                 valid: false,
                 message: "Subquery contains non-SELECT operation"
             };
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("SQL query validated");
+        }
         return {
             valid: true,
             message: "Query is valid"
@@ -98,7 +127,13 @@ component output="false" {
      * @return Boolean
      */
     public boolean function isSafeSelectQuery(required string query) {
-        return validateSelectQuery(arguments.query).valid;
+        var valid = validateSelectQuery(arguments.query).valid;
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Safe SELECT check", {
+                valid: valid
+            });
+        }
+        return valid;
     }
 
     /**
@@ -182,6 +217,11 @@ component output="false" {
         // Remove null bytes
         escaped = replace(escaped, chr(0), "", "all");
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Escaped SQL value", {
+                length: len(arguments.value)
+            });
+        }
         return escaped;
     }
 
@@ -192,7 +232,14 @@ component output="false" {
      */
     public boolean function isValidTableName(required string tableName) {
         // Table names should be alphanumeric with underscores, no spaces or special chars
-        return reFindNoCase("^[a-zA-Z_][a-zA-Z0-9_]*$", arguments.tableName) > 0;
+        var valid = reFindNoCase("^[a-zA-Z_][a-zA-Z0-9_]*$", arguments.tableName) > 0;
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Table name validation", {
+                tableName: arguments.tableName,
+                valid: valid
+            });
+        }
+        return valid;
     }
 
     /**
@@ -203,7 +250,14 @@ component output="false" {
     public boolean function isValidColumnName(required string columnName) {
         // Column names should be alphanumeric with underscores
         // Also allow qualified names like table.column
-        return reFindNoCase("^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$", arguments.columnName) > 0;
+        var valid = reFindNoCase("^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$", arguments.columnName) > 0;
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Column name validation", {
+                columnName: arguments.columnName,
+                valid: valid
+            });
+        }
+        return valid;
     }
 
     /**

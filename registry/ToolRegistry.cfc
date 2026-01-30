@@ -12,6 +12,9 @@ component output="false" {
      * Initialize the registry
      */
     public function init() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("ToolRegistry init");
+        }
         return this;
     }
 
@@ -47,7 +50,13 @@ component output="false" {
         try {
             if (structKeyExists(variables.tools, arguments.toolName)) {
                 structDelete(variables.tools, arguments.toolName);
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Tool unregistered", { name: arguments.toolName });
+                }
                 return true;
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tool unregister failed (not found)", { name: arguments.toolName });
             }
             return false;
         } finally {
@@ -66,7 +75,13 @@ component output="false" {
 
         try {
             if (structKeyExists(variables.tools, arguments.toolName)) {
+                if (structKeyExists(application, "logger")) {
+                    application.logger.debug("Tool retrieved", { name: arguments.toolName });
+                }
                 return variables.tools[arguments.toolName];
+            }
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tool not found", { name: arguments.toolName });
             }
             return javacast("null", "");
         } finally {
@@ -84,7 +99,14 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structKeyExists(variables.tools, arguments.toolName);
+            var exists = structKeyExists(variables.tools, arguments.toolName);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tool exists check", {
+                    name: arguments.toolName,
+                    exists: exists
+                });
+            }
+            return exists;
         } finally {
             readLock.unlock();
         }
@@ -111,6 +133,9 @@ component output="false" {
                 return compareNoCase(a.name, b.name);
             });
 
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tools listed", { count: arrayLen(toolList) });
+            }
             return toolList;
         } finally {
             readLock.unlock();
@@ -126,7 +151,11 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structCount(variables.tools);
+            var count = structCount(variables.tools);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tool count", { count: count });
+            }
+            return count;
         } finally {
             readLock.unlock();
         }
@@ -141,7 +170,11 @@ component output="false" {
         readLock.lock();
 
         try {
-            return structKeyArray(variables.tools);
+            var names = structKeyArray(variables.tools);
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Tool names requested", { count: arrayLen(names) });
+            }
+            return names;
         } finally {
             readLock.unlock();
         }
@@ -155,7 +188,11 @@ component output="false" {
         writeLock.lock();
 
         try {
+            var count = structCount(variables.tools);
             variables.tools = {};
+            if (structKeyExists(application, "logger")) {
+                application.logger.info("Cleared tools", { count: count });
+            }
         } finally {
             writeLock.unlock();
         }

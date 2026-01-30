@@ -129,9 +129,19 @@ component output="false" {
     public boolean function onRequestStart(required string targetPage) {
         // Handle application restart request
         if (structKeyExists(url, "reinit") || structKeyExists(url, "reload")) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.info("Application restart requested", {
+                    targetPage: arguments.targetPage
+                });
+            }
             onApplicationStart();
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Request start", {
+                targetPage: arguments.targetPage
+            });
+        }
         return true;
     }
 

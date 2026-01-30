@@ -67,6 +67,7 @@ component extends="AbstractTool" output="false" {
         validateRequired(arguments.toolArgs, ["action"]);
 
         var action = lCase(arguments.toolArgs.action);
+        logExecution("PDF operation requested", { action: action });
 
         switch(action) {
             case "generate":
@@ -94,6 +95,10 @@ component extends="AbstractTool" output="false" {
 
         var html = arguments.args.html;
         var filename = arguments.args.filename;
+        logExecution("Generating PDF", {
+            filename: filename,
+            htmlLength: len(html)
+        });
 
         // Ensure filename has .pdf extension
         if (!findNoCase(".pdf", filename)) {
@@ -161,6 +166,7 @@ component extends="AbstractTool" output="false" {
         validateRequired(arguments.args, ["pdfPath"]);
 
         var pdfPath = resolvePDFPath(arguments.args.pdfPath);
+        logExecution("Extracting PDF text", { pdfPath: arguments.args.pdfPath });
 
         if (!fileExists(pdfPath)) {
             return errorResult("PDF file not found: #arguments.args.pdfPath#");
@@ -215,6 +221,10 @@ component extends="AbstractTool" output="false" {
 
         var sourcePaths = arguments.args.sourcePaths;
         var outputPath = arguments.args.outputPath;
+        logExecution("Merging PDFs", {
+            sourceCount: isArray(sourcePaths) ? arrayLen(sourcePaths) : 0,
+            outputPath: outputPath
+        });
 
         // Validate sourcePaths is an array
         if (!isArray(sourcePaths)) {
@@ -277,6 +287,7 @@ component extends="AbstractTool" output="false" {
         validateRequired(arguments.args, ["pdfPath"]);
 
         var pdfPath = resolvePDFPath(arguments.args.pdfPath);
+        logExecution("Getting PDF info", { pdfPath: arguments.args.pdfPath });
 
         if (!fileExists(pdfPath)) {
             return errorResult("PDF file not found: #arguments.args.pdfPath#");
@@ -322,6 +333,7 @@ component extends="AbstractTool" output="false" {
      */
     private string function resolvePDFPath(required string path) {
         var pdfPath = arguments.path;
+        logExecution("Resolving PDF path", { path: arguments.path });
 
         // If not an absolute path, assume it's relative to temp directory
         if (left(pdfPath, 1) != "/" && !findNoCase(":\", pdfPath)) {

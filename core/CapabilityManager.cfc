@@ -10,6 +10,9 @@ component output="false" {
      * @return Struct of server capabilities
      */
     public struct function getServerCapabilities() {
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Building server capabilities");
+        }
         var capabilities = structNew("ordered");
 
         // Tools capability
@@ -48,6 +51,11 @@ component output="false" {
                 experimental: arguments.clientCapabilities.experimental
             });
         }
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Client capabilities validated", {
+                hasExperimental: structKeyExists(arguments.clientCapabilities, "experimental")
+            });
+        }
 
         return true;
     }
@@ -62,14 +70,32 @@ component output="false" {
         var caps = getServerCapabilities();
 
         if (!structKeyExists(caps, arguments.capability)) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Capability not supported", {
+                    capability: arguments.capability
+                });
+            }
             return false;
         }
 
         if (len(arguments.feature)) {
-            return structKeyExists(caps[arguments.capability], arguments.feature)
+            var supported = structKeyExists(caps[arguments.capability], arguments.feature)
                 && caps[arguments.capability][arguments.feature];
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Capability feature check", {
+                    capability: arguments.capability,
+                    feature: arguments.feature,
+                    supported: supported
+                });
+            }
+            return supported;
         }
 
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Capability supported", {
+                capability: arguments.capability
+            });
+        }
         return true;
     }
 
@@ -78,7 +104,13 @@ component output="false" {
      * @return Array of supported protocol version strings
      */
     public array function getSupportedProtocolVersions() {
-        return ["2025-06-18", "2025-03-26", "2024-11-05"];
+        var versions = ["2025-06-18", "2025-03-26", "2024-11-05"];
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Supported protocol versions", {
+                versions: versions
+            });
+        }
+        return versions;
     }
 
     /**
@@ -87,7 +119,14 @@ component output="false" {
      * @return Boolean indicating support
      */
     public boolean function isProtocolVersionSupported(required string version) {
-        return arrayFindNoCase(getSupportedProtocolVersions(), arguments.version) > 0;
+        var supported = arrayFindNoCase(getSupportedProtocolVersions(), arguments.version) > 0;
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Protocol version supported check", {
+                version: arguments.version,
+                supported: supported
+            });
+        }
+        return supported;
     }
 
     /**
@@ -100,11 +139,22 @@ component output="false" {
 
         // If client version is directly supported, use it
         if (arrayFindNoCase(supported, arguments.clientVersion) > 0) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Negotiated protocol version (direct match)", {
+                    clientVersion: arguments.clientVersion
+                });
+            }
             return arguments.clientVersion;
         }
 
         // Return our latest supported version as fallback
         // The spec says server should return its supported version
+        if (structKeyExists(application, "logger")) {
+            application.logger.debug("Negotiated protocol version (fallback)", {
+                clientVersion: arguments.clientVersion,
+                negotiated: supported[1]
+            });
+        }
         return supported[1];
     }
 }

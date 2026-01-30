@@ -1,7 +1,7 @@
 /**
  * CapabilityManager.cfc
  * Manages MCP Protocol Capability Negotiation
- * Protocol Version: 2025-11-25
+ * Protocol Version: 2025-06-18
  */
 component output="false" {
 
@@ -78,7 +78,7 @@ component output="false" {
      * @return Array of supported protocol version strings
      */
     public array function getSupportedProtocolVersions() {
-        return ["2025-11-25"];
+        return ["2025-06-18", "2025-03-26", "2024-11-05"];
     }
 
     /**

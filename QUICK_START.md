@@ -26,11 +26,11 @@ box install mcpcfc
 1. **Navigate to the installation**
 
    ```
-   http://localhost:8500/mcpcfc/
+   https://localhost:8443/mcpcfc/
    ```
 
 2. **Test the server**
-   - Open the test client: `http://localhost:8500/mcpcfc/client-examples/test-client.cfm`
+   - Open the test client: `https://localhost:8443/mcpcfc/client-examples/test-client.cfm`
    - Click "Connect"
    - Click "Initialize"
    - Try the example tools!
@@ -77,7 +77,7 @@ box install mcpcfc
 
 ## Connecting to Claude Desktop (Local)
 
-Claude Desktop requires MCP servers to communicate via stdio (standard input/output), while your ColdFusion MCP server uses HTTP. A minimal bridge script handles this protocol translation.
+Claude Desktop requires local MCP servers to communicate via stdio (standard input/output), while MCPCFC uses HTTP. The bridge script (`bridge/cf-mcp-bridge.sh`) translates between the two — no external dependencies required (just `curl` and `bash`).
 
 ### Quick Setup
 
@@ -87,62 +87,73 @@ Claude Desktop requires MCP servers to communicate via stdio (standard input/out
    chmod +x /path/to/mcpcfc/bridge/cf-mcp-bridge.sh
    ```
 
+   On macOS, also clear the quarantine flag if needed:
+
+   ```bash
+   xattr -d com.apple.quarantine /path/to/mcpcfc/bridge/cf-mcp-bridge.sh
+   ```
+
 2. **Add to your Claude Desktop config**:
 
-   Open `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
+   Open `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows) and add:
 
    ```json
    {
      "mcpServers": {
        "coldfusion-mcp": {
-         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh"
+         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh",
+         "env": {
+           "MCPCFC_URL": "https://your-cf-server.local"
+         }
        }
      }
    }
    ```
 
-3. **Restart Claude Desktop**
+   Replace the path and URL for your environment. The `MCPCFC_URL` env var tells the bridge where your ColdFusion server is running.
 
-4. **Verify the connection** - You should see your ColdFusion tools available in Claude!
+3. **Restart Claude Desktop** — fully quit and relaunch.
+
+4. **Verify** — You should see the MCP server indicator in the input area. Click it to see your ColdFusion tools.
+
+### Bridge Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCPCFC_URL` | `https://mcpcfc.local` | Base URL of your ColdFusion server |
+| `MCPCFC_DEBUG` | `0` | Set to `1` for debug logging to stderr |
+| `MCPCFC_TIMEOUT` | `60` | Request timeout in seconds |
+| `MCPCFC_INSECURE` | `0` | Set to `1` to skip SSL verification (dev only) |
+
+### Test the Bridge Manually
+
+```bash
+echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./bridge/cf-mcp-bridge.sh
+```
+
+You should see a JSON response with `protocolVersion`, `capabilities`, and `serverInfo`.
 
 ### Troubleshooting
 
-- **Check ColdFusion is running**: Visit `http://localhost:8500/mcpcfc/`
-- **Check logs**: Look in `~/Library/Logs/Claude/mcp-server-coldfusion.log`
-- **Test the bridge manually**:
+- **Bridge not starting**: Check `~/Library/Logs/Claude/mcp*.log` for errors
+- **Permission denied**: Run `chmod +x bridge/cf-mcp-bridge.sh`
+- **SSL errors**: Set `"MCPCFC_INSECURE": "1"` in the env block (dev only), or ensure your cert is trusted
+- **Connection refused**: Verify ColdFusion is running — visit your server URL in a browser
+- **Empty responses**: Check that ColdFusion output control is configured (`<cfsetting enableCFOutputOnly="true">`)
+- **Debug mode**: Set `"MCPCFC_DEBUG": "1"` in the env block, then check `~/Library/Logs/Claude/mcp-server-coldfusion-mcp.log`
 
-    ```bash
-    echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./bridge/cf-mcp-bridge.sh
-    ```
+### How It Works
 
-- **Common issues**:
-  - If you see "permission denied", make sure the script is executable
-  - If you see empty responses, check that ColdFusion output control is properly configured
-  - If you see JSON parsing errors, ensure your bridge script is correctly configured
+```text
+Claude Desktop  ──stdio──▸  cf-mcp-bridge.sh  ──HTTP POST──▸  endpoints/mcp.cfm
+   (JSON-RPC)                  (curl + bash)                   (ColdFusion)
+```
 
-### How it Works
-
-- Your ColdFusion MCP server remains 100% ColdFusion (HTTP based)
-- The bridge script (`bridge/cf-mcp-bridge.sh`) uses curl to translate between:
-  - Claude Desktop's stdio protocol (line-delimited JSON)
-  - ColdFusion MCP's HTTP protocol via `endpoints/mcp.cfm`
-- All logging goes to stderr, only JSON responses go to stdout
-- This is necessary because Claude Desktop can only spawn command-line processes
-
-### Why a Bridge is Needed
-
-1. **Claude Desktop limitation**: Only supports stdio communication
-2. **ColdFusion architecture**: Designed for web applications, not stdio servers
-3. **Protocol mismatch**: HTTP ↔ stdio requires translation
-
-### Key Implementation Details
-
-1. **ColdFusion Output Control**: The endpoint uses `<cfsetting enableCFOutputOnly="true">` and `<cfcontent reset="yes">` to ensure clean JSON output
-2. **JSON-RPC Field Ordering**: Uses `structNew("ordered")` to maintain proper field order (jsonrpc, id, result/error)
-3. **Notification Handling**: Messages without an ID field are notifications and don't require a response
-4. **Single Unified Endpoint**: All MCP communication goes through `endpoints/mcp.cfm`
-
-Your ColdFusion MCP server implementation remains pure ColdFusion - the bridge only handles protocol translation!
+- The bridge reads JSON-RPC requests from stdin, POSTs them to your ColdFusion endpoint via `curl`, and writes responses to stdout
+- Notifications (no `id` field) produce no stdout output, as required by JSON-RPC
+- All diagnostic logging goes to stderr only — stdout is reserved for protocol data
+- Your ColdFusion server is 100% standard HTTP — the bridge is the only non-CF component
+- No Node.js, Python, or other runtime dependencies — just `bash` and `curl`
 
 ## Setting Up as a Remote MCP Server
 

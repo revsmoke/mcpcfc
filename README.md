@@ -73,13 +73,16 @@ git clone https://github.com/revsmoke/mcpcfc.git
 
 1. **Install MCPCFC** in your CF webroot
 2. **Make bridge executable**: `chmod +x bridge/cf-mcp-bridge.sh`
-3. **Add to Claude Desktop config**:
+3. **Add to Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
    ```json
    {
      "mcpServers": {
        "coldfusion-mcp": {
-         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh"
+         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh",
+         "env": {
+           "MCPCFC_URL": "https://your-cf-server.local"
+         }
        }
      }
    }
@@ -203,12 +206,9 @@ component extends="tools.AbstractTool" {
 |------|-------------|--------|
 | **hello** | Simple greeting tool | Working |
 | **queryDatabase** | Execute validated SELECT queries | Working |
-| **generatePDF** | Create PDFs from HTML | Working |
-| **extractPDFText** | Extract text from PDFs | Working |
-| **mergePDFs** | Combine multiple PDFs | Working |
+| **pdf** | PDF operations (generate, extract, merge) via `action` parameter | Working |
 | **sendEmail** | Send emails via SendGrid | Working |
-| **readFile** | Read file contents | Working |
-| **writeFile** | Write file contents | Working |
+| **fileOperations** | Sandboxed file operations (read, write, list, delete) via `action` parameter | Working |
 | **httpRequest** | Make HTTP requests | Working |
 
 ### Adding Custom Tools

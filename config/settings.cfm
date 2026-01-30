@@ -2,7 +2,7 @@
 /**
  * MCPCFC Configuration Settings
  * ColdFusion 2025 MCP Server - Configuration File
- * Protocol Version: 2025-11-25
+ * Protocol Version: 2025-06-18
  */
 
 // Server identity
@@ -10,7 +10,7 @@ application.config = {
     // Server identification
     serverName: "coldfusion-mcp-server",
     serverVersion: "2.0.0",
-    protocolVersion: "2025-11-25",
+    protocolVersion: "2025-06-18",
 
     // URLs
     baseUrl: "https://mcpcfc.local",

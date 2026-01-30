@@ -117,8 +117,12 @@ component output="false" {
     public struct function handleInitialize(struct params = {}, required string sessionId) {
         var capMgr = new core.CapabilityManager();
 
+        // Negotiate protocol version with client
+        var clientVersion = arguments.params.protocolVersion ?: application.config.protocolVersion;
+        var negotiatedVersion = capMgr.negotiateProtocolVersion(clientVersion);
+
         var result = structNew("ordered");
-        result["protocolVersion"] = application.config.protocolVersion;
+        result["protocolVersion"] = negotiatedVersion;
         result["capabilities"] = capMgr.getServerCapabilities();
         result["serverInfo"] = structNew("ordered");
         result.serverInfo["name"] = application.config.serverName;
@@ -127,7 +131,9 @@ component output="false" {
         application.sessionManager.markInitialized(arguments.sessionId);
 
         application.logger.info("Client initialized", {
-            clientInfo: arguments.params.clientInfo ?: {}
+            clientInfo: arguments.params.clientInfo ?: {},
+            negotiatedVersion: negotiatedVersion,
+            clientRequestedVersion: clientVersion
         });
 
         return result;

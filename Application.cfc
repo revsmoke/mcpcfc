@@ -24,9 +24,11 @@ component output="false" {
     this.customTagPaths = [expandPath("./customtags/")];
 
     // Mapping for component paths
-    //this.mappings["/core"] = expandPath("./core");
-    //this.mappings["tools"] = expandPath("./tools");
-    //this.mappings["/validators"] = expandPath("./validators");
+    this.mappings["/core"] = expandPath("./core");
+    this.mappings["/registry"] = expandPath("./registry");
+    this.mappings["/logging"] = expandPath("./logging");
+    this.mappings["/session"] = expandPath("./session");
+    this.mappings["/config"] = expandPath("./config");
 
     /**
      * Application start handler

@@ -30,12 +30,12 @@ component output="false" {
         application.logger.info("Starting tool registration");
 
         var toolClasses = [
-            "tools.HelloTool",
-            "tools.PDFTool",
-            "tools.SendGridEmailTool",
-            "tools.DatabaseTool",
-            "tools.FileTool",
-            "tools.HttpClientTool"
+            "core.tools.HelloTool",
+            "core.tools.PDFTool",
+            "core.tools.SendGridEmailTool",
+            "core.tools.DatabaseTool",
+            "core.tools.FileTool",
+            "core.tools.HttpClientTool"
         ];
 
         var registeredTools = [];

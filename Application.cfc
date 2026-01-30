@@ -15,7 +15,7 @@ component output="false" {
 
     // CF2025: Configure Java settings for local JAR loading
     this.javaSettings = {
-        loadPaths: [expandPath("/lib")],
+        loadPaths: [expandPath("./lib/")],
         loadColdFusionClassPath: true,
         reloadOnChange: false
     };
@@ -24,7 +24,9 @@ component output="false" {
     this.customTagPaths = [expandPath("./customtags/")];
 
     // Mapping for component paths
-    this.mappings["/mcpcfc"] = expandPath("./");
+    //this.mappings["/core"] = expandPath("./core");
+    //this.mappings["tools"] = expandPath("./tools");
+    //this.mappings["/validators"] = expandPath("./validators");
 
     /**
      * Application start handler

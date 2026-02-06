@@ -33,22 +33,26 @@ for (local.header in local.responseHeaders) {
 if (!local.transport.isMethodAllowed()) {
     cfheader(statuscode=405);
     cfheader(name="Allow", value="POST, OPTIONS");
-    writeOutput(serializeJson({
-        jsonrpc: "2.0",
-        error: { code: -32600, message: "Method not allowed. Use POST." },
-        id: javacast("null", "")
-    }));
+    local.errorResponse = structNew("ordered");
+    local.errorResponse["jsonrpc"] = "2.0";
+    local.errorResponse["error"] = structNew("ordered");
+    local.errorResponse.error["code"] = -32600;
+    local.errorResponse.error["message"] = "Method not allowed. Use POST.";
+    local.errorResponse["id"] = javacast("null", "");
+    writeOutput(serializeJson(local.errorResponse));
     abort;
 }
 
 // Validate content type
 if (!local.transport.isValidContentType()) {
     cfheader(statuscode=415);
-    writeOutput(serializeJson({
-        jsonrpc: "2.0",
-        error: { code: -32600, message: "Content-Type must be application/json" },
-        id: javacast("null", "")
-    }));
+    local.errorResponse = structNew("ordered");
+    local.errorResponse["jsonrpc"] = "2.0";
+    local.errorResponse["error"] = structNew("ordered");
+    local.errorResponse.error["code"] = -32600;
+    local.errorResponse.error["message"] = "Content-Type must be application/json";
+    local.errorResponse["id"] = javacast("null", "");
+    writeOutput(serializeJson(local.errorResponse));
     abort;
 }
 
@@ -94,11 +98,13 @@ try {
     }
 
     cfheader(statuscode=400);
-    writeOutput(serializeJson({
-        jsonrpc: "2.0",
-        error: { code: -32700, message: "Parse error: #e.message#" },
-        id: javacast("null", "")
-    }));
+    local.errorResponse = structNew("ordered");
+    local.errorResponse["jsonrpc"] = "2.0";
+    local.errorResponse["error"] = structNew("ordered");
+    local.errorResponse.error["code"] = -32700;
+    local.errorResponse.error["message"] = "Parse error: #e.message#";
+    local.errorResponse["id"] = javacast("null", "");
+    writeOutput(serializeJson(local.errorResponse));
 
 } catch (InvalidRequest e) {
     if (structKeyExists(application, "logger")) {
@@ -106,11 +112,13 @@ try {
     }
 
     cfheader(statuscode=400);
-    writeOutput(serializeJson({
-        jsonrpc: "2.0",
-        error: { code: -32600, message: "Invalid request: #e.message#" },
-        id: javacast("null", "")
-    }));
+    local.errorResponse = structNew("ordered");
+    local.errorResponse["jsonrpc"] = "2.0";
+    local.errorResponse["error"] = structNew("ordered");
+    local.errorResponse.error["code"] = -32600;
+    local.errorResponse.error["message"] = "Invalid request: #e.message#";
+    local.errorResponse["id"] = javacast("null", "");
+    writeOutput(serializeJson(local.errorResponse));
 
 } catch (any e) {
     if (structKeyExists(application, "logger")) {
@@ -127,10 +135,12 @@ try {
         ? local.request.id
         : javacast("null", "");
 
-    writeOutput(serializeJson({
-        jsonrpc: "2.0",
-        error: { code: -32603, message: "Internal error" },
-        id: local.errorId
-    }));
+    local.errorResponse = structNew("ordered");
+    local.errorResponse["jsonrpc"] = "2.0";
+    local.errorResponse["error"] = structNew("ordered");
+    local.errorResponse.error["code"] = -32603;
+    local.errorResponse.error["message"] = "Internal error";
+    local.errorResponse["id"] = local.errorId;
+    writeOutput(serializeJson(local.errorResponse));
 }
 </cfscript>

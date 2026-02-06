@@ -13,47 +13,57 @@ component extends="AbstractTool" output="false" {
         setTitle("PDF Operations");
         setDescription("Generate PDFs from HTML, extract text from PDFs, or merge multiple PDFs. Uses ColdFusion's powerful built-in PDF engine.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                action: {
-                    type: "string",
-                    enum: ["generate", "extract", "merge", "info"],
-                    description: "The PDF operation to perform"
-                },
-                html: {
-                    type: "string",
-                    description: "HTML content to convert to PDF (for 'generate' action)"
-                },
-                filename: {
-                    type: "string",
-                    description: "Output filename for generated PDF (for 'generate' action)"
-                },
-                pdfPath: {
-                    type: "string",
-                    description: "Path to PDF file (for 'extract' and 'info' actions)"
-                },
-                sourcePaths: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Array of PDF paths to merge (for 'merge' action)"
-                },
-                outputPath: {
-                    type: "string",
-                    description: "Output path for merged PDF (for 'merge' action)"
-                },
-                orientation: {
-                    type: "string",
-                    enum: ["portrait", "landscape"],
-                    description: "Page orientation for generated PDF (default: portrait)"
-                },
-                pageSize: {
-                    type: "string",
-                    description: "Page size (e.g., 'letter', 'A4') for generated PDF"
-                }
-            },
-            required: ["action"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
+
+        var actionSchema = structNew("ordered");
+        actionSchema["type"] = "string";
+        actionSchema["enum"] = ["generate", "extract", "merge", "info"];
+        actionSchema["description"] = "The PDF operation to perform";
+        inputSchema.properties["action"] = actionSchema;
+
+        var htmlSchema = structNew("ordered");
+        htmlSchema["type"] = "string";
+        htmlSchema["description"] = "HTML content to convert to PDF (for 'generate' action)";
+        inputSchema.properties["html"] = htmlSchema;
+
+        var filenameSchema = structNew("ordered");
+        filenameSchema["type"] = "string";
+        filenameSchema["description"] = "Output filename for generated PDF (for 'generate' action)";
+        inputSchema.properties["filename"] = filenameSchema;
+
+        var pdfPathSchema = structNew("ordered");
+        pdfPathSchema["type"] = "string";
+        pdfPathSchema["description"] = "Path to PDF file (for 'extract' and 'info' actions)";
+        inputSchema.properties["pdfPath"] = pdfPathSchema;
+
+        var sourcePathsSchema = structNew("ordered");
+        sourcePathsSchema["type"] = "array";
+        var sourcePathItems = structNew("ordered");
+        sourcePathItems["type"] = "string";
+        sourcePathsSchema["items"] = sourcePathItems;
+        sourcePathsSchema["description"] = "Array of PDF paths to merge (for 'merge' action)";
+        inputSchema.properties["sourcePaths"] = sourcePathsSchema;
+
+        var outputPathSchema = structNew("ordered");
+        outputPathSchema["type"] = "string";
+        outputPathSchema["description"] = "Output path for merged PDF (for 'merge' action)";
+        inputSchema.properties["outputPath"] = outputPathSchema;
+
+        var orientationSchema = structNew("ordered");
+        orientationSchema["type"] = "string";
+        orientationSchema["enum"] = ["portrait", "landscape"];
+        orientationSchema["description"] = "Page orientation for generated PDF (default: portrait)";
+        inputSchema.properties["orientation"] = orientationSchema;
+
+        var pageSizeSchema = structNew("ordered");
+        pageSizeSchema["type"] = "string";
+        pageSizeSchema["description"] = "Page size (e.g., 'letter', 'A4') for generated PDF";
+        inputSchema.properties["pageSize"] = pageSizeSchema;
+
+        inputSchema["required"] = ["action"];
+        setInputSchema(inputSchema);
 
         return this;
     }

@@ -165,14 +165,13 @@ component output="false" {
         if (findNoCase("/endpoints/", cgi.script_name)) {
             cfheader(statuscode=500);
             cfcontent(type="application/json", reset=true);
-            writeOutput(serializeJson({
-                jsonrpc: "2.0",
-                error: {
-                    code: -32603,
-                    message: "Internal server error"
-                },
-                id: javacast("null", "")
-            }));
+            var errorResponse = structNew("ordered");
+            errorResponse["jsonrpc"] = "2.0";
+            errorResponse["error"] = structNew("ordered");
+            errorResponse.error["code"] = -32603;
+            errorResponse.error["message"] = "Internal server error";
+            errorResponse["id"] = javacast("null", "");
+            writeOutput(serializeJson(errorResponse));
             abort;
         }
 

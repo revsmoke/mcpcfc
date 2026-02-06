@@ -161,16 +161,15 @@ component output="false" {
      * Get server status information
      */
     public struct function getStatus() {
-        var status = {
-            serverName: application.config.serverName,
-            serverVersion: application.config.serverVersion,
-            protocolVersion: application.config.protocolVersion,
-            uptime: dateDiff("s", application.startTime, now()),
-            activeSessions: application.sessionManager.getSessionCount(),
-            registeredTools: application.toolRegistry.getToolCount(),
-            registeredResources: application.resourceRegistry.getResourceCount(),
-            registeredPrompts: application.promptRegistry.getPromptCount()
-        };
+        var status = structNew("ordered");
+        status["serverName"] = application.config.serverName;
+        status["serverVersion"] = application.config.serverVersion;
+        status["protocolVersion"] = application.config.protocolVersion;
+        status["uptime"] = dateDiff("s", application.startTime, now());
+        status["activeSessions"] = application.sessionManager.getSessionCount();
+        status["registeredTools"] = application.toolRegistry.getToolCount();
+        status["registeredResources"] = application.resourceRegistry.getResourceCount();
+        status["registeredPrompts"] = application.promptRegistry.getPromptCount();
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Status requested", status);
         }

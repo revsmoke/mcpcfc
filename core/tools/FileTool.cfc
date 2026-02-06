@@ -13,29 +13,33 @@ component extends="AbstractTool" output="false" {
         setTitle("File Operations");
         setDescription("Read, write, list, and delete files within a sandboxed directory. Path traversal is prevented.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                action: {
-                    type: "string",
-                    enum: ["read", "write", "list", "delete", "exists", "info"],
-                    description: "The file operation to perform"
-                },
-                path: {
-                    type: "string",
-                    description: "Relative path within the sandbox directory"
-                },
-                content: {
-                    type: "string",
-                    description: "Content to write (required for 'write' action)"
-                },
-                encoding: {
-                    type: "string",
-                    description: "File encoding for read/write (default: UTF-8)"
-                }
-            },
-            required: ["action"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
+
+        var actionSchema = structNew("ordered");
+        actionSchema["type"] = "string";
+        actionSchema["enum"] = ["read", "write", "list", "delete", "exists", "info"];
+        actionSchema["description"] = "The file operation to perform";
+        inputSchema.properties["action"] = actionSchema;
+
+        var pathSchema = structNew("ordered");
+        pathSchema["type"] = "string";
+        pathSchema["description"] = "Relative path within the sandbox directory";
+        inputSchema.properties["path"] = pathSchema;
+
+        var contentSchema = structNew("ordered");
+        contentSchema["type"] = "string";
+        contentSchema["description"] = "Content to write (required for 'write' action)";
+        inputSchema.properties["content"] = contentSchema;
+
+        var encodingSchema = structNew("ordered");
+        encodingSchema["type"] = "string";
+        encodingSchema["description"] = "File encoding for read/write (default: UTF-8)";
+        inputSchema.properties["encoding"] = encodingSchema;
+
+        inputSchema["required"] = ["action"];
+        setInputSchema(inputSchema);
 
         return this;
     }

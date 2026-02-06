@@ -194,39 +194,45 @@ component output="false" {
                 var table = arguments.args.table ?: "table_name";
                 var columns = arguments.args.columns ?: "*";
 
-                arrayAppend(messages, {
-                    role: "user",
-                    content: {
-                        type: "text",
-                        text: "Help me write a safe SQL SELECT query for the table '#table#' selecting columns: #columns#. " &
-                              "The query should be read-only and avoid any SQL injection vulnerabilities."
-                    }
-                });
+                var content = structNew("ordered");
+                content["type"] = "text";
+                content["text"] = "Help me write a safe SQL SELECT query for the table '#table#' selecting columns: #columns#. " &
+                    "The query should be read-only and avoid any SQL injection vulnerabilities.";
+
+                var message = structNew("ordered");
+                message["role"] = "user";
+                message["content"] = content;
+
+                arrayAppend(messages, message);
                 break;
 
             case "email_composer":
                 var purpose = arguments.args.purpose ?: "general";
                 var tone = arguments.args.tone ?: "professional";
 
-                arrayAppend(messages, {
-                    role: "user",
-                    content: {
-                        type: "text",
-                        text: "Help me compose an email for the following purpose: #purpose#. " &
-                              "The tone should be #tone#. Please provide a subject line and body."
-                    }
-                });
+                var content = structNew("ordered");
+                content["type"] = "text";
+                content["text"] = "Help me compose an email for the following purpose: #purpose#. " &
+                    "The tone should be #tone#. Please provide a subject line and body.";
+
+                var message = structNew("ordered");
+                message["role"] = "user";
+                message["content"] = content;
+
+                arrayAppend(messages, message);
                 break;
 
             default:
                 // Generic prompt
-                arrayAppend(messages, {
-                    role: "user",
-                    content: {
-                        type: "text",
-                        text: "Prompt: #arguments.promptName#"
-                    }
-                });
+                var content = structNew("ordered");
+                content["type"] = "text";
+                content["text"] = "Prompt: #arguments.promptName#";
+
+                var message = structNew("ordered");
+                message["role"] = "user";
+                message["content"] = content;
+
+                arrayAppend(messages, message);
         }
 
         return messages;

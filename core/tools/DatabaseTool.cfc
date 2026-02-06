@@ -13,38 +13,43 @@ component extends="AbstractTool" output="false" {
         setTitle("Query Database");
         setDescription("Execute SELECT queries against the database. Only read operations are allowed for safety.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                query: {
-                    type: "string",
-                    description: "SQL SELECT query to execute. Only SELECT statements are allowed."
-                },
-                datasource: {
-                    type: "string",
-                    description: "Database datasource name (optional, uses default if not provided)"
-                }
-            },
-            required: ["query"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
 
-        setOutputSchema({
-            type: "object",
-            properties: {
-                recordCount: {
-                    type: "number",
-                    description: "Number of records returned"
-                },
-                columns: {
-                    type: "string",
-                    description: "Comma-separated list of column names"
-                },
-                data: {
-                    type: "array",
-                    description: "Array of row objects"
-                }
-            }
-        });
+        var querySchema = structNew("ordered");
+        querySchema["type"] = "string";
+        querySchema["description"] = "SQL SELECT query to execute. Only SELECT statements are allowed.";
+        inputSchema.properties["query"] = querySchema;
+
+        var datasourceSchema = structNew("ordered");
+        datasourceSchema["type"] = "string";
+        datasourceSchema["description"] = "Database datasource name (optional, uses default if not provided)";
+        inputSchema.properties["datasource"] = datasourceSchema;
+
+        inputSchema["required"] = ["query"];
+        setInputSchema(inputSchema);
+
+        var outputSchema = structNew("ordered");
+        outputSchema["type"] = "object";
+        outputSchema["properties"] = structNew("ordered");
+
+        var recordCountSchema = structNew("ordered");
+        recordCountSchema["type"] = "number";
+        recordCountSchema["description"] = "Number of records returned";
+        outputSchema.properties["recordCount"] = recordCountSchema;
+
+        var columnsSchema = structNew("ordered");
+        columnsSchema["type"] = "string";
+        columnsSchema["description"] = "Comma-separated list of column names";
+        outputSchema.properties["columns"] = columnsSchema;
+
+        var dataSchema = structNew("ordered");
+        dataSchema["type"] = "array";
+        dataSchema["description"] = "Array of row objects";
+        outputSchema.properties["data"] = dataSchema;
+
+        setOutputSchema(outputSchema);
 
         return this;
     }

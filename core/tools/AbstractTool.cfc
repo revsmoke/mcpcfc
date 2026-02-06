@@ -52,10 +52,13 @@ component output="false" accessors="true" {
             def["description"] = getDescription();
         }
 
-        def["inputSchema"] = getInputSchema() ?: {
-            type: "object",
-            properties: {}
-        };
+        var inputSchema = getInputSchema();
+        if (isNull(inputSchema)) {
+            inputSchema = structNew("ordered");
+            inputSchema["type"] = "object";
+            inputSchema["properties"] = structNew("ordered");
+        }
+        def["inputSchema"] = inputSchema;
 
         // MCP 2025-11-25: outputSchema is optional but recommended
         if (!isNull(getOutputSchema())) {
@@ -74,12 +77,13 @@ component output="false" accessors="true" {
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Tool text result", { tool: getName() ?: "" });
         }
-        return {
-            content: [{
-                type: "text",
-                text: arguments.text
-            }]
-        };
+        var item = structNew("ordered");
+        item["type"] = "text";
+        item["text"] = arguments.text;
+
+        var result = structNew("ordered");
+        result["content"] = [item];
+        return result;
     }
 
     /**
@@ -94,13 +98,14 @@ component output="false" accessors="true" {
                 message: arguments.message
             });
         }
-        return {
-            content: [{
-                type: "text",
-                text: arguments.message
-            }],
-            isError: true
-        };
+        var item = structNew("ordered");
+        item["type"] = "text";
+        item["text"] = arguments.message;
+
+        var result = structNew("ordered");
+        result["content"] = [item];
+        result["isError"] = true;
+        return result;
     }
 
     /**
@@ -112,12 +117,13 @@ component output="false" accessors="true" {
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Tool json result", { tool: getName() ?: "" });
         }
-        return {
-            content: [{
-                type: "text",
-                text: serializeJson(arguments.data)
-            }]
-        };
+        var item = structNew("ordered");
+        item["type"] = "text";
+        item["text"] = serializeJson(arguments.data);
+
+        var result = structNew("ordered");
+        result["content"] = [item];
+        return result;
     }
 
     /**
@@ -130,13 +136,14 @@ component output="false" accessors="true" {
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Tool image result", { tool: getName() ?: "" });
         }
-        return {
-            content: [{
-                type: "image",
-                data: arguments.data,
-                mimeType: arguments.mimeType
-            }]
-        };
+        var item = structNew("ordered");
+        item["type"] = "image";
+        item["data"] = arguments.data;
+        item["mimeType"] = arguments.mimeType;
+
+        var result = structNew("ordered");
+        result["content"] = [item];
+        return result;
     }
 
     /**
@@ -153,16 +160,18 @@ component output="false" accessors="true" {
                 uri: arguments.uri
             });
         }
-        return {
-            content: [{
-                type: "resource",
-                resource: {
-                    uri: arguments.uri,
-                    text: arguments.text,
-                    mimeType: arguments.mimeType
-                }
-            }]
-        };
+        var resource = structNew("ordered");
+        resource["uri"] = arguments.uri;
+        resource["text"] = arguments.text;
+        resource["mimeType"] = arguments.mimeType;
+
+        var item = structNew("ordered");
+        item["type"] = "resource";
+        item["resource"] = resource;
+
+        var result = structNew("ordered");
+        result["content"] = [item];
+        return result;
     }
 
     /**

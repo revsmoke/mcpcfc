@@ -12,26 +12,28 @@ component extends="AbstractTool" output="false" {
         setTitle("Hello Greeting");
         setDescription("Returns a friendly greeting for the specified name. Useful for testing the MCP connection.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                name: {
-                    type: "string",
-                    description: "The name to greet"
-                }
-            },
-            required: ["name"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
 
-        setOutputSchema({
-            type: "object",
-            properties: {
-                greeting: {
-                    type: "string",
-                    description: "The greeting message"
-                }
-            }
-        });
+        var nameSchema = structNew("ordered");
+        nameSchema["type"] = "string";
+        nameSchema["description"] = "The name to greet";
+        inputSchema.properties["name"] = nameSchema;
+
+        inputSchema["required"] = ["name"];
+        setInputSchema(inputSchema);
+
+        var outputSchema = structNew("ordered");
+        outputSchema["type"] = "object";
+        outputSchema["properties"] = structNew("ordered");
+
+        var greetingSchema = structNew("ordered");
+        greetingSchema["type"] = "string";
+        greetingSchema["description"] = "The greeting message";
+        outputSchema.properties["greeting"] = greetingSchema;
+
+        setOutputSchema(outputSchema);
 
         return this;
     }

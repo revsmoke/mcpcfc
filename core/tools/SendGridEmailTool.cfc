@@ -13,48 +13,57 @@ component extends="AbstractTool" output="false" {
         setTitle("Send Email");
         setDescription("Send an email via SendGrid API. Supports plain text and HTML content.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                to: {
-                    type: "string",
-                    description: "Recipient email address"
-                },
-                subject: {
-                    type: "string",
-                    description: "Email subject line"
-                },
-                body: {
-                    type: "string",
-                    description: "Email body (plain text)"
-                },
-                htmlBody: {
-                    type: "string",
-                    description: "HTML body (optional, in addition to plain text)"
-                },
-                from: {
-                    type: "string",
-                    description: "Sender email address (optional, uses default if not provided)"
-                },
-                fromName: {
-                    type: "string",
-                    description: "Sender display name (optional)"
-                },
-                cc: {
-                    type: "string",
-                    description: "CC email address (optional)"
-                },
-                bcc: {
-                    type: "string",
-                    description: "BCC email address (optional)"
-                },
-                replyTo: {
-                    type: "string",
-                    description: "Reply-To email address (optional)"
-                }
-            },
-            required: ["to", "subject", "body"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
+
+        var toSchema = structNew("ordered");
+        toSchema["type"] = "string";
+        toSchema["description"] = "Recipient email address";
+        inputSchema.properties["to"] = toSchema;
+
+        var subjectSchema = structNew("ordered");
+        subjectSchema["type"] = "string";
+        subjectSchema["description"] = "Email subject line";
+        inputSchema.properties["subject"] = subjectSchema;
+
+        var bodySchema = structNew("ordered");
+        bodySchema["type"] = "string";
+        bodySchema["description"] = "Email body (plain text)";
+        inputSchema.properties["body"] = bodySchema;
+
+        var htmlBodySchema = structNew("ordered");
+        htmlBodySchema["type"] = "string";
+        htmlBodySchema["description"] = "HTML body (optional, in addition to plain text)";
+        inputSchema.properties["htmlBody"] = htmlBodySchema;
+
+        var fromSchema = structNew("ordered");
+        fromSchema["type"] = "string";
+        fromSchema["description"] = "Sender email address (optional, uses default if not provided)";
+        inputSchema.properties["from"] = fromSchema;
+
+        var fromNameSchema = structNew("ordered");
+        fromNameSchema["type"] = "string";
+        fromNameSchema["description"] = "Sender display name (optional)";
+        inputSchema.properties["fromName"] = fromNameSchema;
+
+        var ccSchema = structNew("ordered");
+        ccSchema["type"] = "string";
+        ccSchema["description"] = "CC email address (optional)";
+        inputSchema.properties["cc"] = ccSchema;
+
+        var bccSchema = structNew("ordered");
+        bccSchema["type"] = "string";
+        bccSchema["description"] = "BCC email address (optional)";
+        inputSchema.properties["bcc"] = bccSchema;
+
+        var replyToSchema = structNew("ordered");
+        replyToSchema["type"] = "string";
+        replyToSchema["description"] = "Reply-To email address (optional)";
+        inputSchema.properties["replyTo"] = replyToSchema;
+
+        inputSchema["required"] = ["to", "subject", "body"];
+        setInputSchema(inputSchema);
 
         return this;
     }

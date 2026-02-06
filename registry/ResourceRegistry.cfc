@@ -200,32 +200,34 @@ component output="false" {
 
             // Handle different resource types
             if (arguments.uri == "mcpcfc://server/info") {
-                arrayAppend(contents, {
-                    uri: arguments.uri,
-                    mimeType: "application/json",
-                    text: serializeJson(application.mcpServer.getStatus())
-                });
+                var item = structNew("ordered");
+                item["uri"] = arguments.uri;
+                item["mimeType"] = "application/json";
+                item["text"] = serializeJson(application.mcpServer.getStatus());
+                arrayAppend(contents, item);
             } else if (arguments.uri == "mcpcfc://server/config") {
                 // Return sanitized config (hide sensitive values)
                 var safeConfig = duplicate(application.config);
                 safeConfig.sendGridApiKey = len(safeConfig.sendGridApiKey) ? "[CONFIGURED]" : "[NOT SET]";
                 safeConfig.authToken = "[HIDDEN]";
 
-                arrayAppend(contents, {
-                    uri: arguments.uri,
-                    mimeType: "application/json",
-                    text: serializeJson(safeConfig)
-                });
+                var item = structNew("ordered");
+                item["uri"] = arguments.uri;
+                item["mimeType"] = "application/json";
+                item["text"] = serializeJson(safeConfig);
+                arrayAppend(contents, item);
             } else {
                 // Generic resource - return metadata only
-                arrayAppend(contents, {
-                    uri: arguments.uri,
-                    mimeType: resource.mimeType ?: "text/plain",
-                    text: "Resource: #resource.name#"
-                });
+                var item = structNew("ordered");
+                item["uri"] = arguments.uri;
+                item["mimeType"] = resource.mimeType ?: "text/plain";
+                item["text"] = "Resource: #resource.name#";
+                arrayAppend(contents, item);
             }
 
-            return { contents: contents };
+            var result = structNew("ordered");
+            result["contents"] = contents;
+            return result;
 
         } finally {
             readLock.unlock();

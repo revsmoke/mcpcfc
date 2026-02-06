@@ -13,63 +13,74 @@ component extends="AbstractTool" output="false" {
         setTitle("HTTP Request");
         setDescription("Make HTTP requests to external URLs. Supports various methods and custom headers.");
 
-        setInputSchema({
-            type: "object",
-            properties: {
-                url: {
-                    type: "string",
-                    description: "The URL to request (must be HTTP or HTTPS)"
-                },
-                method: {
-                    type: "string",
-                    enum: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-                    description: "HTTP method (default: GET)"
-                },
-                headers: {
-                    type: "object",
-                    description: "Request headers as key-value pairs"
-                },
-                body: {
-                    type: "string",
-                    description: "Request body (for POST, PUT, PATCH)"
-                },
-                contentType: {
-                    type: "string",
-                    description: "Content-Type header (e.g., 'application/json')"
-                },
-                timeout: {
-                    type: "number",
-                    description: "Request timeout in seconds (default: 30)"
-                },
-                followRedirects: {
-                    type: "boolean",
-                    description: "Whether to follow redirects (default: true)"
-                }
-            },
-            required: ["url"]
-        });
+        var inputSchema = structNew("ordered");
+        inputSchema["type"] = "object";
+        inputSchema["properties"] = structNew("ordered");
 
-        setOutputSchema({
-            type: "object",
-            properties: {
-                statusCode: {
-                    type: "number",
-                    description: "HTTP status code"
-                },
-                statusText: {
-                    type: "string",
-                    description: "HTTP status text"
-                },
-                headers: {
-                    type: "object",
-                    description: "Response headers"
-                },
-                body: {
-                    type: "string",
-                    description: "Response body (truncated if large)"
-                }
-            }
-        });
+        var urlSchema = structNew("ordered");
+        urlSchema["type"] = "string";
+        urlSchema["description"] = "The URL to request (must be HTTP or HTTPS)";
+        inputSchema.properties["url"] = urlSchema;
+
+        var methodSchema = structNew("ordered");
+        methodSchema["type"] = "string";
+        methodSchema["enum"] = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
+        methodSchema["description"] = "HTTP method (default: GET)";
+        inputSchema.properties["method"] = methodSchema;
+
+        var headersSchema = structNew("ordered");
+        headersSchema["type"] = "object";
+        headersSchema["description"] = "Request headers as key-value pairs";
+        inputSchema.properties["headers"] = headersSchema;
+
+        var bodySchema = structNew("ordered");
+        bodySchema["type"] = "string";
+        bodySchema["description"] = "Request body (for POST, PUT, PATCH)";
+        inputSchema.properties["body"] = bodySchema;
+
+        var contentTypeSchema = structNew("ordered");
+        contentTypeSchema["type"] = "string";
+        contentTypeSchema["description"] = "Content-Type header (e.g., 'application/json')";
+        inputSchema.properties["contentType"] = contentTypeSchema;
+
+        var timeoutSchema = structNew("ordered");
+        timeoutSchema["type"] = "number";
+        timeoutSchema["description"] = "Request timeout in seconds (default: 30)";
+        inputSchema.properties["timeout"] = timeoutSchema;
+
+        var followRedirectsSchema = structNew("ordered");
+        followRedirectsSchema["type"] = "boolean";
+        followRedirectsSchema["description"] = "Whether to follow redirects (default: true)";
+        inputSchema.properties["followRedirects"] = followRedirectsSchema;
+
+        inputSchema["required"] = ["url"];
+        setInputSchema(inputSchema);
+
+        var outputSchema = structNew("ordered");
+        outputSchema["type"] = "object";
+        outputSchema["properties"] = structNew("ordered");
+
+        var statusCodeSchema = structNew("ordered");
+        statusCodeSchema["type"] = "number";
+        statusCodeSchema["description"] = "HTTP status code";
+        outputSchema.properties["statusCode"] = statusCodeSchema;
+
+        var statusTextSchema = structNew("ordered");
+        statusTextSchema["type"] = "string";
+        statusTextSchema["description"] = "HTTP status text";
+        outputSchema.properties["statusText"] = statusTextSchema;
+
+        var responseHeadersSchema = structNew("ordered");
+        responseHeadersSchema["type"] = "object";
+        responseHeadersSchema["description"] = "Response headers";
+        outputSchema.properties["headers"] = responseHeadersSchema;
+
+        var responseBodySchema = structNew("ordered");
+        responseBodySchema["type"] = "string";
+        responseBodySchema["description"] = "Response body (truncated if large)";
+        outputSchema.properties["body"] = responseBodySchema;
+
+        setOutputSchema(outputSchema);
 
         return this;
     }

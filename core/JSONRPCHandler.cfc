@@ -190,7 +190,9 @@ component output="false" {
         var cursor = arguments.params.cursor ?: "";
         // For now, return all tools (pagination can be added later)
 
-        return { tools: tools };
+        var result = structNew("ordered");
+        result["tools"] = tools;
+        return result;
     }
 
     /**
@@ -242,7 +244,9 @@ component output="false" {
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Handling resources/list");
         }
-        return { resources: application.resourceRegistry.list() };
+        var result = structNew("ordered");
+        result["resources"] = application.resourceRegistry.list();
+        return result;
     }
 
     /**
@@ -268,7 +272,9 @@ component output="false" {
         if (structKeyExists(application, "logger")) {
             application.logger.debug("Handling prompts/list");
         }
-        return { prompts: application.promptRegistry.list() };
+        var result = structNew("ordered");
+        result["prompts"] = application.promptRegistry.list();
+        return result;
     }
 
     /**
@@ -323,12 +329,13 @@ component output="false" {
             }
         }
 
-        return {
-            completion: {
-                values: completions,
-                hasMore: false
-            }
-        };
+        var completion = structNew("ordered");
+        completion["values"] = completions;
+        completion["hasMore"] = false;
+
+        var result = structNew("ordered");
+        result["completion"] = completion;
+        return result;
     }
 
     /**

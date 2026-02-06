@@ -62,12 +62,30 @@ Then **fully quit and relaunch** Claude Desktop.
   - Example (if your `mcpServers` key is `coldfusion-mcp`): `~/Library/Logs/Claude/mcp-server-coldfusion-mcp.log`
 - Bridge debug logging: set `MCPCFC_DEBUG=1` in the `env` block (logs go to stderr)
 
+## Remote / Streamable HTTP clients
+
+MCPCFC also supports MCP clients that can connect over **Streamable HTTP** directly to:
+
+- `BASE_URL/endpoints/mcp.cfm`
+
+For copy/paste configs and client-specific instructions (Claude Code, ChatGPT, Codex, Cursor, VS Code, Zed, etc.), see:
+
+- `CLIENTS.md`
+
 ## Stdio smoke test (recommended)
 
 This repo includes a regression/smoke test that verifies MCP responses keep the **correct JSON key casing** required by strict MCP clients:
 
 ```bash
 MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-stdio.sh
+```
+
+## Direct HTTP smoke test (Streamable HTTP)
+
+If you’re connecting a client directly to the HTTP endpoint, this smoke test validates the endpoint over Streamable HTTP (including the `MCP-Session-Id` response header):
+
+```bash
+MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-http.sh
 ```
 
 If you’re using local HTTPS with an untrusted cert, set `MCPCFC_INSECURE=1` when running the bridge (or trust the cert in your OS keychain).
@@ -136,9 +154,9 @@ session/
 validators/
 scripts/
   verify-stdio.sh
+  verify-http.sh
 ```
 
 ## License
 
 MIT. See `LICENSE`.
-

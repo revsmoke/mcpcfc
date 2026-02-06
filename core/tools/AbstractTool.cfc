@@ -43,7 +43,7 @@ component output="false" accessors="true" {
         var def = structNew("ordered");
         def["name"] = getName();
 
-        // MCP 2025-11-25: title is the human-readable name
+        // MCP: title is a human-readable display name (optional)
         if (len(getTitle() ?: "")) {
             def["title"] = getTitle();
         }
@@ -60,7 +60,7 @@ component output="false" accessors="true" {
         }
         def["inputSchema"] = inputSchema;
 
-        // MCP 2025-11-25: outputSchema is optional but recommended
+        // MCP: outputSchema is optional but recommended
         if (!isNull(getOutputSchema())) {
             def["outputSchema"] = getOutputSchema();
         }

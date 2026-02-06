@@ -1,7 +1,7 @@
 /**
  * MCPServer.cfc
  * Main MCP Server Orchestrator for ColdFusion 2025
- * Protocol Version: 2025-11-25
+ * Protocol Version: 2025-06-18
  */
 component output="false" {
 

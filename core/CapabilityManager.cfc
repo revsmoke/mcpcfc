@@ -31,7 +31,7 @@ component output="false" {
         // Logging capability
         capabilities["logging"] = structNew("ordered");
 
-        // Experimental features (MCP 2025-11-25)
+        // Experimental features (reserved)
         capabilities["experimental"] = structNew("ordered");
 
         return capabilities;

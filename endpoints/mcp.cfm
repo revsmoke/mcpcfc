@@ -2,10 +2,10 @@
 <cfscript>
 /**
  * MCP Protocol Endpoint
- * Single Streamable HTTP endpoint for MCP Protocol 2025-11-25
+ * Single Streamable HTTP endpoint for MCP Protocol 2025-06-18
  *
  * This endpoint handles all JSON-RPC 2.0 requests for the MCP server.
- * SSE transport is deprecated in MCP 2025-11-25.
+ * Streamable HTTP may use SSE, but this implementation only uses HTTP POST.
  */
 
 // Initialize transport manager (using local scope for template-level variables)
@@ -74,6 +74,7 @@ try {
 
     // Add session header to response
     cfheader(name="X-Session-ID", value=local.sessionId);
+    cfheader(name="MCP-Session-Id", value=local.sessionId);
 
     // Process request
     local.response = application.mcpServer.processRequest(local.request, local.sessionId);
@@ -81,7 +82,7 @@ try {
     // Handle response
     if (structIsEmpty(local.response)) {
         // Notification - no response body
-        cfheader(statuscode=204);
+        cfheader(statuscode=202);
     } else {
         // Set appropriate status code
         local.statusCode = local.transport.getStatusCode(local.response);

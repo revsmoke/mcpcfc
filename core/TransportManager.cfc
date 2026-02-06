@@ -1,9 +1,8 @@
 /**
  * TransportManager.cfc
- * Handles Streamable HTTP Transport for MCP Protocol 2025-11-25
+ * Handles Streamable HTTP Transport for MCP Protocol 2025-06-18
  *
- * Note: SSE transport is DEPRECATED in MCP 2025-11-25
- * This implementation uses standard HTTP POST with JSON-RPC
+ * Note: Streamable HTTP may use SSE, but this implementation only uses HTTP POST with JSON-RPC.
  */
 component output="false" {
 
@@ -145,7 +144,7 @@ component output="false" {
         if (len(origin)) {
             headers["Access-Control-Allow-Origin"] = origin;
             headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-            headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Session-ID";
+            headers["Access-Control-Allow-Headers"] = "Content-Type, Accept, Authorization, MCP-Session-Id, MCP-Protocol-Version, X-Session-ID";
             headers["Access-Control-Max-Age"] = "86400";
         }
 
@@ -199,6 +198,24 @@ component output="false" {
 
         // Check header
         var headers = getHttpRequestData().headers;
+        if (structKeyExists(headers, "MCP-Session-Id") && len(headers["MCP-Session-Id"])) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session ID from MCP-Session-Id header", {
+                    sessionId: headers["MCP-Session-Id"]
+                });
+            }
+            return headers["MCP-Session-Id"];
+        }
+
+        if (structKeyExists(headers, "Mcp-Session-Id") && len(headers["Mcp-Session-Id"])) {
+            if (structKeyExists(application, "logger")) {
+                application.logger.debug("Session ID from Mcp-Session-Id header", {
+                    sessionId: headers["Mcp-Session-Id"]
+                });
+            }
+            return headers["Mcp-Session-Id"];
+        }
+
         if (structKeyExists(headers, "X-Session-ID") && len(headers["X-Session-ID"])) {
             if (structKeyExists(application, "logger")) {
                 application.logger.debug("Session ID from header", { sessionId: headers["X-Session-ID"] });

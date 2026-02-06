@@ -62,6 +62,15 @@ cd /path/to/mcpcfc
 MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-stdio.sh
 ```
 
+## 4b) (Optional) Run the direct HTTP smoke test
+
+If you plan to connect a client directly to the HTTP endpoint (Streamable HTTP), run:
+
+```bash
+cd /path/to/mcpcfc
+MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-http.sh
+```
+
 ## 5) Connect to Claude Desktop (local MCP server)
 
 Claude Desktop talks to local MCP servers via **stdio**. MCPCFC is HTTP, so the bridge script translates stdio ⇄ HTTP.
@@ -104,6 +113,17 @@ Claude Desktop talks to local MCP servers via **stdio**. MCPCFC is HTTP, so the 
 - To enable bridge logging, add:
   - `"MCPCFC_DEBUG": "1"`
 
+## 6) Connect from other MCP clients (remote Streamable HTTP)
+
+Many clients can connect directly to the MCPCFC endpoint over Streamable HTTP:
+
+- `http://localhost:8500/mcpcfc/endpoints/mcp.cfm` (local)
+- `https://your-domain.example/mcpcfc/endpoints/mcp.cfm` (remote)
+
+Client-by-client instructions live in:
+
+- `CLIENTS.md`
+
 ## Optional setup
 
 ### Database tool (`queryDatabase`)
@@ -131,4 +151,3 @@ If it’s not set, the tool will return an error telling you it’s not configur
 This is a dev-focused MCP server that exposes powerful capabilities (filesystem access, outbound HTTP, database querying, email sending).
 
 Do **not** expose it publicly without authentication + strong restrictions.
-

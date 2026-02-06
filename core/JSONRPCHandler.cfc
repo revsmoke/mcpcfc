@@ -1,6 +1,6 @@
 /**
  * JSONRPCHandler.cfc
- * JSON-RPC 2.0 Request Processor for MCP Protocol 2025-11-25
+ * JSON-RPC 2.0 Request Processor for MCP Protocol 2025-06-18
  */
 component output="false" {
 

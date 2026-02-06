@@ -12,6 +12,7 @@ MCPCFC is an **MCP (Model Context Protocol)** server implemented in **Adobe Cold
 - **Unified MCP endpoint**: `endpoints/mcp.cfm`
 - **Claude Desktop bridge (stdio ⇄ HTTP)**: `bridge/cf-mcp-bridge.sh`
 - **Browser test client**: `client-examples/test-client.cfm`
+- **Client configs (Claude, ChatGPT, Codex, Cursor, VS Code, Zed, etc.)**: `CLIENTS.md`
 - **Smoke test**: `scripts/verify-stdio.sh`
 
 ## Protocol notes
@@ -35,4 +36,3 @@ bridge/                Stdio bridge for Claude Desktop
 client-examples/       Browser test client
 scripts/               Local smoke/regression scripts
 ```
-

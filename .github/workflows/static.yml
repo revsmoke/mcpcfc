@@ -31,13 +31,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Build site
+        run: |
+          mkdir -p _site
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          pandoc README.md -f markdown -t html -s -o _site/index.html --metadata title="MCPCFC - Model Context Protocol for ColdFusion"
+          cp CNAME _site/CNAME
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Upload only the _site directory
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

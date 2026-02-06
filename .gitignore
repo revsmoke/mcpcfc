@@ -24,6 +24,7 @@ cache/
 # Build files
 build/
 dist/
+_site/
 
 # Dependencies (if using box)
 modules/

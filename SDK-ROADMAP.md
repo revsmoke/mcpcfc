@@ -6,7 +6,7 @@ Create the first official CFML/CFScript SDK for the Model Context Protocol, enab
 
 ## Current Implementation Status (v2.0)
 
-The MCP server is now **FULLY OPERATIONAL** with MCP Protocol 2025-11-25 compliance:
+The MCP server is now **FULLY OPERATIONAL** with MCP Protocol support (negotiates `2025-06-18` by default):
 
 - ✅ JSON-RPC 2.0 message processing
 - ✅ **Unified HTTP endpoint** (`endpoints/mcp.cfm`)
@@ -26,7 +26,7 @@ The MCP server is now **FULLY OPERATIONAL** with MCP Protocol 2025-11-25 complia
 
 ### Protocol Notes
 
-**SSE Transport**: Deprecated in MCP Protocol 2025-11-25. The previous SSE-based endpoints (`sse.cfm`, `messages.cfm`) have been replaced with a unified HTTP endpoint (`mcp.cfm`). Legacy endpoints are preserved in `_deprecated/` for reference.
+**SSE Transport**: This implementation uses a unified HTTP endpoint (`endpoints/mcp.cfm`). If you add other transports in the future, keep MCP clients’ strict JSON key casing in mind (ex: `result.tools`, JSON Schema `type/properties/required`).
 
 ## Core SDK Components
 
@@ -43,7 +43,7 @@ The MCP server is now **FULLY OPERATIONAL** with MCP Protocol 2025-11-25 complia
     - `HTTPTransport.cfc` - HTTP endpoint (current implementation)
     - `WebSocketTransport.cfc` - WebSocket support (planned)
     - `StdioTransport.cfc` - Standard I/O for CLI tools (via bridge)
-    - ~~`SSETransport.cfc`~~ - Deprecated in MCP 2025-11-25
+    - ~~`SSETransport.cfc`~~ - Deprecated in modern MCP clients
 
 ### 3. Protocol Components
 

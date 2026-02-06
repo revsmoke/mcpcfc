@@ -1,264 +1,134 @@
-# Quick Start Guide
+# Quick Start (Fork-and-Run)
+
+This guide is written for someone **forking this repo on their own machine**.
+
+## Tested environment
+
+- ✅ **macOS + Adobe ColdFusion 2025**
+- ⚠️ Not yet tested on Windows/Linux or other CFML engines (ex: Lucee)
 
 ## Prerequisites
 
-- Adobe ColdFusion 2025 (or Lucee 5+)
-- A web server (IIS, Apache, or built-in)
-- Modern web browser for testing
+- Adobe ColdFusion 2025 running locally
+- Ability to place a folder in your ColdFusion **web root** (or create a mapping)
+- `bash` + `curl` (for Claude Desktop bridge)
+- Optional: Claude Desktop (macOS) for stdio transport testing
 
-## Installation
+## 1) Fork + clone
 
-### Option 1: Git Clone
+Clone your fork into your ColdFusion web root.
 
-```bash
-cd /path/to/your/webroot
-git clone https://github.com/revsmoke/mcpcfc.git
-```
-
-### Option 2: CommandBox (Coming Soon)
+Example (adjust the path for your setup):
 
 ```bash
-box install mcpcfc
+cd /path/to/your/coldfusion/webroot
+git clone https://github.com/<your-user>/<your-fork>.git mcpcfc
 ```
 
-## Basic Setup
+After this, you should be able to load:
 
-1. **Navigate to the installation**
+- `http://localhost:8500/mcpcfc/`
 
-   ```
-   https://localhost:8443/mcpcfc/
-   ```
+> If your ColdFusion server isn’t on port 8500, use whatever base URL applies to your installation.
 
-2. **Test the server**
-   - Open the test client: `https://localhost:8443/mcpcfc/client-examples/test-client.cfm`
-   - Click "Connect"
-   - Click "Initialize"
-   - Try the example tools!
+## 2) Confirm the MCP endpoint responds
 
-## Creating Your First Tool
+Your endpoint should be reachable at:
 
-1. Create a new CFC in `/tools` that extends `AbstractTool`:
+- `http://localhost:8500/mcpcfc/endpoints/mcp.cfm`
 
-    ```cfscript
-    component extends="tools.AbstractTool" displayname="MyTool" {
+It only accepts **POST** with `Content-Type: application/json`.
 
-        public function init() {
-            variables.name = "myTool";
-            variables.description = "My custom tool";
-            variables.inputSchema = {
-                "type": "object",
-                "properties": {
-                    "message": {"type": "string", "description": "A message to process"}
-                },
-                "required": ["message"]
-            };
-            return this;
-        }
+## 3) Test in the browser (recommended first)
 
-        public struct function execute(required struct args) {
-            return {
-                "content": [{
-                    "type": "text",
-                    "text": "Hello from MyTool! You said: " & arguments.args.message
-                }]
-            };
-        }
-    }
-    ```
+Open the test client:
 
-2. Register it in `Application.cfc`:
+- `http://localhost:8500/mcpcfc/client-examples/test-client.cfm`
 
-    ```cfscript
-    // In onApplicationStart()
-    application.toolRegistry.registerTool(new tools.MyTool());
-    ```
+Then click:
 
-3. Restart your CF application and test!
+1. **Connect**
+2. **List Tools**
+3. **Call Hello Tool**
 
-## Connecting to Claude Desktop (Local)
+If you see JSON-RPC responses in the log panel, your server is working.
 
-Claude Desktop requires local MCP servers to communicate via stdio (standard input/output), while MCPCFC uses HTTP. The bridge script (`bridge/cf-mcp-bridge.sh`) translates between the two — no external dependencies required (just `curl` and `bash`).
+## 4) Run the stdio smoke test (catches common MCP issues)
 
-### Quick Setup
+This repo includes a smoke/regression test that validates the stdio bridge and ensures responses keep the **strict JSON key casing** required by MCP clients:
 
-1. **Make the bridge script executable**:
+```bash
+cd /path/to/mcpcfc
+MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-stdio.sh
+```
+
+## 5) Connect to Claude Desktop (local MCP server)
+
+Claude Desktop talks to local MCP servers via **stdio**. MCPCFC is HTTP, so the bridge script translates stdio ⇄ HTTP.
+
+1. Make the bridge executable:
 
    ```bash
-   chmod +x /path/to/mcpcfc/bridge/cf-mcp-bridge.sh
+   chmod +x bridge/cf-mcp-bridge.sh
    ```
 
-   On macOS, also clear the quarantine flag if needed:
+   On macOS, you may also need:
 
    ```bash
-   xattr -d com.apple.quarantine /path/to/mcpcfc/bridge/cf-mcp-bridge.sh
+   xattr -d com.apple.quarantine bridge/cf-mcp-bridge.sh
    ```
 
-2. **Add to your Claude Desktop config**:
+2. Add to Claude Desktop config:
 
-   Open `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows) and add:
+   `~/Library/Application Support/Claude/claude_desktop_config.json`
 
    ```json
    {
      "mcpServers": {
        "coldfusion-mcp": {
-         "command": "/path/to/mcpcfc/bridge/cf-mcp-bridge.sh",
+         "command": "/absolute/path/to/mcpcfc/bridge/cf-mcp-bridge.sh",
          "env": {
-           "MCPCFC_URL": "https://your-cf-server.local"
+           "MCPCFC_URL": "http://localhost:8500/mcpcfc"
          }
        }
      }
    }
    ```
 
-   Replace the path and URL for your environment. The `MCPCFC_URL` env var tells the bridge where your ColdFusion server is running.
+3. **Fully quit and relaunch** Claude Desktop.
 
-3. **Restart Claude Desktop** — fully quit and relaunch.
+### Debugging Claude Desktop
 
-4. **Verify** — You should see the MCP server indicator in the input area. Click it to see your ColdFusion tools.
+- Logs live at: `~/Library/Logs/Claude/mcp-server-<name>.log`
+  - Example: `~/Library/Logs/Claude/mcp-server-coldfusion-mcp.log`
+- To enable bridge logging, add:
+  - `"MCPCFC_DEBUG": "1"`
 
-### Bridge Environment Variables
+## Optional setup
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MCPCFC_URL` | `https://mcpcfc.local` | Base URL of your ColdFusion server |
-| `MCPCFC_DEBUG` | `0` | Set to `1` for debug logging to stderr |
-| `MCPCFC_TIMEOUT` | `60` | Request timeout in seconds |
-| `MCPCFC_INSECURE` | `0` | Set to `1` to skip SSL verification (dev only) |
+### Database tool (`queryDatabase`)
 
-### Test the Bridge Manually
+`queryDatabase` expects a ColdFusion datasource named `mcpcfc_ds` (default; configurable).
 
-```bash
-echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}' | ./bridge/cf-mcp-bridge.sh
-```
+1. Create/configure the datasource in ColdFusion Administrator.
+2. Load sample tables/data:
+   - visit `database-setup.cfm`, or
+   - import `mcpcfc_db.sql` into MySQL/MariaDB
 
-You should see a JSON response with `protocolVersion`, `capabilities`, and `serverInfo`.
+### SendGrid email tool (`sendEmail`)
 
-### Troubleshooting
+To enable email sending, set `SENDGRID_API_KEY` in the environment where ColdFusion runs, then restart ColdFusion.
 
-- **Bridge not starting**: Check `~/Library/Logs/Claude/mcp*.log` for errors
-- **Permission denied**: Run `chmod +x bridge/cf-mcp-bridge.sh`
-- **SSL errors**: Set `"MCPCFC_INSECURE": "1"` in the env block (dev only), or ensure your cert is trusted
-- **Connection refused**: Verify ColdFusion is running — visit your server URL in a browser
-- **Empty responses**: Check that ColdFusion output control is configured (`<cfsetting enableCFOutputOnly="true">`)
-- **Debug mode**: Set `"MCPCFC_DEBUG": "1"` in the env block, then check `~/Library/Logs/Claude/mcp-server-coldfusion-mcp.log`
+If it’s not set, the tool will return an error telling you it’s not configured.
 
-### How It Works
+## Restarting the app during development
 
-```text
-Claude Desktop  ──stdio──▸  cf-mcp-bridge.sh  ──HTTP POST──▸  endpoints/mcp.cfm
-   (JSON-RPC)                  (curl + bash)                   (ColdFusion)
-```
+- `restart-app.cfm`
+- or hit any page with `?reload=1` to run `onApplicationStart()` again
 
-- The bridge reads JSON-RPC requests from stdin, POSTs them to your ColdFusion endpoint via `curl`, and writes responses to stdout
-- Notifications (no `id` field) produce no stdout output, as required by JSON-RPC
-- All diagnostic logging goes to stderr only — stdout is reserved for protocol data
-- Your ColdFusion server is 100% standard HTTP — the bridge is the only non-CF component
-- No Node.js, Python, or other runtime dependencies — just `bash` and `curl`
+## Security warning
 
-## Setting Up as a Remote MCP Server
+This is a dev-focused MCP server that exposes powerful capabilities (filesystem access, outbound HTTP, database querying, email sending).
 
-To use your ColdFusion MCP server remotely with Claude via the API (MCP Connector):
+Do **not** expose it publicly without authentication + strong restrictions.
 
-### Prerequisites for Remote MCP Server
-
-1. **Public URL**: Your server must be accessible via HTTPS from the internet
-2. **Security**: Implement authentication (see Security section below)
-3. **SSL Certificate**: Required for production deployment
-
-### Configuration Steps
-
-1. **Deploy to a public server** with HTTPS enabled:
-
-   ```text
-   https://your-domain.com/mcpcfc/endpoints/mcp.cfm
-   ```
-
-2. **Add authentication** to your endpoint (recommended):
-
-   ```cfscript
-   // In endpoints/mcp.cfm
-   if (!structKeyExists(url, "token") || url.token != application.mcpAuthToken) {
-       writeOutput("Unauthorized");
-       abort;
-   }
-   ```
-
-3. **Use with Claude API** by including the MCP configuration:
-
-   ```python
-   import anthropic
-
-   client = anthropic.Anthropic(
-       api_key="your-api-key",
-       default_headers={"anthropic-beta": "mcp-client-2025-04-04"}
-   )
-
-   response = client.messages.create(
-       model="claude-sonnet-4-20250514",
-       max_tokens=1024,
-       messages=[{"role": "user", "content": "Generate a PDF report"}],
-       mcp_servers=[{
-           "type": "url",
-           "url": "https://your-domain.com/mcpcfc/endpoints/mcp.cfm",
-           "name": "coldfusion-mcp",
-           "authorization_token": "your-secure-token"
-       }]
-   )
-   ```
-
-### Security Considerations for Remote MCP Server
-
-1. **Authentication Token**: Generate a secure token in Application.cfc:
-
-   ```cfscript
-   application.mcpAuthToken = hash(createUUID() & now(), "SHA-256");
-   ```
-
-2. **HTTPS Only**: Never expose MCP endpoints over HTTP in production
-
-3. **Rate Limiting**: Implement request throttling:
-
-   ```cfscript
-   // Example rate limiting
-   if (application.requestCount[cgi.remote_addr] > 100) {
-       writeOutput("Rate limit exceeded");
-       abort;
-   }
-   ```
-
-4. **IP Whitelisting** (optional):
-
-   ```cfscript
-   var allowedIPs = ["1.2.3.4", "5.6.7.8"];
-   if (!arrayFind(allowedIPs, cgi.remote_addr)) {
-       abort;
-   }
-   ```
-
-### Testing Your Remote Server
-
-1. **Verify HTTPS access**:
-
-   ```bash
-   curl https://your-domain.com/mcpcfc/endpoints/mcp.cfm?token=your-token
-   ```
-
-2. **Test with Claude API** using the example code above
-
-3. **Monitor logs** for any connection issues
-
-### Limitations
-
-- Currently only tool calls are supported via MCP Connector
-- Not available on Amazon Bedrock or Google Vertex
-- Requires public HTTPS endpoint
-
-Your ColdFusion MCP server is now available as a remote service!
-
-## Need Help?
-
-- Check the [full documentation](README.md)
-- Open an [issue](https://github.com/revsmoke/mcpcfc/issues)
-- Join the discussion!
-
-Happy coding!

@@ -1,138 +1,62 @@
-# Contributing to MCPCFC
+# Contributing
 
-First off, thank you for considering contributing to MCPCFC - the world's first ColdFusion MCP server! It's people like you that will make this a great tool for the ColdFusion community.
+Thanks for contributing! This project is an MCP server implemented in **Adobe ColdFusion 2025**.
 
-## How Can I Contribute?
+## Tested environment
 
-### Reporting Bugs
+- ✅ macOS + Adobe ColdFusion 2025
+- ⚠️ Other platforms/CFML engines are welcome, but currently unverified
 
-- **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/revsmoke/mcpcfc/issues).
-- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/revsmoke/mcpcfc/issues/new).
+## Quick dev loop
 
-### Suggesting Enhancements
+1. Make changes
+2. Restart the app:
+   - `restart-app.cfm`
+   - or hit any page with `?reload=1`
+3. Validate:
+   - Browser test client: `client-examples/test-client.cfm`
+   - Stdio smoke test: `MCPCFC_URL="http://localhost:8500/mcpcfc" ./scripts/verify-stdio.sh`
 
-- Open a new issue with a clear title and detailed description.
-- Explain why this enhancement would be useful to most MCPCFC users.
+## Project structure (high level)
 
-### Pull Requests
-
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. Ensure your code follows the existing code style.
-4. Make sure your code works with both Adobe ColdFusion 2025 and Lucee 5+.
-5. Issue that pull request!
-
-## Code Style
-
-- Use CFScript where possible
-- Follow existing naming conventions
-- Comment your code, especially complex logic
-- Keep functions focused and single-purpose
-
-## Project Architecture (v2.0)
-
-Understanding the project structure will help you contribute effectively:
-
-```
-/mcpcfc/
-├── core/                    # Core MCP components
-│   ├── MCPServer.cfc       # Main server orchestration
-│   ├── JSONRPCHandler.cfc  # Protocol handling
-│   ├── CapabilityManager.cfc
-│   └── TransportManager.cfc
-├── registry/                # Registration systems
-│   ├── ToolRegistry.cfc    # Tool registration
-│   ├── ResourceRegistry.cfc # Resource registration
-│   └── PromptRegistry.cfc  # Prompt registration
-├── session/                 # Session management
-├── tools/                   # Tool implementations
-├── validators/              # Input validation
-├── logging/                 # Logging utilities
-├── endpoints/               # HTTP endpoints
-│   └── mcp.cfm             # Unified MCP endpoint
-└── bridge/                  # Protocol bridges
+```text
+core/                 MCP request handling + tools
+endpoints/mcp.cfm      Unified JSON-RPC HTTP endpoint
+registry/              Tool/resource/prompt registries
+session/               Session manager
+bridge/                Claude Desktop stdio ⇄ HTTP bridge
+client-examples/       Browser test client
+config/                Settings + routing config
 ```
 
-## Adding New Tools
+## Adding a tool
 
-When adding a new tool:
+1. Create a new tool component in `core/tools/` that extends `AbstractTool` (see existing tools).
+2. Register it by adding the component path to the `toolClasses` array in:
+   - `core/MCPServer.cfc` → `registerDefaultTools()`
 
-1. **Create a new CFC** in the `/tools` directory that extends `AbstractTool`:
+### Tool checklist
 
-```cfscript
-component extends="tools.AbstractTool" {
+- Input validation: use `validateRequired()` and/or `validateTypes()`
+- Return values: use `textResult()`, `jsonResult()`, or `errorResult()`
+- Keep JSON keys **lowercase** in schemas/results (strict MCP clients depend on it)
 
-    public function init() {
-        variables.name = "myNewTool";
-        variables.description = "What this tool does";
-        variables.inputSchema = {
-            "type": "object",
-            "properties": {
-                "param1": {"type": "string", "description": "Parameter description"}
-            },
-            "required": ["param1"]
-        };
-        return this;
-    }
+## Resources & prompts
 
-    public struct function execute(required struct args) {
-        // Implement your tool logic
-        return {
-            "content": [{
-                "type": "text",
-                "text": "Result of the tool"
-            }]
-        };
-    }
-}
-```
+This repo currently registers resources/prompts as structs:
 
-2. **Register in Application.cfc**:
+- Resources: `application.resourceRegistry.register({ ... })`
+- Prompts: `application.promptRegistry.register({ ... })`
 
-```cfscript
-application.toolRegistry.registerTool(new tools.MyNewTool());
-```
+If you add new registries or more dynamic resources/prompts, keep responses aligned with MCP key casing (`resources`, `prompts`, `contents`, etc.).
 
-3. **Add tests** in `/tests` directory
+## Reporting issues
 
-4. **Document the tool** in the README
+When filing a bug, include:
 
-## Adding Resources
+- ColdFusion version + OS
+- Whether you’re using browser client vs Claude Desktop
+- Relevant logs:
+  - Claude Desktop (macOS): `~/Library/Logs/Claude/mcp-server-<name>.log`
+  - MCPCFC server logs: `logs/` (see `config/settings.cfm`)
 
-Resources follow a similar pattern using `ResourceRegistry`:
-
-1. Create a resource class
-2. Register via `application.resourceRegistry.registerResource()`
-3. Implement `read()` method for resource content
-
-## Adding Prompts
-
-Prompts use `PromptRegistry`:
-
-1. Create a prompt class
-2. Register via `application.promptRegistry.registerPrompt()`
-3. Implement `get()` method for prompt content
-
-## Testing
-
-- Test with Adobe ColdFusion 2025 (primary target)
-- Test with Lucee 5+ if possible
-- Include error cases in your testing
-- Test with the included test client at `/client-examples/test-client.cfm`
-- Test via Claude Desktop integration if applicable
-
-## Validation
-
-If your tool accepts user input:
-
-1. Use `validators/InputValidator.cfc` for general validation
-2. Use `validators/SQLValidator.cfc` if handling database queries
-3. Never trust input - always validate and sanitize
-
-## Community
-
-- Be welcoming and inclusive
-- Help others who are trying to contribute
-- Share your use cases and success stories
-
-Thank you for helping make ColdFusion part of the AI revolution!

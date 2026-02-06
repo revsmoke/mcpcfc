@@ -34,7 +34,7 @@ This proves that ColdFusion remains relevant and can participate in cutting-edge
 
 ## Features
 
-- ✅ MCP Protocol 2025-11-25 compliance
+- ✅ MCP Protocol support (negotiates `2025-06-18` by default)
 - ✅ Unified HTTP endpoint
 - ✅ JSON-RPC 2.0 protocol compliance
 - ✅ Thread-safe session management
@@ -44,10 +44,7 @@ This proves that ColdFusion remains relevant and can participate in cutting-edge
 
 ## Get Started
 
-Clone the repository or download from GitHub:
-```bash
-git clone https://github.com/revsmoke/mcpcfc.git
-```
+Fork this repository and follow `QUICK_START.md`.
 
 Test it with the included client:
 `http://localhost:8500/mcpcfc/client-examples/test-client.cfm`
